@@ -16,9 +16,10 @@ $start_time = time();
 
 // 설정과 함수 파일을 인클루드한다.
 
+define('CONVERTING', 'YES');
 require dirname(__FILE__) . '/config.php';
 require dirname(__FILE__) . '/functions.php';
-
+require dirname(__FILE__) . '/update.php';
 echo "\n";
 
 // 필요한 기능이 모두 있는지 확인한다.
@@ -948,8 +949,6 @@ echo '[Step 8/8] 업데이트를 적용하는 중 ... ' . "\n\n";
 
 // update.php를 호출한다.
 
-define('CONVERTING', 'YES');
-require 'update.php';
 do_updates();
 
 // 끝!
