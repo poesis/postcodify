@@ -4,7 +4,7 @@
  *  
  *  도로명주소 우편번호 검색 기능을 제공하는 jQuery 플러그인
  *  
- *  Version 1.1.6
+ *  Version 1.1.7
  *  
  * ---------------------------------------------------------------------------------------
  * 
@@ -151,9 +151,8 @@
                 search_button.attr("disabled", "disabled");
                 search_button.html('<img alt="검색" src="' + $.fn.postcodify.gif + '" />');
                 
-                // 스크롤 위치와 검색 시작 시각을 기억한다.
+                // 스크롤 위치를 기억한다.
                 
-                var ajax_request_time = new Date().getTime();
                 var scroll_top = $(window).scrollTop();
                 
                 // 검색 서버로 AJAX (JSONP) 요청을 전송한다.
@@ -169,10 +168,6 @@
                     // 요청이 성공한 경우 이 함수를 호출한다.
                     
                     "success": function(data, textStatus, jqXHR) {
-                        
-                        // 검색에 소요된 시간을 측정한다. 네트워크 왕복 시간이 추가되므로 그다지 정확하지는 않다.
-                        
-                        var ajax_elapsed_time = (new Date().getTime() - ajax_request_time) / 1000;
                         
                         // 검색후 콜백 함수를 실행한다.
                         
@@ -241,7 +236,7 @@
                             
                             results.find("div.postcode_search_status.summary").detach().appendTo(results).show();
                             results.find("div.postcode_search_status.summary div.result_count span").text(data.count);
-                            results.find("div.postcode_search_status.summary div.search_time span").text(ajax_elapsed_time);
+                            results.find("div.postcode_search_status.summary div.search_time span").text(data.time);
                             
                             if (data.count >= 100) {
                                 results.find("div.postcode_search_status.too_many").show();
