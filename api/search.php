@@ -174,14 +174,6 @@ foreach ($keywords as $id => $keyword)
     break;
 }
 
-// 행정동명의 숫자를 제거한다.
-/*
-if (isset($kw['dongri']) && preg_match('/^([가-힣]+)(?:[0-9,]+동|([0-9,]+가))$/u', $kw['dongri'], $matches))
-{
-    $kw['dongri'] = $matches[1] . (isset($matches[2]) ? '' : '동');
-}
-*/
-
 // 건물번호 또는 지번을 주번과 부번으로 분리한다.
 
 if (isset($kw['numbers']))

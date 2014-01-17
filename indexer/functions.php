@@ -72,46 +72,38 @@ function get_variations_of_dongri($str, &$dongs)
 {
     $keywords = array($str);
     
-    if (preg_match('/^(.+)([0-9]+)([.,-][0-9]+)*리$/uU', $str, $matches))
+    if (preg_match('/^(.+)제?([0-9,]+)([동리])$/uU', $str, $matches))
     {
-        $keywords[] = $matches[1] . '리';
+        $keywords[] = $matches[1] . $matches[3];
+        $matches[2] = preg_split('/[.,-]/', $matches[2]);
+        foreach ($matches[2] as $match)
+        {
+            if (ctype_digit(trim($match))) $keywords[] = $matches[1] . $match . $matches[3];
+        }
     }
-    else
+    elseif (preg_match('/^(.+)([0-9]+)가동$/uU', $str, $matches))
     {
-        if (preg_match('/^(.+)제?([0-9]+)([.,-][0-9]+)*동$/uU', $str, $matches))
+        $keywords[] = $matches[1] . '동';
+    }
+    elseif (preg_match('/^(.+)동([0-9]+)가$/uU', $str, $matches))
+    {
+        $keywords[] = $matches[1] . '동';
+    }
+    elseif (substr($str, strlen($str) - 6) === '본동')
+    {
+        $dong_original_suspected = substr($str, 0, strlen($str) - 6) . '동';
+        if (isset($dongs[$dong_original_suspected]))
         {
-            $str = $matches[1] . '동';
-            $keywords[] = $str;
-        }
-        
-        if (preg_match('/^(.+)([0-9]+)가동$/uU', $str, $matches))
-        {
-            $str = $matches[1] . '동';
-            $keywords[] = $str;
-        }
-        
-        if (preg_match('/^(.+)동([0-9]+)가$/uU', $str, $matches))
-        {
-            $str = $matches[1] . '동';
-            $keywords[] = $str;
-        }
-        
-        if (substr($str, strlen($str) - 6) === '본동')
-        {
-            $dong_original_suspected = substr($str, 0, strlen($str) - 6) . '동';
-            if (isset($dongs[$dong_original_suspected]))
-            {
-                $keywords[] = $dong_original_suspected;
-            }
-            else
-            {
-                $dongs[$str] = 1;
-            }
+            $keywords[] = $dong_original_suspected;
         }
         else
         {
             $dongs[$str] = 1;
-        }            
+        }
+    }
+    else
+    {
+        $dongs[$str] = 1;
     }
     
     return array_unique($keywords);
