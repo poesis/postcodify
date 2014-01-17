@@ -252,8 +252,8 @@ function do_updates()
                 
                 // postcode_keywords_jibeon 테이블에 지번주소 키워드를 저장한다.
                 
-                $keywords = get_variations_of_dongri(get_canonical($dongri), $dongs);
-                if ($admin_dong) $keywords += get_variations_of_dongri(get_canonical($admin_dong), $dongs);
+                $keywords = get_variations_of_dongri($dongri, $dongs);
+                if ($admin_dong) $keywords += get_variations_of_dongri($admin_dong, $dongs);
                 $keywords = array_unique($keywords);
                 
                 foreach ($keywords as $keyword)
@@ -367,8 +367,8 @@ function do_updates()
                 
                 // postcode_keywords_jibeon 테이블에 지번주소 키워드를 저장한다.
                 
-                $keywords = get_variations_of_dongri(get_canonical($dongri), $dongs);
-                if ($admin_dong) $keywords += get_variations_of_dongri(get_canonical($admin_dong), $dongs);
+                $keywords = get_variations_of_dongri($dongri, $dongs);
+                if ($admin_dong) $keywords += get_variations_of_dongri($admin_dong, $dongs);
                 $keywords = array_unique($keywords);
                 
                 foreach ($keywords as $keyword)

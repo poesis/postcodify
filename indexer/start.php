@@ -418,7 +418,7 @@ while (count($files))
                 
                 // 검색 키워드들을 정리하여 postcode_keywords_jibeon 테이블에 삽입한다.
                 
-                $keywords = get_variations_of_dongri(get_canonical($dongri), $dongs[$filename]);
+                $keywords = get_variations_of_dongri($dongri, $dongs[$filename]);
                 foreach ($keywords as $keyword)
                 {
                     $ps_keyword_insert->execute(array($address_id, $keyword, $num_major, $num_minor));
@@ -620,14 +620,14 @@ while (count($files))
                 {
                     // 행정동명에 다양한 변형을 가해 키워드 목록을 구한다.
                     
-                    $keywords_dongs = get_variations_of_dongri(get_canonical($admin_dong), $dongs[$filename]);
+                    $keywords_dongs = get_variations_of_dongri($admin_dong, $dongs[$filename]);
                     $keywords_dongs = array_combine($keywords_dongs, $keywords_dongs);
                     
                     // 이미 키워드로 등록된 법정동명은 제외한다.
                     
                     if ($legal_dong !== '')
                     {
-                        $legal_dong_variations = get_variations_of_dongri(get_canonical($legal_dong), $dongs[$filename]);
+                        $legal_dong_variations = get_variations_of_dongri($legal_dong, $dongs[$filename]);
                         foreach ($legal_dong_variations as $legal_dong_variation)
                         {
                             if (isset($keywords_dongs[$legal_dong_variation]))
