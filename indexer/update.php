@@ -10,9 +10,10 @@ function do_updates()
 
     $db = get_db();
 
-    $ps_address_select = $db->prepare('SELECT postcode5, road_id, road_section FROM postcode_addresses ' .
-        'WHERE (road_id = ? AND road_section = ?) OR postcode6 = ? ' .
-        'ORDER BY IF(road_id = ? AND road_section = ?, 1, 2) LIMIT 1');
+    $ps_address_select1 = $db->prepare('SELECT postcode5, road_id, road_section FROM postcode_addresses ' .
+        'WHERE road_id = ? AND road_section = ? LIMIT 1');
+    $ps_address_select2 = $db->prepare('SELECT postcode5, road_id, road_section FROM postcode_addresses ' .
+        'WHERE postcode6 = ? LIMIT 1');
     $ps_address_insert = $db->prepare('INSERT INTO postcode_addresses ' .
         '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
         'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, ' .
@@ -203,12 +204,21 @@ function do_updates()
                 else
                 {
                     $postcode5 = null;
-                    $ps_address_select->execute(array($road_id, $road_section, $postcode6, $road_id, $road_section));
-                    if ($c5row = $ps_address_select->fetch(PDO::FETCH_NUM))
+                    $ps_address_select1->execute(array($road_id, $road_section));
+                    if ($c5row = $ps_address_select1->fetch(PDO::FETCH_NUM))
                     {
                         $postcode5 = $c5row[0];
                     }
-                    $ps_address_select->closeCursor();
+                    $ps_address_select1->closeCursor();
+                    if ($c5row === null)
+                    {
+                        $ps_address_select2->execute(array($postcode6));
+                        if ($c5row = $ps_address_select2->fetch(PDO::FETCH_NUM))
+                        {
+                            $postcode5 = $c5row[0];
+                        }
+                        $ps_address_select2->closeCursor();
+                    }
                 }
                 
                 // 건물명을 조합한다.
@@ -307,12 +317,21 @@ function do_updates()
                     else
                     {
                         $postcode5 = null;
-                        $ps_address_select->execute(array($road_id, $road_section, $postcode6, $road_id, $road_section));
-                        if ($c5row = $ps_address_select->fetch(PDO::FETCH_NUM))
+                        $ps_address_select1->execute(array($road_id, $road_section));
+                        if ($c5row = $ps_address_select1->fetch(PDO::FETCH_NUM))
                         {
                             $postcode5 = $c5row[0];
                         }
-                        $ps_address_select->closeCursor();
+                        $ps_address_select1->closeCursor();
+                        if ($c5row === null)
+                        {
+                            $ps_address_select2->execute(array($postcode6));
+                            if ($c5row = $ps_address_select2->fetch(PDO::FETCH_NUM))
+                            {
+                                $postcode5 = $c5row[0];
+                            }
+                            $ps_address_select2->closeCursor();
+                        }
                     }                    
                 }
                 
