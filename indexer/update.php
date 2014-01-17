@@ -431,8 +431,8 @@ if (!defined('CONVERTING'))
     error_reporting(-1);
     gc_enable();
 
-    include dirname(__FILE__) . '/config.php';
-    include dirname(__FILE__) . '/functions.php';
+    require dirname(__FILE__) . '/config.php';
+    require dirname(__FILE__) . '/functions.php';
     
     do_updates();
 }

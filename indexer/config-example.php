@@ -2,7 +2,7 @@
 
 // 텍스트 파일들이 저장되어 있는 경로를 지정한다.
 
-define('TXT_DIRECTORY', dirname(__FILE__) . '/data');
+define('TXT_DIRECTORY', dirname(dirname(__FILE__)) . '/data');
 
 // DB 접속 정보를 지정한다.
 

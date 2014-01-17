@@ -24,8 +24,8 @@ function send_response($json)
 
 // 설정을 불러온다.
 
-include 'areas.php';
-include 'config.php';
+require 'areas.php';
+require 'config.php';
 
 // 검색 키워드를 구한다.
 
