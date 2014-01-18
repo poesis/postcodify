@@ -83,19 +83,13 @@ foreach ($keywords as $id => $keyword)
     
     // 첫 번째 구성요소가 시도인지 확인한다.
     
-    if (!$id)
+    if ($id == 0 && count($keywords) > 1)
     {
-        $sido_found = false;
-        foreach ($areas_sido as $sido_short => $sido_fullname)
+        if (isset($areas_sido[$keyword]))
         {
-            if (!strncmp($keyword, $sido_short, strlen($sido_short)))
-            {
-                $kw['sido'] = $sido_fullname;
-                $sido_found = true;
-                break;
-            }
+            $kw['sido'] = $areas_sido[$keyword];
+            continue;
         }
-        if ($sido_found) continue;
     }
     
     // 시군구읍면을 확인한다.
