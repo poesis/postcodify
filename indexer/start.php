@@ -146,8 +146,8 @@ while ($line = trim(fgets($fp)))
     
     if (($pos = strpos($sigungu, ' ')) !== false)
     {
-        $sigungu = substr($sigungu, 0, $pos);
         $ilbangu = substr($sigungu, $pos + 1);
+        $sigungu = substr($sigungu, 0, $pos);
     }
     else
     {
@@ -381,22 +381,9 @@ while (count($files))
                 // 상세 데이터를 읽어들인다.
                 
                 $address_id = trim($line[0]);
-                $sido = trim($line[3]);
-                $sigungu = trim($line[4]);
-                $eupmyeon = trim($line[5]);
-                $dongri = trim($line[6]); if ($dongri === '') $dongri = $eupmyeon;
-                
-                // 특별시/광역시 아래의 자치구와 행정시 아래의 일반구를 구분한다.
-                
-                if (($pos = strpos($sigungu, ' ')) !== false)
-                {
-                    $sigungu = substr($sigungu, 0, $pos);
-                    $ilbangu = substr($sigungu, $pos + 1);
-                }
-                else
-                {
-                    $ilbangu = '';
-                }
+                $eupmyeon = ;
+                $dongri = trim($line[6]);
+                if ($dongri === '') $dongri = trim($line[5]);
                 
                 $num_major = (int)trim($line[8]); if (!$num_major) $num_major = null;
                 $num_minor = (int)trim($line[9]); if (!$num_minor) $num_minor = null;
@@ -808,8 +795,8 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
         
         if (($pos = strpos($sigungu, ' ')) !== false)
         {
-            $sigungu = substr($sigungu, 0, $pos);
             $ilbangu = substr($sigungu, $pos + 1);
+            $sigungu = substr($sigungu, 0, $pos);
         }
         else
         {

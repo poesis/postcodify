@@ -101,15 +101,19 @@ foreach ($keywords as $id => $keyword)
             $kw['eupmyeon'] = $keyword;
             continue;
         }
-        elseif (in_array($keyword, $areas_ilbangu))
+        elseif (isset($kw['sigungu']) && in_array($keyword, $areas_ilbangu[$kw['sigungu']]))
         {
             $kw['ilbangu'] = $keyword;
             continue;
         }
-        else
+        elseif (in_array($keyword, $areas_sigungu))
         {
             $kw['sigungu'] = $keyword;
             continue;
+        }
+        else
+        {
+            if (count($keywords) > $id + 1) continue;
         }
     }
     elseif (in_array($keyword . '시', $areas_sigungu))
@@ -187,6 +191,8 @@ else
 {
     $kw['numbers'] = array(null, null);
 }
+
+var_dump($kw); exit;
 
 // 검색한다.
 

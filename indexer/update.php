@@ -113,8 +113,8 @@ function do_updates()
             
             if (($pos = strpos($sigungu, ' ')) !== false)
             {
-                $sigungu = substr($sigungu, 0, $pos);
                 $ilbangu = substr($sigungu, $pos + 1);
+                $sigungu = substr($sigungu, 0, $pos);
             }
             else
             {
@@ -357,7 +357,7 @@ function do_updates()
                             }
                             $ps_address_select2->closeCursor();
                         }
-                    }                    
+                    }
                 }
                 
                 // 건물명을 조합한다.
