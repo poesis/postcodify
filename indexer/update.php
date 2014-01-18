@@ -25,18 +25,24 @@ function do_updates()
     $ps_keyword_juso_insert = $db->prepare('INSERT INTO postcode_keywords_juso ' .
         '(address_id, keyword_crc32, num_major, num_minor) ' .
         'VALUES (?, ?, ?, ?)');
+    $ps_keyword_juso_update = $db->prepare('UPDATE postcode_keywords_juso ' .
+        'SET address_id = ? WHERE address_id = ?');
     $ps_keyword_jibeon_delete = $db->prepare('DELETE FROM postcode_keywords_jibeon ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
         'AND keyword_crc32 = ? AND num_major = ? AND num_minor = ?');
     $ps_keyword_jibeon_insert = $db->prepare('INSERT INTO postcode_keywords_jibeon ' .
         '(address_id, keyword_crc32, num_major, num_minor) ' .
         'VALUES (?, ?, ?, ?)');
+    $ps_keyword_jibeon_update = $db->prepare('UPDATE postcode_keywords_jibeon ' .
+        'SET address_id = ? WHERE address_id = ?');
     $ps_keyword_building_delete = $db->prepare('DELETE FROM postcode_keywords_building ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
         'AND keyword = ? AND admin_dongri = ? AND legal_dongri = ?');
     $ps_keyword_building_insert = $db->prepare('INSERT INTO postcode_keywords_building ' .
         '(address_id, keyword, admin_dongri, legal_dongri) ' .
         'VALUES (?, ?, ?, ?)');
+    $ps_keyword_building_update = $db->prepare('UPDATE postcode_keywords_building ' .
+        'SET address_id = ? WHERE address_id = ?');
     
     $dongs = array();
     $code5s = array();
@@ -299,7 +305,15 @@ function do_updates()
                 // 기존의 데이터가 있는지 확인한다. (있어야 정상이지만 현행 매칭테이블이 워낙 엉망이라 없을 수도 있다.)
                 // 있는 경우 삭제하되, 기초구역번호와 기타 지번 정보 등은 재사용할 수 있도록 저장해 둔다.
                 
-                if ($old_address_id === null) $old_address_id = $address_id;
+                if ($old_address_id === null)
+                {
+                    $old_address_id = $address_id;
+                    $old_address_id_is_different = true;
+                }
+                else
+                {
+                    $old_address_id_is_different = false;
+                }
                 
                 $q = $db->query('SELECT * FROM postcode_addresses WHERE id = \'' . $address_id . '\' OR id = \'' . $old_address_id . '\' ORDER BY id LIMIT 1');
                 $row = $q->fetch(PDO::FETCH_ASSOC);
@@ -414,6 +428,15 @@ function do_updates()
                         $admin_dong ? crc32_x64($admin_dong) : null,
                         $dongri ? crc32_x64($dongri) : null
                     ));
+                }
+                
+                // 기존의 관리번호로 연결되는 키워드들을 새 관리번호로 연결한다.
+                
+                if ($old_address_id_is_different)
+                {
+                    $ps_keyword_juso_update->execute(array($address_id, $old_address_id));
+                    $ps_keyword_jibeon_update->execute(array($address_id, $old_address_id));
+                    $ps_keyword_building_update->execute(array($address_id, $old_address_id));
                 }
             }
             
