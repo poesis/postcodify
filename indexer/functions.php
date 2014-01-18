@@ -16,6 +16,14 @@ function get_db()
     return new PDO($dsn, DB_USER, DB_PASS, $pdo_options);
 }
 
+// 항상 64비트식으로 (음수 없이) CRC32를 계산하는 함수.
+
+function crc32_x64($str)
+{
+    $crc32 = crc32($str);
+    return ($crc32 >= 0) ? $crc32 : ($crc32 + 0x100000000);
+}
+
 // 검색 키워드에서 불필요한 문자와 띄어쓰기를 제거하는 함수.
 
 function get_canonical($str)

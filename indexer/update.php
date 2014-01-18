@@ -21,15 +21,15 @@ function do_updates()
         'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     $ps_keyword_juso_delete = $db->prepare('DELETE FROM postcode_keywords_juso ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
-        'AND keyword = ? AND num_major = ? AND num_minor = ?');
+        'AND keyword_crc32 = ? AND num_major = ? AND num_minor = ?');
     $ps_keyword_juso_insert = $db->prepare('INSERT INTO postcode_keywords_juso ' .
-        '(address_id, keyword, num_major, num_minor) ' .
+        '(address_id, keyword_crc32, num_major, num_minor) ' .
         'VALUES (?, ?, ?, ?)');
     $ps_keyword_jibeon_delete = $db->prepare('DELETE FROM postcode_keywords_jibeon ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
-        'AND keyword = ? AND num_major = ? AND num_minor = ?');
+        'AND keyword_crc32 = ? AND num_major = ? AND num_minor = ?');
     $ps_keyword_jibeon_insert = $db->prepare('INSERT INTO postcode_keywords_jibeon ' .
-        '(address_id, keyword, num_major, num_minor) ' .
+        '(address_id, keyword_crc32, num_major, num_minor) ' .
         'VALUES (?, ?, ?, ?)');
     $ps_keyword_building_delete = $db->prepare('DELETE FROM postcode_keywords_building ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
@@ -247,7 +247,7 @@ function do_updates()
                 
                 foreach ($keywords as $keyword)
                 {
-                    $ps_keyword_juso_insert->execute(array($address_id, $keyword, $num_major, $num_minor));
+                    $ps_keyword_juso_insert->execute(array($address_id, crc32_x64($keyword), $num_major, $num_minor));
                 }
                 
                 // postcode_keywords_jibeon 테이블에 지번주소 키워드를 저장한다.
@@ -258,7 +258,7 @@ function do_updates()
                 
                 foreach ($keywords as $keyword)
                 {
-                    $ps_keyword_jibeon_insert->execute(array($address_id, $keyword, $jibeon_major, $jibeon_minor));
+                    $ps_keyword_jibeon_insert->execute(array($address_id, crc32_x64($keyword), $jibeon_major, $jibeon_minor));
                 }
                 
                 // postcode_keywords_building 테이블에 건물명 키워드를 저장한다.
@@ -284,7 +284,11 @@ function do_updates()
                 
                 foreach ($keywords as $keyword)
                 {
-                    $ps_keyword_building_insert->execute(array($address_id, $keyword, $admin_dong, $dongri));
+                    $ps_keyword_building_insert->execute(array(
+                        $address_id, $keyword,
+                        $admin_dong ? crc32_x64($admin_dong) : null,
+                        $dongri ? crc32_x64($dongri) : null
+                    ));
                 }
             }
             
@@ -361,8 +365,8 @@ function do_updates()
                 
                 foreach ($keywords as $keyword)
                 {
-                    $ps_keyword_juso_delete->execute(array($address_id, $old_address_id, $keyword, $num_major, $num_minor));
-                    $ps_keyword_juso_insert->execute(array($address_id, $keyword, $num_major, $num_minor));
+                    $ps_keyword_juso_delete->execute(array($address_id, $old_address_id, crc32_x64($keyword), $num_major, $num_minor));
+                    $ps_keyword_juso_insert->execute(array($address_id, crc32_x64($keyword), $num_major, $num_minor));
                 }
                 
                 // postcode_keywords_jibeon 테이블에 지번주소 키워드를 저장한다.
@@ -373,8 +377,8 @@ function do_updates()
                 
                 foreach ($keywords as $keyword)
                 {
-                    $ps_keyword_jibeon_delete->execute(array($address_id, $old_address_id, $keyword, $jibeon_major, $jibeon_minor));
-                    $ps_keyword_jibeon_insert->execute(array($address_id, $keyword, $jibeon_major, $jibeon_minor));
+                    $ps_keyword_jibeon_delete->execute(array($address_id, $old_address_id, crc32_x64($keyword), $jibeon_major, $jibeon_minor));
+                    $ps_keyword_jibeon_insert->execute(array($address_id, crc32_x64($keyword), $jibeon_major, $jibeon_minor));
                 }
                 
                 // postcode_keywords_building 테이블에 건물명 키워드를 저장한다.
@@ -400,8 +404,16 @@ function do_updates()
                 
                 foreach ($keywords as $keyword)
                 {
-                    $ps_keyword_building_delete->execute(array($address_id, $old_address_id, $keyword, $admin_dong, $dongri));
-                    $ps_keyword_building_insert->execute(array($address_id, $keyword, $admin_dong, $dongri));
+                    $ps_keyword_building_delete->execute(array(
+                        $address_id, $old_address_id, $keyword,
+                        $admin_dong ? crc32_x64($admin_dong) : null,
+                        $dongri ? crc32_x64($dongri) : null
+                    ));
+                    $ps_keyword_building_insert->execute(array(
+                        $address_id, $keyword,
+                        $admin_dong ? crc32_x64($admin_dong) : null,
+                        $dongri ? crc32_x64($dongri) : null
+                    ));
                 }
             }
             

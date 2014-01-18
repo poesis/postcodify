@@ -22,6 +22,14 @@ function send_response($json)
     exit;
 }
 
+// 항상 64비트식으로 (음수 없이) CRC32를 계산하는 함수.
+
+function crc32_x64($str)
+{
+    $crc32 = crc32($str);
+    return ($crc32 >= 0) ? $crc32 : ($crc32 + 0x100000000);
+}
+
 // 설정을 불러온다.
 
 require 'areas.php';
@@ -214,7 +222,7 @@ try
         if (isset($kw['road']))
         {
             $ps = $db->prepare('CALL postcode_search_juso_in_area(?, ?, ?, ?, ?, ?, ?)');
-            $ps->execute(array($kw['road'], $kw['numbers'][0], $kw['numbers'][1], $kw['sido'], $kw['sigungu'], $kw['ilbangu'], $kw['eupmyeon']));
+            $ps->execute(array(crc32_x64($kw['road']), $kw['numbers'][0], $kw['numbers'][1], $kw['sido'], $kw['sigungu'], $kw['ilbangu'], $kw['eupmyeon']));
         }
         
         // 동리+지번으로 검색하는 경우...
@@ -222,7 +230,7 @@ try
         elseif (isset($kw['dongri']) && !isset($kw['building']))
         {
             $ps = $db->prepare('CALL postcode_search_jibeon_in_area(?, ?, ?, ?, ?, ?, ?)');
-            $ps->execute(array($kw['dongri'], $kw['numbers'][0], $kw['numbers'][1], $kw['sido'], $kw['sigungu'], $kw['ilbangu'], $kw['eupmyeon']));
+            $ps->execute(array(crc32_x64($kw['dongri']), $kw['numbers'][0], $kw['numbers'][1], $kw['sido'], $kw['sigungu'], $kw['ilbangu'], $kw['eupmyeon']));
         }
         
         // 건물명만으로 검색하는 경우...
@@ -238,7 +246,7 @@ try
         elseif (isset($kw['building']) && isset($kw['dongri']))
         {
             $ps = $db->prepare('CALL postcode_search_building_with_dongri_in_area(?, ?, ?, ?, ?, ?)');
-            $ps->execute(array($kw['building'], $kw['dongri'], $kw['sido'], $kw['sigungu'], $kw['ilbangu'], $kw['eupmyeon']));
+            $ps->execute(array($kw['building'], crc32_x64($kw['dongri']), $kw['sido'], $kw['sigungu'], $kw['ilbangu'], $kw['eupmyeon']));
         }
         
         // 사서함으로 검색하는 경우...
@@ -266,7 +274,7 @@ try
         if (isset($kw['road']))
         {
             $ps = $db->prepare('CALL postcode_search_juso(?, ?, ?)');
-            $ps->execute(array($kw['road'], $kw['numbers'][0], $kw['numbers'][1]));
+            $ps->execute(array(crc32_x64($kw['road']), $kw['numbers'][0], $kw['numbers'][1]));
         }
         
         // 동리+지번으로 검색하는 경우...
@@ -274,7 +282,7 @@ try
         elseif (isset($kw['dongri']) && !isset($kw['building']))
         {
             $ps = $db->prepare('CALL postcode_search_jibeon(?, ?, ?)');
-            $ps->execute(array($kw['dongri'], $kw['numbers'][0], $kw['numbers'][1]));
+            $ps->execute(array(crc32_x64($kw['dongri']), $kw['numbers'][0], $kw['numbers'][1]));
         }
         
         // 건물명만으로 검색하는 경우...
@@ -290,7 +298,7 @@ try
         elseif (isset($kw['building']) && isset($kw['dongri']))
         {
             $ps = $db->prepare('CALL postcode_search_building_with_dongri(?, ?)');
-            $ps->execute(array($kw['building'], $kw['dongri']));
+            $ps->execute(array($kw['building'], crc32_x64($kw['dongri'])));
         }
         
         // 사서함으로 검색하는 경우...

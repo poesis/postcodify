@@ -216,7 +216,7 @@ while (count($files))
             'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon) ' .
             'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $ps_keyword_insert = $db->prepare('INSERT INTO postcode_keywords_juso ' .
-            '(address_id, keyword, num_major, num_minor) ' .
+            '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
         
         // 트랜잭션을 시작한다.
@@ -276,7 +276,7 @@ while (count($files))
                 $keywords = get_variations_of_road_name(get_canonical($road_name));
                 foreach ($keywords as $keyword)
                 {
-                    $ps_keyword_insert->execute(array($address_id, $keyword, $num_major, $num_minor));
+                    $ps_keyword_insert->execute(array($address_id, crc32_x64($keyword), $num_major, $num_minor));
                 }
                 
                 // 가비지 컬렉션.
@@ -355,7 +355,7 @@ while (count($files))
             'SET other_addresses = CONCAT_WS(\'\\n\', other_addresses, ?) ' .
             'WHERE id = ?');
         $ps_keyword_insert = $db->prepare('INSERT INTO postcode_keywords_jibeon ' .
-            '(address_id, keyword, num_major, num_minor) ' .
+            '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
         
         $dongs[$filename] = array();
@@ -421,7 +421,7 @@ while (count($files))
                 $keywords = get_variations_of_dongri($dongri, $dongs[$filename]);
                 foreach ($keywords as $keyword)
                 {
-                    $ps_keyword_insert->execute(array($address_id, $keyword, $num_major, $num_minor));
+                    $ps_keyword_insert->execute(array($address_id, crc32_x64($keyword), $num_major, $num_minor));
                 }
                 
                 // 가비지 컬렉션.
@@ -496,7 +496,7 @@ while (count($files))
             'SET postcode6 = ?, building_name = ?, other_addresses = ? ' .
             'WHERE id = ?');
         $ps_keyword_jibeon_insert = $db->prepare('INSERT INTO postcode_keywords_jibeon ' .
-            '(address_id, keyword, num_major, num_minor) ' .
+            '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
         $ps_keyword_building_insert = $db->prepare('INSERT INTO postcode_keywords_building ' .
             '(address_id, keyword, admin_dongri, legal_dongri) ' .
@@ -668,14 +668,18 @@ while (count($files))
                     foreach ($keywords_nums as $num)
                     {
                         $num = explode('-', $num); if (!isset($num[1])) $num[1] = null;
-                        $ps_keyword_jibeon_insert->execute(array($address_id, $keyword, $num[0], $num[1]));
+                        $ps_keyword_jibeon_insert->execute(array($address_id, crc32_x64($keyword), $num[0], $num[1]));
                     }
                 }
                 
                 foreach ($keywords as $keyword)
                 {
                     if (isset($keywords_dongs[$keyword])) continue;
-                    $ps_keyword_building_insert->execute(array($address_id, $keyword, $admin_dong ? $admin_dong : null, $legal_dong ? $legal_dong : null));
+                    $ps_keyword_building_insert->execute(array(
+                        $address_id, $keyword,
+                        $admin_dong ? crc32_x64($admin_dong) : null,
+                        $legal_dong ? crc32_x64($legal_dong) : null
+                    ));
                 }
                 
                 // 가비지 컬렉션.
@@ -874,8 +878,8 @@ echo '[Step 7/8] 인덱스를 생성하는 중. 아주 긴 시간이 걸릴 수 
 
 $indexes = array(
     'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'sido', 'sigungu', 'ilbangu', 'eupmyeon', 'dongri'),
-    'postcode_keywords_juso' => array('address_id', 'keyword', 'num_major', 'num_minor'),
-    'postcode_keywords_jibeon' => array('address_id', 'keyword', 'num_major', 'num_minor'),
+    'postcode_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
+    'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcode_keywords_building' => array('address_id', 'keyword', 'admin_dongri', 'legal_dongri'),
     'postcode_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
 );

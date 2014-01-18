@@ -24,77 +24,77 @@ CREATE TABLE postcode_addresses (
     road_id NUMERIC(12),
     road_section CHAR(2),
     road_name VARCHAR(80),
-    num_major INT(10),
-    num_minor INT(10),
-    is_basement INT(1) DEFAULT 0,
+    num_major SMALLINT(5) UNSIGNED,
+    num_minor SMALLINT(5) UNSIGNED,
+    is_basement TINYINT(1) DEFAULT 0,
     sido VARCHAR(20),
-    sigungu VARCHAR(40),
-    ilbangu VARCHAR(40),
-    eupmyeon VARCHAR(40),
-    dongri VARCHAR(80),
-    jibeon VARCHAR(20),
-    building_name VARCHAR(80),
-    other_addresses VARCHAR(1000)
+    sigungu VARCHAR(20),
+    ilbangu VARCHAR(20),
+    eupmyeon VARCHAR(20),
+    dongri VARCHAR(20),
+    jibeon VARCHAR(10),
+    building_name VARCHAR(40),
+    other_addresses VARCHAR(600)
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 CREATE TABLE postcode_keywords_juso (
-    seq INT(10) PRIMARY KEY AUTO_INCREMENT,
+    seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     address_id NUMERIC(25) NOT NULL,
-    keyword VARCHAR(80),
-    num_major INT(10),
-    num_minor INT(10)
+    keyword_crc32 INT(10) UNSIGNED,
+    num_major SMALLINT(5) UNSIGNED,
+    num_minor SMALLINT(5) UNSIGNED
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 CREATE TABLE postcode_keywords_jibeon (
-    seq INT(10) PRIMARY KEY AUTO_INCREMENT,
+    seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     address_id NUMERIC(25) NOT NULL,
-    keyword VARCHAR(80),
-    num_major INT(10),
-    num_minor INT(10)
+    keyword_crc32 INT(10) UNSIGNED,
+    num_major SMALLINT(5) UNSIGNED,
+    num_minor SMALLINT(5) UNSIGNED
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 CREATE TABLE postcode_keywords_building (
-    seq INT(10) PRIMARY KEY AUTO_INCREMENT,
+    seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     address_id NUMERIC(25) NOT NULL,
-    keyword VARCHAR(80),
-    admin_dongri VARCHAR(80),
-    legal_dongri VARCHAR(80)
+    keyword VARCHAR(40),
+    admin_dongri INT(10) UNSIGNED,
+    legal_dongri INT(10) UNSIGNED
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 CREATE TABLE postcode_keywords_pobox (
-    seq INT(10) PRIMARY KEY AUTO_INCREMENT,
+    seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     address_id NUMERIC(25) NOT NULL,
-    keyword VARCHAR(80),
-    range_start_major INT(10),
-    range_start_minor INT(10),
-    range_end_major INT(10),
-    range_end_minor INT(10)
+    keyword VARCHAR(40),
+    range_start_major SMALLINT(5) UNSIGNED,
+    range_start_minor SMALLINT(5) UNSIGNED,
+    range_end_major SMALLINT(5) UNSIGNED,
+    range_end_minor SMALLINT(5) UNSIGNED
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 CREATE TABLE postcode_metadata (
     k VARCHAR(20) PRIMARY KEY,
-    v VARCHAR(80)
+    v VARCHAR(40)
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
-INSERT INTO postcode_metadata (k, v) VALUES ('version', '4.0');
+INSERT INTO postcode_metadata (k, v) VALUES ('version', '4.1');
 INSERT INTO postcode_metadata (k, v) VALUES ('updated', '00000000');
 
-CREATE PROCEDURE postcode_search_juso(IN keyword VARCHAR(80), IN num1 INT, IN num2 INT)
+CREATE PROCEDURE postcode_search_juso(IN keyword_crc32 INT UNSIGNED, IN num1 SMALLINT UNSIGNED, IN num2 SMALLINT UNSIGNED)
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_juso AS pk ON pa.id = pk.address_id
-    WHERE pk.keyword LIKE CONCAT(keyword, '%')
+    WHERE pk.keyword_crc32 = keyword_crc32
     AND (num1 IS NULL OR pk.num_major = num1)
     AND (num2 IS NULL OR pk.num_minor = num2)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
 
-CREATE PROCEDURE postcode_search_juso_in_area(IN keyword VARCHAR(80), IN num1 INT, IN num2 INT,
+CREATE PROCEDURE postcode_search_juso_in_area(IN keyword_crc32 INT UNSIGNED, IN num1 SMALLINT UNSIGNED, IN num2 SMALLINT UNSIGNED,
     IN area1 VARCHAR(20), IN area2 VARCHAR(20), IN area3 VARCHAR(20), IN area4 VARCHAR(20))
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_juso AS pk ON pa.id = pk.address_id
-    WHERE pk.keyword LIKE CONCAT(keyword, '%')
+    WHERE pk.keyword_crc32 = keyword_crc32
     AND (num1 IS NULL OR pk.num_major = num1)
     AND (num2 IS NULL OR pk.num_minor = num2)
     AND (area1 IS NULL OR pa.sido = area1)
@@ -105,23 +105,23 @@ BEGIN
     LIMIT 100;
 END;
 
-CREATE PROCEDURE postcode_search_jibeon(IN keyword VARCHAR(80), IN num1 INT, IN num2 INT)
+CREATE PROCEDURE postcode_search_jibeon(IN keyword_crc32 INT UNSIGNED, IN num1 SMALLINT UNSIGNED, IN num2 SMALLINT UNSIGNED)
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_jibeon AS pk ON pa.id = pk.address_id
-    WHERE pk.keyword LIKE CONCAT(keyword, '%')
+    WHERE pk.keyword_crc32 = keyword_crc32
     AND (num1 IS NULL OR pk.num_major = num1)
     AND (num2 IS NULL OR pk.num_minor = num2)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
 
-CREATE PROCEDURE postcode_search_jibeon_in_area(IN keyword VARCHAR(80), IN num1 INT, IN num2 INT,
+CREATE PROCEDURE postcode_search_jibeon_in_area(IN keyword_crc32 INT UNSIGNED, IN num1 SMALLINT UNSIGNED, IN num2 SMALLINT UNSIGNED,
     IN area1 VARCHAR(20), IN area2 VARCHAR(20), IN area3 VARCHAR(20), IN area4 VARCHAR(20))
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_jibeon AS pk ON pa.id = pk.address_id
-    WHERE pk.keyword LIKE CONCAT(keyword, '%')
+    WHERE pk.keyword_crc32 = keyword_crc32
     AND (num1 IS NULL OR pk.num_major = num1)
     AND (num2 IS NULL OR pk.num_minor = num2)
     AND (area1 IS NULL OR pa.sido = area1)
@@ -155,23 +155,23 @@ BEGIN
     LIMIT 100;
 END;
 
-CREATE PROCEDURE postcode_search_building_with_dongri(IN keyword VARCHAR(80), IN dongri VARCHAR(80))
+CREATE PROCEDURE postcode_search_building_with_dongri(IN keyword VARCHAR(80), IN dongri_crc32 INT UNSIGNED)
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
     WHERE pk.keyword LIKE CONCAT('%', keyword, '%')
-    AND (pk.admin_dongri = dongri OR pk.legal_dongri = dongri)
+    AND (pk.admin_dongri = dongri_crc32 OR pk.legal_dongri = dongri_crc32)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
 
-CREATE PROCEDURE postcode_search_building_with_dongri_in_area(IN keyword VARCHAR(80), IN dongri VARCHAR(80),
+CREATE PROCEDURE postcode_search_building_with_dongri_in_area(IN keyword VARCHAR(80), IN dongri_crc32 INT UNSIGNED,
     IN area1 VARCHAR(20), IN area2 VARCHAR(20), IN area3 VARCHAR(20), IN area4 VARCHAR(20))
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
     WHERE pk.keyword LIKE CONCAT('%', keyword, '%')
-    AND (pk.admin_dongri = dongri OR pk.legal_dongri = dongri)
+    AND (pk.admin_dongri = dongri_crc32 OR pk.legal_dongri = dongri_crc32)
     AND (area1 IS NULL OR pa.sido = area1)
     AND (area2 IS NULL OR pa.sigungu = area2)
     AND (area3 IS NULL OR pa.ilbangu = area3)
@@ -180,7 +180,7 @@ BEGIN
     LIMIT 100;
 END;
 
-CREATE PROCEDURE postcode_search_pobox(IN keyword VARCHAR(80), IN num1 INT, IN num2 INT)
+CREATE PROCEDURE postcode_search_pobox(IN keyword VARCHAR(80), IN num1 SMALLINT UNSIGNED, IN num2 SMALLINT UNSIGNED)
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_pobox AS pk ON pa.id = pk.address_id
@@ -191,7 +191,7 @@ BEGIN
     LIMIT 100;
 END;
 
-CREATE PROCEDURE postcode_search_pobox_in_area(IN keyword VARCHAR(80), IN num1 INT, IN num2 INT,
+CREATE PROCEDURE postcode_search_pobox_in_area(IN keyword VARCHAR(80), IN num1 SMALLINT UNSIGNED, IN num2 SMALLINT UNSIGNED,
     IN area1 VARCHAR(20), IN area2 VARCHAR(20), IN area3 VARCHAR(20), IN area4 VARCHAR(20))
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
