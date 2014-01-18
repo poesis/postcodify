@@ -499,8 +499,8 @@ while (count($files))
             '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
         $ps_keyword_building_insert = $db->prepare('INSERT INTO postcode_keywords_building ' .
-            '(address_id, keyword, admin_dongri, legal_dongri) ' .
-            'VALUES (?, ?, ?, ?)');
+            '(address_id, keyword, dongri_crc32_1, dongri_crc32_2, dongri_crc32_3, dongri_crc32_4) ' .
+            'VALUES (?, ?, ?, ?, ?, ?)');
         
         $dongs[$filename] = array();
         
@@ -661,7 +661,7 @@ while (count($files))
                 $keywords = array_unique($keywords);
                 $keywords_nums = array_unique($keywords_nums);
                 
-                // 검색 키워드들을 postcode_keywords_* 테이블에 삽입한다.
+                // 지번 검색 키워드들을 postcode_keywords_jibeon 테이블에 삽입한다.
                 
                 foreach ($keywords_dongs as $keyword)
                 {
@@ -672,14 +672,22 @@ while (count($files))
                     }
                 }
                 
+                // 건물명 검색 키워드들을 postcode_keywords_building 테이블에 삽입한다.
+                
+                $dongris = array();
+                if ($legal_dong) $dongris[] = crc32_x64($legal_dong);
+                if ($admin_dong)
+                {
+                    $dongris2 = get_variations_of_dongri($admin_dong, $dongs[$filename]);
+                    foreach ($dongris2 as $dongri2) $dongris[] = crc32_x64($dongri2);
+                    $dongris = array_values(array_unique($dongris));
+                }
+                $dongris[] = null; $dongris[] = null; $dongris[] = null; $dongris[] = null;
+                
                 foreach ($keywords as $keyword)
                 {
                     if (isset($keywords_dongs[$keyword])) continue;
-                    $ps_keyword_building_insert->execute(array(
-                        $address_id, $keyword,
-                        $admin_dong ? crc32_x64($admin_dong) : null,
-                        $legal_dong ? crc32_x64($legal_dong) : null
-                    ));
+                    $ps_keyword_building_insert->execute(array($address_id, $keyword, $dongris[0], $dongris[1], $dongris[2], $dongris[3]));
                 }
                 
                 // 가비지 컬렉션.
@@ -698,6 +706,8 @@ while (count($files))
                 unset($keywords_nums);
                 unset($keywords_dongs);
                 unset($keywords);
+                unset($dongris);
+                unset($dongris2);
                 unset($line);
             }
         }
@@ -880,7 +890,7 @@ $indexes = array(
     'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'sido', 'sigungu', 'ilbangu', 'eupmyeon', 'dongri'),
     'postcode_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
-    'postcode_keywords_building' => array('address_id', 'keyword', 'admin_dongri', 'legal_dongri'),
+    'postcode_keywords_building' => array('address_id', 'keyword', 'dongri_crc32_1', 'dongri_crc32_2', 'dongri_crc32_3', 'dongri_crc32_4'),
     'postcode_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
 );
 

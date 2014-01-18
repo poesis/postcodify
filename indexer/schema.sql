@@ -67,8 +67,10 @@ CREATE TABLE postcode_keywords_building (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,        -- PK
     address_id NUMERIC(25) NOT NULL,                    -- 관리번호 (FK)
     keyword VARCHAR(40),                                -- 건물명
-    admin_dongri INT(10) UNSIGNED,                      -- 행정동명의 CRC32 값
-    legal_dongri INT(10) UNSIGNED                       -- 법정동/리명의 CRC32 값
+    dongri_crc32_1 INT(10) UNSIGNED,                    -- 동/리명의 CRC32 값
+    dongri_crc32_2 INT(10) UNSIGNED,                    -- 동/리명의 CRC32 값
+    dongri_crc32_3 INT(10) UNSIGNED,                    -- 동/리명의 CRC32 값
+    dongri_crc32_4 INT(10) UNSIGNED                     -- 동/리명의 CRC32 값
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- 사서함 검색을 위한 키워드 테이블.
@@ -103,8 +105,8 @@ BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_juso AS pk ON pa.id = pk.address_id
     WHERE pk.keyword_crc32 = keyword_crc32
-    AND (num1 IS NULL OR pk.num_major = num1)
-    AND (num2 IS NULL OR pk.num_minor = num2)
+        AND (num1 IS NULL OR pk.num_major = num1)
+        AND (num2 IS NULL OR pk.num_minor = num2)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
@@ -119,12 +121,12 @@ BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_juso AS pk ON pa.id = pk.address_id
     WHERE pk.keyword_crc32 = keyword_crc32
-    AND (num1 IS NULL OR pk.num_major = num1)
-    AND (num2 IS NULL OR pk.num_minor = num2)
-    AND (area1 IS NULL OR pa.sido = area1)
-    AND (area2 IS NULL OR pa.sigungu = area2)
-    AND (area3 IS NULL OR pa.ilbangu = area3)
-    AND (area4 IS NULL OR pa.eupmyeon = area4)
+        AND (num1 IS NULL OR pk.num_major = num1)
+        AND (num2 IS NULL OR pk.num_minor = num2)
+        AND (area1 IS NULL OR pa.sido = area1)
+        AND (area2 IS NULL OR pa.sigungu = area2)
+        AND (area3 IS NULL OR pa.ilbangu = area3)
+        AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
@@ -137,8 +139,8 @@ BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_jibeon AS pk ON pa.id = pk.address_id
     WHERE pk.keyword_crc32 = keyword_crc32
-    AND (num1 IS NULL OR pk.num_major = num1)
-    AND (num2 IS NULL OR pk.num_minor = num2)
+        AND (num1 IS NULL OR pk.num_major = num1)
+        AND (num2 IS NULL OR pk.num_minor = num2)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
@@ -153,12 +155,12 @@ BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_jibeon AS pk ON pa.id = pk.address_id
     WHERE pk.keyword_crc32 = keyword_crc32
-    AND (num1 IS NULL OR pk.num_major = num1)
-    AND (num2 IS NULL OR pk.num_minor = num2)
-    AND (area1 IS NULL OR pa.sido = area1)
-    AND (area2 IS NULL OR pa.sigungu = area2)
-    AND (area3 IS NULL OR pa.ilbangu = area3)
-    AND (area4 IS NULL OR pa.eupmyeon = area4)
+        AND (num1 IS NULL OR pk.num_major = num1)
+        AND (num2 IS NULL OR pk.num_minor = num2)
+        AND (area1 IS NULL OR pa.sido = area1)
+        AND (area2 IS NULL OR pa.sigungu = area2)
+        AND (area3 IS NULL OR pa.ilbangu = area3)
+        AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
@@ -183,10 +185,10 @@ BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
     WHERE pk.keyword LIKE CONCAT(keyword, '%')
-    AND (area1 IS NULL OR pa.sido = area1)
-    AND (area2 IS NULL OR pa.sigungu = area2)
-    AND (area3 IS NULL OR pa.ilbangu = area3)
-    AND (area4 IS NULL OR pa.eupmyeon = area4)
+        AND (area1 IS NULL OR pa.sido = area1)
+        AND (area2 IS NULL OR pa.sigungu = area2)
+        AND (area3 IS NULL OR pa.ilbangu = area3)
+        AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
@@ -199,7 +201,10 @@ BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
     WHERE pk.keyword LIKE CONCAT('%', keyword, '%')
-    AND (pk.admin_dongri = dongri_crc32 OR pk.legal_dongri = dongri_crc32)
+        AND (pk.dongri_crc32_1 = dongri_crc32
+            OR pk.dongri_crc32_2 = dongri_crc32
+            OR pk.dongri_crc32_3 = dongri_crc32
+            OR pk.dongri_crc32_4 = dongri_crc32)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
@@ -214,11 +219,14 @@ BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
     WHERE pk.keyword LIKE CONCAT('%', keyword, '%')
-    AND (pk.admin_dongri = dongri_crc32 OR pk.legal_dongri = dongri_crc32)
-    AND (area1 IS NULL OR pa.sido = area1)
-    AND (area2 IS NULL OR pa.sigungu = area2)
-    AND (area3 IS NULL OR pa.ilbangu = area3)
-    AND (area4 IS NULL OR pa.eupmyeon = area4)
+        AND (pk.dongri_crc32_1 = dongri_crc32
+            OR pk.dongri_crc32_2 = dongri_crc32
+            OR pk.dongri_crc32_3 = dongri_crc32
+            OR pk.dongri_crc32_4 = dongri_crc32)
+        AND (area1 IS NULL OR pa.sido = area1)
+        AND (area2 IS NULL OR pa.sigungu = area2)
+        AND (area3 IS NULL OR pa.ilbangu = area3)
+        AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
@@ -231,8 +239,8 @@ BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_pobox AS pk ON pa.id = pk.address_id
     WHERE pk.keyword LIKE CONCAT(keyword, '%')
-    AND (num1 IS NULL OR num1 BETWEEN pk.range_start_major AND pk.range_end_major)
-    AND (num2 IS NULL OR num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
+        AND (num1 IS NULL OR num1 BETWEEN pk.range_start_major AND pk.range_end_major)
+        AND (num2 IS NULL OR num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
@@ -247,12 +255,12 @@ BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_pobox AS pk ON pa.id = pk.address_id
     WHERE pk.keyword LIKE CONCAT(keyword, '%')
-    AND (num1 IS NULL OR num1 BETWEEN pk.range_start_major AND pk.range_end_major)
-    AND (num2 IS NULL OR num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
-    AND (area1 IS NULL OR pa.sido = area1)
-    AND (area2 IS NULL OR pa.sigungu = area2)
-    AND (area3 IS NULL OR pa.ilbangu = area3)
-    AND (area4 IS NULL OR pa.eupmyeon = area4)
+        AND (num1 IS NULL OR num1 BETWEEN pk.range_start_major AND pk.range_end_major)
+        AND (num2 IS NULL OR num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
+        AND (area1 IS NULL OR pa.sido = area1)
+        AND (area2 IS NULL OR pa.sigungu = area2)
+        AND (area3 IS NULL OR pa.ilbangu = area3)
+        AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
