@@ -192,8 +192,6 @@ else
     $kw['numbers'] = array(null, null);
 }
 
-var_dump($kw); exit;
-
 // 검색한다.
 
 try
