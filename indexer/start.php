@@ -887,7 +887,7 @@ echo $elapsed_seconds . '초' . "\n\n";
 echo '[Step 7/8] 인덱스를 생성하는 중. 아주 긴 시간이 걸릴 수 있습니다 ... ' . "\n\n";
 
 $indexes = array(
-    'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'sido', 'sigungu', 'ilbangu', 'eupmyeon', 'dongri'),
+    'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'sido', 'sigungu', 'ilbangu', 'eupmyeon'),
     'postcode_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcode_keywords_building' => array('address_id', 'keyword', 'dongri_crc32_1', 'dongri_crc32_2', 'dongri_crc32_3', 'dongri_crc32_4'),
