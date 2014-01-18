@@ -82,22 +82,24 @@ function get_variations_of_dongri($str, &$dongs)
     
     if (preg_match('/^(.+)제?([0-9,]+)([동리])$/uU', $str, $matches))
     {
-        $keywords[] = $matches[1] . $matches[3];
+        $keywords[] = $str = $matches[1] . $matches[3];
         $matches[2] = preg_split('/[.,-]/', $matches[2]);
         foreach ($matches[2] as $match)
         {
             if (ctype_digit(trim($match))) $keywords[] = $matches[1] . $match . $matches[3];
         }
     }
-    elseif (preg_match('/^(.+)([0-9]+)가동$/uU', $str, $matches))
+    
+    if (preg_match('/^(.+)([0-9]+)가동$/uU', $str, $matches))
     {
-        $keywords[] = $matches[1] . '동';
+        $keywords[] = $str = $matches[1] . '동';
     }
     elseif (preg_match('/^([가-힣]+)동?([0-9]+)가$/uU', $str, $matches))
     {
-        $keywords[] = $matches[1] . '동';
+        $keywords[] = $str = $matches[1] . '동';
     }
-    elseif (substr($str, strlen($str) - 6) === '본동')
+    
+    if (substr($str, strlen($str) - 6) === '본동')
     {
         $dong_original_suspected = substr($str, 0, strlen($str) - 6) . '동';
         if (isset($dongs[$dong_original_suspected]))
