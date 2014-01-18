@@ -93,7 +93,7 @@ function get_variations_of_dongri($str, &$dongs)
     {
         $keywords[] = $matches[1] . '동';
     }
-    elseif (preg_match('/^(.+)동([0-9]+)가$/uU', $str, $matches))
+    elseif (preg_match('/^([가-힣]+)동?([0-9]+)가$/uU', $str, $matches))
     {
         $keywords[] = $matches[1] . '동';
     }

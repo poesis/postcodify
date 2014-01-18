@@ -100,7 +100,7 @@ function do_updates()
             $sigungu = trim($line[2]); if ($sigungu === '') $sigungu = null;
             $eupmyeon = trim($line[3]); if ($eupmyeon === '') $eupmyeon = null;
             $dongri = trim($line[4]); if ($dongri === '') $dongri = null;
-            if ($dongri === null && preg_match('/동$/u', $eupmyeon))
+            if ($dongri === null && !preg_match('/[읍면]$/u', $eupmyeon))
             {
                 $dongri = $eupmyeon;
                 $eupmyeon = null;
