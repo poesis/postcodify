@@ -93,10 +93,13 @@ function get_variations_of_dongri($str, &$dongs)
     if (preg_match('/^(.+)([0-9]+)가동$/uU', $str, $matches))
     {
         $keywords[] = $str = $matches[1] . '동';
+        $keywords[] = $str = $matches[1] . '동' . $matches[2] . '가';
     }
     elseif (preg_match('/^([가-힣]+)동?([0-9]+)가$/uU', $str, $matches))
     {
         $keywords[] = $str = $matches[1] . '동';
+        $keywords[] = $str = $matches[1] . '동' . $matches[2] . '가';
+        $keywords[] = $str = $matches[1] . $matches[2] . '가동';
     }
     
     if (substr($str, strlen($str) - 6) === '본동')
@@ -116,6 +119,7 @@ function get_variations_of_dongri($str, &$dongs)
         $dongs[$str] = 1;
     }
     
+    rsort($keywords);
     return array_unique($keywords);
 }
 
