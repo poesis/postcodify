@@ -381,7 +381,6 @@ while (count($files))
                 // 상세 데이터를 읽어들인다.
                 
                 $address_id = trim($line[0]);
-                $eupmyeon = ;
                 $dongri = trim($line[6]);
                 if ($dongri === '') $dongri = trim($line[5]);
                 
