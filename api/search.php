@@ -317,6 +317,7 @@ try
 }
 catch (Exception $e)
 {
+    error_log($e->getMessage());
     header('HTTP/1.0 500 Internal Server Error');
     send_response(json_encode(array('version' => VERSION, 'error' => 'Internal Server Error', 'count' => 0, 'time' => 0, 'results' => array())));
 }
