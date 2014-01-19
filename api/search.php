@@ -2,10 +2,10 @@
 
 // 주소 검색 API 스크립트.
 
-$start_time = microtime(true);
 define('VERSION', '1.1');
 date_default_timezone_set('Asia/Seoul');
 error_reporting(-1);
+$start_time = microtime(true);
 
 // 헤더를 전송한다.
 
