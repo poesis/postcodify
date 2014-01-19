@@ -66,11 +66,7 @@ CREATE TABLE postcode_keywords_jibeon (
 CREATE TABLE postcode_keywords_building (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,        -- PK
     address_id NUMERIC(25) NOT NULL,                    -- 관리번호 (FK)
-    keyword VARCHAR(40),                                -- 건물명
-    dongri_crc32_1 INT(10) UNSIGNED,                    -- 동/리명의 CRC32 값
-    dongri_crc32_2 INT(10) UNSIGNED,                    -- 동/리명의 CRC32 값
-    dongri_crc32_3 INT(10) UNSIGNED,                    -- 동/리명의 CRC32 값
-    dongri_crc32_4 INT(10) UNSIGNED                     -- 동/리명의 CRC32 값
+    keyword VARCHAR(40)                                 -- 건물명
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- 사서함 검색을 위한 키워드 테이블.
@@ -184,7 +180,7 @@ CREATE PROCEDURE postcode_search_building_in_area(IN keyword VARCHAR(80),
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
-    WHERE pk.keyword LIKE CONCAT(keyword, '%')
+    WHERE pk.keyword LIKE CONCAT('%', keyword, '%')
         AND (area1 IS NULL OR pa.sido = area1)
         AND (area2 IS NULL OR pa.sigungu = area2)
         AND (area3 IS NULL OR pa.ilbangu = area3)
@@ -195,16 +191,14 @@ END;
 
 -- 건물명 + 동/리 검색 (단순) 프로시저.
 
-CREATE PROCEDURE postcode_search_building_with_dongri(IN keyword VARCHAR(80),
+CREATE PROCEDURE postcode_search_building_with_dongri (IN keyword VARCHAR(80),
     IN dongri_crc32 INT UNSIGNED)
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-    INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
-    WHERE pk.keyword LIKE CONCAT('%', keyword, '%')
-        AND (pk.dongri_crc32_1 = dongri_crc32
-            OR pk.dongri_crc32_2 = dongri_crc32
-            OR pk.dongri_crc32_3 = dongri_crc32
-            OR pk.dongri_crc32_4 = dongri_crc32)
+    INNER JOIN postcode_keywords_building AS pkb ON pa.id = pkb.address_id
+    INNER JOIN postcode_keywords_jibeon AS pkj ON pa.id = pkj.address_id
+    WHERE pkb.keyword LIKE CONCAT('%', keyword, '%')
+        AND pkj.keyword_crc32 = dongri_crc32
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
@@ -217,12 +211,10 @@ CREATE PROCEDURE postcode_search_building_with_dongri_in_area(IN keyword VARCHAR
     IN area3 VARCHAR(20), IN area4 VARCHAR(20))
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-    INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
-    WHERE pk.keyword LIKE CONCAT('%', keyword, '%')
-        AND (pk.dongri_crc32_1 = dongri_crc32
-            OR pk.dongri_crc32_2 = dongri_crc32
-            OR pk.dongri_crc32_3 = dongri_crc32
-            OR pk.dongri_crc32_4 = dongri_crc32)
+    INNER JOIN postcode_keywords_building AS pkb ON pa.id = pkb.address_id
+    INNER JOIN postcode_keywords_jibeon AS pkj ON pa.id = pkj.address_id
+    WHERE pkb.keyword LIKE CONCAT('%', keyword, '%')
+        AND pkj.keyword_crc32 = dongri_crc32
         AND (area1 IS NULL OR pa.sido = area1)
         AND (area2 IS NULL OR pa.sigungu = area2)
         AND (area3 IS NULL OR pa.ilbangu = area3)

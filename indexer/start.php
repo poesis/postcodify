@@ -485,8 +485,8 @@ while (count($files))
             '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
         $ps_keyword_building_insert = $db->prepare('INSERT INTO postcode_keywords_building ' .
-            '(address_id, keyword, dongri_crc32_1, dongri_crc32_2, dongri_crc32_3, dongri_crc32_4) ' .
-            'VALUES (?, ?, ?, ?, ?, ?)');
+            '(address_id, keyword) ' .
+            'VALUES (?, ?)');
         
         $dongs[$filename] = array();
         
@@ -547,13 +547,6 @@ while (count($files))
                     $keywords_nums[] = str_replace('산', '', $other[1]);
                 }
                 
-                // 지번 및 기타주소 정리 : 행정동명을 추가한다.
-                
-                if ($admin_dong !== '' && $legal_dong !== '' && $admin_dong !== $legal_dong)
-                {
-                    if (!preg_match('/[시군구읍면리]$/u', $admin_dong)) $addresses_building[] = $admin_dong;
-                }
-                
                 // 지번 및 기타주소 정리 : 건물 이름들을 추가한다.
                 
                 if ($building1 !== '') $addresses_building[] = str_replace(';', ':', $building1);
@@ -561,6 +554,7 @@ while (count($files))
                 if ($building3 !== '') $addresses_building[] = str_replace(';', ':', $building3);
                 
                 $addresses_building = array_unique($addresses_building);
+                natsort($addresses_building);
                 
                 // 지번 및 기타주소 정리 : 지번 주소를 동별로 묶고 지번순으로 정렬하여 재입력한다.
                 
@@ -571,9 +565,15 @@ while (count($files))
                     $other_addresses[] = $dongname . ' ' . implode(', ', $numbers);
                 }
                 
+                // 지번 및 기타주소 정리 : 행정동명을 추가한다.
+                
+                if ($admin_dong !== '' && $legal_dong !== '' && $admin_dong !== $legal_dong)
+                {
+                    if (!preg_match('/[시군구읍면리]$/u', $admin_dong)) $other_addresses[] = $admin_dong;
+                }
+                
                 // 지번 및 기타주소 정리 : 건물명 중 중복되는 것은 빼고 재입력한다.
                 
-                natsort($addresses_building);
                 foreach ($addresses_building as $key => $address)
                 {
                     foreach ($addresses_building as $key2 => $address2)
@@ -660,20 +660,9 @@ while (count($files))
                 
                 // 건물명 검색 키워드들을 postcode_keywords_building 테이블에 삽입한다.
                 
-                $dongris = array();
-                if ($legal_dong) $dongris[] = crc32_x64($legal_dong);
-                if ($admin_dong)
-                {
-                    $dongris2 = get_variations_of_dongri($admin_dong, $dongs[$filename]);
-                    foreach ($dongris2 as $dongri2) $dongris[] = crc32_x64($dongri2);
-                    $dongris = array_values(array_unique($dongris));
-                }
-                $dongris[] = null; $dongris[] = null; $dongris[] = null; $dongris[] = null;
-                
                 foreach ($keywords as $keyword)
                 {
-                    if (isset($keywords_dongs[$keyword])) continue;
-                    $ps_keyword_building_insert->execute(array($address_id, $keyword, $dongris[0], $dongris[1], $dongris[2], $dongris[3]));
+                    $ps_keyword_building_insert->execute(array($address_id, $keyword));
                 }
                 
                 // 가비지 컬렉션.
@@ -876,7 +865,7 @@ $indexes = array(
     'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'sido', 'sigungu', 'ilbangu', 'eupmyeon'),
     'postcode_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
-    'postcode_keywords_building' => array('address_id', 'keyword', 'dongri_crc32_1', 'dongri_crc32_2', 'dongri_crc32_3', 'dongri_crc32_4'),
+    'postcode_keywords_building' => array('address_id', 'keyword'),
     'postcode_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
 );
 

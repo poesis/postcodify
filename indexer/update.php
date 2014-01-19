@@ -37,10 +37,10 @@ function do_updates()
         'SET address_id = ? WHERE address_id = ?');
     $ps_keyword_building_delete = $db->prepare('DELETE FROM postcode_keywords_building ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
-        'AND keyword = ? AND dongri_crc32_1 = ? AND dongri_crc32_2 = ?');
+        'AND keyword = ?');
     $ps_keyword_building_insert = $db->prepare('INSERT INTO postcode_keywords_building ' .
-        '(address_id, keyword, dongri_crc32_1, dongri_crc32_2, dongri_crc32_3, dongri_crc32_4) ' .
-        'VALUES (?, ?, ?, ?, ?, ?)');
+        '(address_id, keyword) ' .
+        'VALUES (?, ?)');
     $ps_keyword_building_update = $db->prepare('UPDATE postcode_keywords_building ' .
         'SET address_id = ? WHERE address_id = ?');
     
@@ -288,20 +288,10 @@ function do_updates()
                 }
                 $keywords = array_unique($keywords);
                 
-                $dongris = array();
-                if ($legal_dong = $dongri) $dongris[] = crc32_x64($legal_dong);
-                if ($admin_dong)
-                {
-                    $dongris2 = get_variations_of_dongri($admin_dong, $dongs[$filename]);
-                    foreach ($dongris2 as $dongri2) $dongris[] = crc32_x64($dongri2);
-                    $dongris = array_values(array_unique($dongris));
-                }
-                $dongris[] = null; $dongris[] = null; $dongris[] = null; $dongris[] = null;
-                
                 foreach ($keywords as $keyword)
                 {
                     if (isset($keywords_dongs[$keyword])) continue;
-                    $ps_keyword_building_insert->execute(array($address_id, $keyword, $dongris[0], $dongris[1], $dongris[2], $dongris[3]));
+                    $ps_keyword_building_insert->execute(array($address_id, $keyword));
                 }
             }
             
@@ -423,31 +413,11 @@ function do_updates()
                 }
                 $keywords = array_unique($keywords);
                 
-                $dongris = array();
-                if ($legal_dong = $dongri) $dongris[] = crc32_x64($legal_dong);
-                if ($admin_dong)
-                {
-                    $dongris2 = get_variations_of_dongri($admin_dong, $dongs[$filename]);
-                    foreach ($dongris2 as $dongri2) $dongris[] = crc32_x64($dongri2);
-                    $dongris = array_values(array_unique($dongris));
-                }
-                $dongris[] = null; $dongris[] = null; $dongris[] = null; $dongris[] = null;
-                
-                /*
-                if ($address_id == '1120011400106560292007878')
-                {
-                    var_dump($dongri);
-                    var_dump($admin_dong);
-                    var_dump(get_variations_of_dongri($admin_dong, $dongs[$filename]));
-                    exit;
-                }
-                */
-                
                 foreach ($keywords as $keyword)
                 {
                     if (isset($keywords_dongs[$keyword])) continue;
-                    $ps_keyword_building_delete->execute(array($address_id, $old_address_id, $keyword, $dongris[0], $dongris[1]));
-                    $ps_keyword_building_insert->execute(array($address_id, $keyword, $dongris[0], $dongris[1], $dongris[2], $dongris[3]));
+                    $ps_keyword_building_delete->execute(array($address_id, $old_address_id, $keyword));
+                    $ps_keyword_building_insert->execute(array($address_id, $keyword));
                 }
                 
                 // 기존의 관리번호로 연결되는 키워드들을 새 관리번호로 연결한다.
