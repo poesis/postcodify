@@ -1,9 +1,9 @@
 #!/bin/sh
 
 MYSQL_HOST="localhost"
-MYSQL_USER="me"
-MYSQL_PASS="me"
-MYSQL_DBNAME="me_postcode"
+MYSQL_USER=""
+MYSQL_PASS=""
+MYSQL_DBNAME=""
 
 mysqldump --opt --order-by-primary --routines \
     --single_transaction --no-autocommit --skip-tz-utc \
