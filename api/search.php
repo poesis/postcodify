@@ -202,6 +202,7 @@ try
     $db = new PDO($dsn, DB_USER, DB_PASS, array(
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_EMULATE_PREPARES => false,
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
     ));
     
     // 시도, 시군구, 일반구, 읍면 등으로 검색 결과를 제한하는 경우...

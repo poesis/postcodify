@@ -5,12 +5,12 @@
 function get_db()
 {
     $dsn = DB_DRIVER . ':host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_DBNAME;
-    if (DB_DRIVER === 'mysql') $dsn .= ';charset=utf8';
-    if (DB_DRIVER === 'pgsql') $dsn .= ';user=' . DB_USER . ';password=' . DB_PASS;
+    $dsn .= ';charset=utf8';
     
     $pdo_options = array(
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_EMULATE_PREPARES => false,
+        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
     );
     
     return new PDO($dsn, DB_USER, DB_PASS, $pdo_options);
