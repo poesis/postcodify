@@ -350,7 +350,26 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
     
     작업을 모두 마쳤습니다. 경과 시간 : 3시간 18분 21초
 
-#### 5단계 : DB 생성 스크립트 실행 ####
+작업이 끝나면 아래와 같이 6개의 테이블이 생성되고,
+
+>   <img src="//raw.github.com/kijin/postcodify/master/indexer/screenshot.png" alt="Screenshot" title="" />
+
+검색을 위한 10개의 프로시저가 생성됩니다.
+
+    postcode_search_building 
+    postcode_search_building_in_area 
+    postcode_search_building_with_dongri 
+    postcode_search_building_with_dongri_in_area 
+    postcode_search_jibeon 
+    postcode_search_jibeon_in_area 
+    postcode_search_juso 
+    postcode_search_juso_in_area 
+    postcode_search_pobox 
+    postcode_search_pobox_in_area 
+
+만약 생성된 DB의 구조나 용량이 위의 스크린샷과 크게 다르다면 문제가 있을 가능성이 높습니다.
+
+#### 5단계 : 업데이트 적용 ####
 
 최초 DB 생성시에 업데이트를 함께 적용했다면 별도로 업데이트할 필요가 없습니다.
 
