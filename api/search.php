@@ -378,16 +378,7 @@ $result['time'] = number_format(microtime(true) - $start_time, 3);
 
 // JSON으로 인코딩한다.
 
-if (version_compare(PHP_VERSION, '5.4.0', '>='))
-{
-    $flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
-}
-else
-{
-    $flags = null;
-}
-
-$result = json_encode($result, $flags);
+$result = json_encode($result);
 
 // 결과를 출력한다.
 
