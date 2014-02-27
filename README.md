@@ -352,7 +352,7 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
 
 작업이 끝나면 아래와 같이 6개의 테이블이 생성되고,
 
->   <img src="/kijin/postcodify/raw/master/indexer/screenshot.png" alt="Screenshot" title="" />
+>   <img src="indexer/screenshot.png" alt="Screenshot" title="" />
 
 검색을 위한 10개의 프로시저가 생성됩니다.
 
