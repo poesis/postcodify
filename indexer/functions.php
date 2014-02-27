@@ -50,7 +50,7 @@ function get_variations_of_road_name($str)
     }
     elseif (preg_match('/^(.+)([동서남북]?)([0-9-]+)번?([가나라다마바사아자차카타파하동서남북안]?)길$/uU', $str, $matches))
     {
-        if (preg_match('/로$/uU', $matches[1]))
+        if (preg_match('/[로길]$/uU', $matches[1]))
         {
             $keywords[] = $matches[1];
         }
