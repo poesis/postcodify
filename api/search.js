@@ -4,7 +4,7 @@
  *  
  *  도로명주소 우편번호 검색 기능을 제공하는 jQuery 플러그인
  *  
- *  Version 1.1.7
+ *  Version 1.2.0
  *  
  * ---------------------------------------------------------------------------------------
  * 
@@ -69,6 +69,7 @@
                 insertAddress : null,
                 insertDetails : null,
                 insertExtraInfo : null,
+                insertJibeonAddress : null,
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results) { },
                 beforeSelect : function(selectedEntry) { },
@@ -204,6 +205,7 @@
                                 option.data("code6", result.code6);
                                 option.data("code5", result.code5);
                                 option.data("address", result.address);
+                                option.data("jibeon_address", result.jibeon_address);
                                 option.data("extra_info_long", result.extra_info_long);
                                 option.data("extra_info_short", result.extra_info_short);
                                 
@@ -293,6 +295,7 @@
                 if (settings.insertPostcode6) $(settings.insertPostcode6).val(entry.data("code6"));
                 if (settings.insertPostcode5) $(settings.insertPostcode5).val(entry.data("code5"));
                 if (settings.insertAddress) $(settings.insertAddress).val(entry.data("address"));
+                if (settings.insertJibeonAddress) $(settings.insertJibeonAddress).val(entry.data("jibeon_address"));
                 if (settings.insertExtraInfo) {
                     var extra_info = settings.useFullJibeon ? entry.data("extra_info_long") : entry.data("extra_info_short");
                     if (extra_info.length) extra_info = "(" + extra_info + ")";

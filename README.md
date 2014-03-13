@@ -60,6 +60,7 @@ GPLv3 라이선스는 프로그램에만 적용되며, 프로그램을 사용하
         insertAddress : "#도로명주소를_입력할_input의_id",
         insertDetails : "#상세주소를_입력할_input의_id",
         insertExtraInfo : "#참고항목을_입력할_input의_id",
+        insertJibeonAddress : "#지번주소를_입력할_input의_id",
         beforeSearch : function(keywords) {
             // 검색 직전에 호출할 콜백
         },
