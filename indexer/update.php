@@ -60,7 +60,8 @@ function do_updates()
     
     // 업데이트 파일 목록을 구한다.
     
-    $files = glob(TXT_DIRECTORY . '/Updates/AlterD.*');
+    $files = @glob(TXT_DIRECTORY . '/Updates/AlterD.*');
+    if (!$files) $files = array();
     foreach ($files as $filename)
     {
         // 이미 적용한 업데이트는 건너뛴다.
