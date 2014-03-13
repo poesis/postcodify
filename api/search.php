@@ -2,7 +2,7 @@
 
 // 주소 검색 API 스크립트.
 
-define('VERSION', '1.1');
+define('VERSION', '1.2');
 date_default_timezone_set('Asia/Seoul');
 error_reporting(-1);
 $start_time = microtime(true);
@@ -335,12 +335,13 @@ $result = array(
 
 while ($item = $ps->fetch(PDO::FETCH_OBJ))
 {
-    // 도로명주소를 생성한다.
+    // 주소를 생성한다.
     
-    $address = trim($item->sido . ' ' . ($item->sigungu ? ($item->sigungu . ' ') : '') .
-        ($item->ilbangu ? ($item->ilbangu . ' ') : '') .
-        ($item->eupmyeon ? ($item->eupmyeon . ' ') : '') .
-        $item->road_name . ' ' . ($item->is_basement ? '지하 ' : '') . ($item->num_major ?: '') . ($item->num_minor ? ('-' . $item->num_minor) : ''));
+    $address_base = trim($item->sido . ' ' . ($item->sigungu ? ($item->sigungu . ' ') : '') .
+        ($item->ilbangu ? ($item->ilbangu . ' ') : '') . ($item->eupmyeon ? ($item->eupmyeon . ' ') : ''));
+        
+    $address_road = $address_base . ' ' . $item->road_name . ' ' . ($item->is_basement ? '지하 ' : '') . ($item->num_major ?: '') . ($item->num_minor ? ('-' . $item->num_minor) : '');
+    $address_old = $address_base . ' ' . $item->dongri . ($item->jibeon ? (' ' . $item->jibeon) : '');
     
     // 추가정보를 정리한다.
     
@@ -364,10 +365,11 @@ while ($item = $ps->fetch(PDO::FETCH_OBJ))
         'dbid' => substr($item->id, 0, 10) === '9999999999' ? '' : $item->id,
         'code6' => substr($item->postcode6, 0, 3) . '-' . substr($item->postcode6, 3, 3),
         'code5' => strval($item->postcode5),
-        'address' => strval($address),
+        'address' => strval($address_road),
         'canonical' => strval($item->dongri . ($item->jibeon ? (' ' . $item->jibeon) : '')),
         'extra_info_long' => strval($address_extra_long),
         'extra_info_short' => strval($address_extra_short),
+        'jibeon_address' => strval($address_old),
         'other' => strval($item->other_addresses),
     );
 }
