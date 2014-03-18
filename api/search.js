@@ -4,7 +4,7 @@
  *  
  *  도로명주소 우편번호 검색 기능을 제공하는 jQuery 플러그인
  *  
- *  Version 1.2.0
+ *  Version 1.2.1
  *  
  * ---------------------------------------------------------------------------------------
  * 
@@ -299,7 +299,11 @@
                 if (settings.insertExtraInfo) {
                     var extra_info = settings.useFullJibeon ? entry.data("extra_info_long") : entry.data("extra_info_short");
                     if (extra_info.length) extra_info = "(" + extra_info + ")";
-                    $(settings.insertExtraInfo).val(extra_info);
+                    if (settings.insertExtraInfo === settings.insertAddress) {
+                        $(settings.insertExtraInfo).val($(settings.insertExtraInfo).val() + "\n" + extra_info);
+                    } else {
+                        $(settings.insertExtraInfo).val(extra_info);
+                    }
                 }
                 
                 // 선택후 콜백을 실행한다.
