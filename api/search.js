@@ -144,7 +144,7 @@
                 
                 // 검색전 콜백 함수를 실행한다.
                 
-                settings.beforeSearch(keywords);
+                if (settings.beforeSearch(keywords) === false) return;
                 
                 // 이미 검색이 진행 중일 때는 검색 단추를 다시 클릭하지 못하도록 하고,
                 // "검색" 라벨을 간단한 GIF 이미지로 대체한다.
@@ -172,7 +172,7 @@
                         
                         // 검색후 콜백 함수를 실행한다.
                         
-                        settings.afterSearch(keywords, data.results);
+                        if (settings.afterSearch(keywords, data.results) === false) return;
                         
                         // 서버가 오류를 반환한 경우...
                         
@@ -286,8 +286,8 @@
                 var entry = $(this).parents("div.postcode_search_result");
                 
                 // 선택전 콜백을 실행한다.
-                 
-                settings.beforeSelect(entry);
+                
+                if (settings.beforeSelect(entry) === false) return;
                 
                 // 사용자가 지정한 입력칸에 데이터를 입력한다.
                 
@@ -308,7 +308,7 @@
                 
                 // 선택후 콜백을 실행한다.
                 
-                settings.afterSelect(entry);
+                if (settings.afterSelect(entry) === false) return;
                 
                 // 상세주소를 입력하는 칸으로 포커스를 이동한다.
                 
