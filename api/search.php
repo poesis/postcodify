@@ -2,7 +2,7 @@
 
 // 주소 검색 API 스크립트.
 
-define('VERSION', '1.2');
+define('VERSION', '1.2.1');
 date_default_timezone_set('Asia/Seoul');
 error_reporting(-1);
 $start_time = microtime(true);
@@ -142,7 +142,7 @@ foreach ($keywords as $id => $keyword)
     
     // 동리+지번을 확인한다.
     
-    if (preg_match('/^(.+(?:[0-9]가|[동리]))(산?([0-9]+(?:-[0-9]+)?)(?:번지?)?)?$/u', $keyword, $matches))
+    if (preg_match('/^(.{1,5}(?:[0-9]가|[동리]))(산?([0-9]+(?:-[0-9]+)?)(?:번지?)?)?$/u', $keyword, $matches))
     {
         $kw['dongri'] = $matches[1];
         if (isset($matches[3]) && $matches[3])
@@ -230,6 +230,15 @@ try
         {
             $ps = $db->prepare('CALL postcode_search_jibeon_in_area(?, ?, ?, ?, ?, ?, ?)');
             $ps->execute(array(crc32_x64($kw['dongri']), $kw['numbers'][0], $kw['numbers'][1], $kw['sido'], $kw['sigungu'], $kw['ilbangu'], $kw['eupmyeon']));
+            
+            // 검색 결과가 없다면 건물명을 동리로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
+            
+            if ($kw['numbers'][0] === null && $kw['numbers'][1] === null && !$ps->rowCount())
+            {
+                $ps->fetch(); unset($ps);
+                $ps = $db->prepare('CALL postcode_search_building_in_area(?, ?, ?, ?, ?)');
+                $ps->execute(array($kw['dongri'], $kw['sido'], $kw['sigungu'], $kw['ilbangu'], $kw['eupmyeon']));
+            }
         }
         
         // 건물명만으로 검색하는 경우...
@@ -282,6 +291,15 @@ try
         {
             $ps = $db->prepare('CALL postcode_search_jibeon(?, ?, ?)');
             $ps->execute(array(crc32_x64($kw['dongri']), $kw['numbers'][0], $kw['numbers'][1]));
+            
+            // 검색 결과가 없다면 건물명을 동리로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
+            
+            if ($kw['numbers'][0] === null && $kw['numbers'][1] === null && !$ps->rowCount())
+            {
+                $ps->fetch(); unset($ps);
+                $ps = $db->prepare('CALL postcode_search_building(?)');
+                $ps->execute(array($kw['dongri']));
+            }
         }
         
         // 건물명만으로 검색하는 경우...
