@@ -68,19 +68,19 @@ if (!file_exists(TXT_DIRECTORY . '/도로명코드_전체분.zip'))
     exit(1);
 }
 
-if (count(glob(TXT_DIRECTORY . '/주소_*.zip')) < 1)
+if (count(glob(TXT_DIRECTORY . '/주소_*.zip')) < 14)
 {
     echo '[ERROR] 주소_*.zip 파일을 찾을 수 없거나 일부 누락되었습니다.' . "\n\n";
     exit(1);
 }
 
-if (count(glob(TXT_DIRECTORY . '/지번_*.zip')) < 1)
+if (count(glob(TXT_DIRECTORY . '/지번_*.zip')) < 14)
 {
     echo '[ERROR] 지번_*.zip 파일을 찾을 수 없거나 일부 누락되었습니다.' . "\n\n";
     exit(1);
 }
 
-if (count(glob(TXT_DIRECTORY . '/부가정보_*.zip')) < 1)
+if (count(glob(TXT_DIRECTORY . '/부가정보_*.zip')) < 14)
 {
     echo '[ERROR] 부가정보_*.zip 파일을 찾을 수 없거나 일부 누락되었습니다.' . "\n\n";
     exit(1);
@@ -887,14 +887,11 @@ while (count($indexes))
     }
     else
     {
-        $columns_query = array();
+        $db = get_db();
         foreach ($columns as $column)
         {
-            $columns_query[] = 'ADD INDEX (' . $column . ')';
+            $db->query('ALTER TABLE ' . $table_name . ' ADD INDEX (' . $column . ')');
         }
-        
-        $db = get_db();
-        $db->query('ALTER TABLE ' . $table_name . ' ' . implode(', ', $columns_query));
         exit;
     }
 }
