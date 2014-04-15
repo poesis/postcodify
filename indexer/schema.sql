@@ -38,7 +38,9 @@ CREATE TABLE postcode_addresses (
     dongri VARCHAR(20),                                 -- 동/리
     jibeon VARCHAR(10),                                 -- 지번
     building_name VARCHAR(40),                          -- 공동주택명
-    other_addresses VARCHAR(600)                        -- 관련주소목록
+    english_address VARCHAR(300),                       -- 영문 주소
+    other_addresses VARCHAR(600),                       -- 관련주소목록
+    updated NUMERIC(8)                                  -- 업데이트 여부
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
 -- 도로명주소 검색을 위한 키워드 테이블.
@@ -87,11 +89,6 @@ CREATE TABLE postcode_metadata (
     k VARCHAR(20) PRIMARY KEY,                          -- 설정 키
     v VARCHAR(40)                                       -- 설정 값
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
-
--- 기본 설정을 삽입한다.
-
-INSERT INTO postcode_metadata (k, v) VALUES ('version', '4.1');
-INSERT INTO postcode_metadata (k, v) VALUES ('updated', '00000000');
 
 -- 도로명주소 검색 (단순) 프로시저.
 

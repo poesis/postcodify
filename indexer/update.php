@@ -4,6 +4,150 @@
 // 우편번호 DB 업데이트 프로그램.
 // -------------------------------------------------------------------------------------------------
 
+ini_set('display_errors', 'on');
+ini_set('memory_limit', '1024M');
+date_default_timezone_set('UTC');
+error_reporting(-1);
+gc_enable();
+
+// 시작한 시각을 기억한다.
+
+$start_time = time();
+
+// 설정과 함수 파일을 인클루드한다.
+
+define('INDEXER_VERSION', '4.2');
+require dirname(__FILE__) . '/config.php';
+require dirname(__FILE__) . '/functions.php';
+echo "\n";
+
+// 어디까지 업데이트했는지 찾아본다.
+
+$updated_query = get_db()->query('SELECT v FROM postcode_metadata WHERE k = \'updated\'');
+$updated = $updated_query->fetchColumn();
+$updated_query->closeCursor();
+
+// -------------------------------------------------------------------------------------------------
+// 전체 도로명 코드 및 행정구역의 영문 명칭을 읽어들인다.
+// -------------------------------------------------------------------------------------------------
+
+echo '[Step 1/3] 도로 목록 및 영문 명칭을 메모리에 읽어들이는 중 ... ' . "\n\n";
+
+$english_cache = array();
+$roads_count = 0;
+
+// 파일을 연다.
+
+$filename = TXT_DIRECTORY . '/도로명코드_전체분.zip';
+echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
+
+$zip = new ZipArchive;
+$zip->open($filename);
+$fp = $zip->getStream($zip->getNameIndex(0));
+
+while ($line = trim(fgets($fp)))
+{
+    // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
+    
+    $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+    if (count($line) < 17 || !ctype_digit($line[0])) continue;
+    
+    // 도로ID, 도로명, 통과하는 읍면동별 구간번호, 소속 행정구역을 읽어들인다.
+    
+    $road_id = trim($line[0]);
+    $road_name = trim($line[1]);
+    $road_section = str_pad(trim($line[3]), 2, '0', STR_PAD_LEFT);
+    $sido = trim($line[4]);
+    $sigungu = trim($line[6]);
+    $eupmyeon = trim($line[8]);
+    
+    // 동 정보는 여기서 기억할 필요가 없다.
+    
+    $eupmyeon_suffix = strlen($eupmyeon) > 3 ? substr($eupmyeon, strlen($eupmyeon) - 3) : null;
+    if ($eupmyeon_suffix !== '읍' && $eupmyeon_suffix !== '면')
+    {
+        $eupmyeon = '';
+    }
+    
+    // 영문 주소를 읽어들인다.
+    
+    $english = array();
+    $english[] = $english_cache[trim($line[1])] = trim($line[2]);
+    if ($eupmyeon !== '') $english[] = $english_cache[trim($line[8])] = trim($line[9]);
+    $english[] = $english_cache[trim($line[6])] = trim($line[7]);
+    $english[] = $english_cache[$sido] = str_replace('-si', '', trim($line[5]));
+    $english = str_replace(', , ', ', ', implode(', ', $english));
+    
+    // 상태를 표시한다.
+    
+    if ($roads_count % 1024 == 0)
+    {
+        echo "\033[10D" . str_pad(number_format($roads_count, 0), 10, ' ', STR_PAD_LEFT);
+    }
+    
+    $roads_count++;
+    
+    // 가비지 컬렉션.
+    
+    unset($road_info);
+    unset($line);
+}
+
+// 마무리...
+
+echo "\033[10D" . str_pad(number_format($roads_count, 0), 10, ' ', STR_PAD_LEFT) . "\n\n";
+$zip->close();
+unset($zip);
+
+// -------------------------------------------------------------------------------------------------
+// 새로 생긴 도로명의 영문 명칭을 읽어들인다.
+// -------------------------------------------------------------------------------------------------
+
+echo '[Step 2/3] 신규 도로명의 영문 명칭을 읽어들이는 중 ... ' . "\n\n";
+
+$files = @glob(TXT_DIRECTORY . '/Updates/AlterD.JUSUZC.*');
+if (!$files) $files = array();
+foreach ($files as $filename)
+{
+    // 이미 적용한 업데이트는 건너뛴다.
+    
+    $filename_date = substr(basename($filename), 14, 8);
+    if (!ctype_digit($filename_date)) continue;
+    if ($filename_date <= $updated) continue;
+    
+    // 파일을 연다.
+    
+    echo '  -->  ' . basename($filename) . ' ... ';
+    $count = 0;
+    
+    $fp = fopen($filename, 'r');
+    while ($line = trim(fgets($fp)))
+    {
+        // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
+        
+        $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+        if (count($line) < 20 || !ctype_digit($line[0])) continue;
+        
+        // 상세 데이터를 읽어들인다.
+        
+        $road_name_ko = trim($line[2]);
+        $road_name_en = trim($line[3]);
+        $english_cache[$road_name_ko] = $road_name_en;
+        $count++;
+    }
+    
+    fclose($fp);
+    echo str_pad(number_format($count, 0), 10, ' ', STR_PAD_LEFT) . "\n";
+}
+
+echo "\n";
+
+// -------------------------------------------------------------------------------------------------
+// 업데이트된 주소 목록을 적용한다.
+// -------------------------------------------------------------------------------------------------
+
+echo '[Step 3/3] 주소 목록을 업데이트하는 중 ... ' . "\n\n";
+
 function do_updates()
 {
     // 준비.
@@ -17,8 +161,8 @@ function do_updates()
     $ps_address_insert = $db->prepare('INSERT INTO postcode_addresses ' .
         '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
         'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, ' .
-        'dongri, jibeon, building_name, other_addresses) ' .
-        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        'dongri, jibeon, building_name, english_address, other_addresses, updated) ' .
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     $ps_keyword_juso_delete = $db->prepare('DELETE FROM postcode_keywords_juso ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
         'AND keyword_crc32 = ? AND num_major = ? AND num_minor = ?');
@@ -51,16 +195,12 @@ function do_updates()
     // 트랜잭션을 시작한다.
     
     $db->beginTransaction();
-    
-    // 어디까지 업데이트했는지 찾아본다.
-    
-    $updated_query = $db->query('SELECT v FROM postcode_metadata WHERE k = \'updated\'');
-    $updated = $updated_query->fetchColumn();
-    $updated_query->closeCursor();
+    global $updated;
+    global $english_cache;
     
     // 업데이트 파일 목록을 구한다.
     
-    $files = @glob(TXT_DIRECTORY . '/Updates/AlterD.*');
+    $files = @glob(TXT_DIRECTORY . '/Updates/AlterD.JUSUBH.*');
     if (!$files) $files = array();
     foreach ($files as $filename)
     {
@@ -228,6 +368,26 @@ function do_updates()
                     }
                 }
                 
+                // 영문 주소를 생성한다.
+                
+                $english = ($is_basement ? 'Jiha ' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : '') . ', ' . $english_cache[$road_name] . ', ';
+                if ($eupmyeon) $english .= $english_cache[$eupmyeon] . ', ';
+                if ($sigungu)
+                {
+                    if ($ilbangu)
+                    {
+                        $english .= $english_cache[$sigungu . ' ' . $ilbangu] . ', ';
+                    }
+                    else
+                    {
+                        $english .= $english_cache[$sigungu] . ', ';
+                    }
+                }
+                if ($sido)
+                {
+                    $english .= $english_cache[$sido];
+                }
+                
                 // 건물명을 조합한다.
                 
                 $buildings = array();
@@ -245,7 +405,8 @@ function do_updates()
                     $road_id, $road_section, $road_name, $num_major, $num_minor, $is_basement,
                     $sido, $sigungu, $ilbangu, $eupmyeon, $dongri,
                     ($jibeon_major ? ($jibeon_major . ($jibeon_minor ? ('-' . $jibeon_minor) : '')) : null),
-                    $building_name, implode('; ', $buildings)
+                    $building_name, $english, implode('; ', $buildings),
+                    $filename_date
                 ));
                 
                 // postcode_keywords_juso 테이블에 도로명주소 키워드를 저장한다.
@@ -351,6 +512,26 @@ function do_updates()
                     }
                 }
                 
+                // 영문 주소를 생성한다.
+                
+                $english = ($is_basement ? 'Jiha ' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : '') . ', ' . $english_cache[$road_name] . ', ';
+                if ($eupmyeon) $english .= $english_cache[$eupmyeon] . ', ';
+                if ($sigungu)
+                {
+                    if ($ilbangu)
+                    {
+                        $english .= $english_cache[$sigungu . ' ' . $ilbangu] . ', ';
+                    }
+                    else
+                    {
+                        $english .= $english_cache[$sigungu] . ', ';
+                    }
+                }
+                if ($sido)
+                {
+                    $english .= $english_cache[$sido];
+                }
+                
                 // 건물명을 조합한다.
                 
                 $buildings = array();
@@ -368,7 +549,8 @@ function do_updates()
                     $road_id, $road_section, $road_name, $num_major, $num_minor, $is_basement,
                     $sido, $sigungu, $ilbangu, $eupmyeon, $dongri,
                     ($jibeon_major ? ($jibeon_major . ($jibeon_minor ? ('-' . $jibeon_minor) : '')) : null),
-                    $building_name, ($row ? $row['other_addresses'] : implode('; ', $buildings))
+                    $building_name, $english, ($row ? $row['other_addresses'] : implode('; ', $buildings)),
+                    $filename_date
                 ));
                 
                 // postcode_keywords_juso 테이블에 도로명주소 키워드를 저장한다.
@@ -446,6 +628,7 @@ function do_updates()
             unset($line);
         }
         
+        fclose($fp);
         echo str_pad(number_format($count, 0), 10, ' ', STR_PAD_LEFT) . "\n";
     }
     
@@ -466,20 +649,4 @@ function do_updates()
     echo "\n";
 }
 
-// -------------------------------------------------------------------------------------------------
-// update.php를 직접 실행한 경우에는 아래의 코드를 실행한다.
-// -------------------------------------------------------------------------------------------------
-
-if (!defined('CONVERTING'))
-{
-    ini_set('display_errors', 'On');
-    ini_set('memory_limit', '1024M');
-    date_default_timezone_set('UTC');
-    error_reporting(-1);
-    gc_enable();
-
-    require dirname(__FILE__) . '/config.php';
-    require dirname(__FILE__) . '/functions.php';
-    
-    do_updates();
-}
+do_updates();

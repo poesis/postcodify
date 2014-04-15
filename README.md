@@ -39,6 +39,7 @@
         insertAddress : "#도로명주소를_입력할_input의_id",
         insertDetails : "#상세주소를_입력할_input의_id",
         insertExtraInfo : "#참고항목을_입력할_input의_id",
+        insertEnglishAddress : "#영문주소를_입력할_input의_id",
         insertJibeonAddress : "#지번주소를_입력할_input의_id",
         beforeSearch : function(keywords) {
             // 검색 직전에 호출할 콜백
@@ -342,12 +343,12 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
 최신 업데이트를 원하시는 경우, 안전행정부에서 업데이트 파일들을 다운로드하여 `data/Updates` 폴더에 넣으시면 됩니다.
 업데이트에 사용할 파일명은 아래와 유사합니다.
 
-  - AlterD.JUSUBH.20131225.MatchingTable.TXT
+  - AlterD.JUSUBH.20140337.MatchingTable.TXT
+  - AlterD.JUSUZC.20140327.TI_SPRD_STRET.TXT
+
+**반드시 TI_SPRD_STRET와 MatchingTable 파일을 모두 사용하셔야 합니다.**
 
 다운로드받은 업데이트를 적용하려면 터미널에서 `php update.php`를 실행하면 됩니다.
-
-2014년 1월 현재 업데이트는 매칭테이블 형태로만 제공되고 있습니다.
-향후 파일 형식이 변경될 경우 현재의 업데이트 스크립트로는 분석이 안될 수도 있습니다.
 
 1단계에서 다운로드한 도로명코드/주소/지번/부가정보 파일의 기준일 이전 업데이트는 필요하지 않습니다.
 예를 들어 나머지 파일들의 기준일이 3월 25일이라면 3월 26일분 업데이트부터 적용하시면 됩니다.

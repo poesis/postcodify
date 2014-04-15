@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.3.0
+ *  jQuery 플러그인 version 1.4.2
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
@@ -36,6 +36,8 @@
  *          insertAddress : "#도로명주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertDetails : "#상세주소를_입력할_input의_id",  // 지정하지 않으면 포커스 이동하지 않음
  *          insertExtraInfo : "#참고항목을_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
+ *          insertEnglishAddress : "#영문주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
+ *          insertJibeonAddress : "#지번주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          beforeSearch : function(keywords) {
  *              // 검색 직전에 호출할 콜백
  *          },
@@ -73,6 +75,7 @@
                 insertAddress : null,
                 insertDetails : null,
                 insertExtraInfo : null,
+                insertEnglishAddress : null,
                 insertJibeonAddress : null,
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results) { },
@@ -213,7 +216,8 @@
                                 option.data("code6", result.code6);
                                 option.data("code5", result.code5);
                                 option.data("address", result.address);
-                                option.data("jibeon_address", result.jibeon_address);
+                                option.data("english_address", result.english_address !== undefined ? result.english_address : "");  // v1.4.2+
+                                option.data("jibeon_address", result.jibeon_address);  // v1.2+
                                 option.data("extra_info_long", result.extra_info_long);
                                 option.data("extra_info_short", result.extra_info_short);
                                 
@@ -303,7 +307,8 @@
                 if (settings.insertPostcode6) $(settings.insertPostcode6).val(entry.data("code6"));
                 if (settings.insertPostcode5) $(settings.insertPostcode5).val(entry.data("code5"));
                 if (settings.insertAddress) $(settings.insertAddress).val(entry.data("address"));
-                if (settings.insertJibeonAddress) $(settings.insertJibeonAddress).val(entry.data("jibeon_address"));
+                if (settings.insertEnglishAddress) $(settings.insertEnglishAddress).val(entry.data("english_address"));  // v1.4.2+
+                if (settings.insertJibeonAddress) $(settings.insertJibeonAddress).val(entry.data("jibeon_address"));  // v1.2+
                 if (settings.insertExtraInfo) {
                     var extra_info = settings.useFullJibeon ? entry.data("extra_info_long") : entry.data("extra_info_short");
                     if (extra_info.length) extra_info = "(" + extra_info + ")";

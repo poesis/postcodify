@@ -16,10 +16,9 @@ $start_time = time();
 
 // 설정과 함수 파일을 인클루드한다.
 
-define('CONVERTING', 'YES');
+define('INDEXER_VERSION', '4.2');
 require dirname(__FILE__) . '/config.php';
 require dirname(__FILE__) . '/functions.php';
-require dirname(__FILE__) . '/update.php';
 echo "\n";
 
 // 필요한 기능이 모두 있는지 확인한다.
@@ -100,12 +99,38 @@ echo '[Step 1/7] 테이블과 프로시저를 생성하는 중 ... ' . "\n\n";
 
 get_db()->exec(file_get_contents(__DIR__ . '/schema.sql'));
 
+// 기본 설정을 입력한다.
+
+$lastmonth = strtotime('-1 month');
+$stdin = fopen('php://stdin', 'r');
+$gotdate = false;
+while (!$gotdate)
+{
+    echo '데이터 기준일을 입력해 주십시오. 예: ' . date('Y년 n월 25일', $lastmonth) . ' = ' . date('Ym25', $lastmonth) . ' : ';
+    $line = trim(fgets($stdin));
+    if (preg_match('/^20[0-9][0-9][0-1][0-9][0-3][0-9]$/', $line))
+    {
+        get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('version', " . INDEXER_VERSION . ")");
+        get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('updated', '" . $line . "')");
+        fclose($stdin);
+        break;
+    }
+    else
+    {
+        echo '입력 형태가 틀립니다. ' . date('Ym25', $lastmonth) . ' 형태로 입력해 주십시오.' . "\n";
+        continue;
+    }
+}
+
+echo "\n";
+
 // -------------------------------------------------------------------------------------------------
 // 전체 도로명 코드 및 소속 행정구역 데이터를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 2/7] 도로 목록을 메모리에 읽어들이는 중 ... ' . "\n\n";
+echo '[Step 2/7] 도로 목록 및 영문 명칭을 메모리에 읽어들이는 중 ... ' . "\n\n";
 
+$english_cache = array();
 $roads = array();
 $roads_count = 0;
 
@@ -154,9 +179,18 @@ while ($line = trim(fgets($fp)))
         $ilbangu = '';
     }
     
+    // 영문 주소를 읽어들인다.
+    
+    $english = array();
+    $english[] = trim($line[2]);
+    if ($eupmyeon !== '') $english[] = $english_cache[trim($line[8])] = trim($line[9]);
+    $english[] = $english_cache[trim($line[6])] = trim($line[7]);
+    $english[] = $english_cache[$sido] = str_replace('-si', '', trim($line[5]));
+    $english = str_replace(', , ', ', ', implode(', ', $english));
+    
     // 도로 정보를 메모리에 저장한다.
     
-    $road_info = $road_name . '|' . $sido . '|' . $sigungu . '|' . $ilbangu . '|' . $eupmyeon;
+    $road_info = $road_name . '|' . $sido . '|' . $sigungu . '|' . $ilbangu . '|' . $eupmyeon . '|' . $english;
     $roads[$road_id][$road_section] = $road_info;
     
     // 상태를 표시한다.
@@ -213,8 +247,8 @@ while (count($files))
         $db = get_db();
         $ps_address_insert = $db->prepare('INSERT INTO postcode_addresses ' .
             '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
-            'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon) ' .
-            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, english_address) ' .
+            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $ps_keyword_insert = $db->prepare('INSERT INTO postcode_keywords_juso ' .
             '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
@@ -266,10 +300,15 @@ while (count($files))
                 $ilbangu = $road_info[3]; if ($ilbangu === '') $ilbangu = null;
                 $eupmyeon = $road_info[4]; if ($eupmyeon === '') $eupmyeon = null;
                 
+                // 영문 주소를 작성한다.
+                
+                $english = $num_major . ($num_minor ? ('-' . $num_minor) : '') . ', '. $road_info[5];
+                if ($is_basement) $english = 'Jiha ' . $english;
+                
                 // postcode_addresses 테이블에 삽입한다.
                 
                 $ps_address_insert->execute(array($address_id, $postcode5, null, $road_id, $road_section, $road_name,
-                    $num_major, $num_minor, $is_basement, $sido, $sigungu, $ilbangu, $eupmyeon));
+                    $num_major, $num_minor, $is_basement, $sido, $sigungu, $ilbangu, $eupmyeon, $english));
                 
                 // 검색 키워드들을 정리하여 postcode_keywords_road 테이블에 삽입한다.
                 
@@ -725,8 +764,8 @@ echo '[Step 6/7] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
 $db = get_db();
 $ps_address_insert = $db->prepare('INSERT INTO postcode_addresses ' .
     '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
-    'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon) ' .
-    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, english_address) ' .
+    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 $ps_keyword_insert = $db->prepare('INSERT INTO postcode_keywords_pobox ' .
     '(address_id, keyword, range_start_major, range_start_minor, range_end_major, range_end_minor) ' .
     'VALUES (?, ?, ?, ?, ?, ?)');
@@ -796,15 +835,24 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
         $address_id = '9999999999999999999' . str_pad($poboxes_count + 1, 6, '0', STR_PAD_LEFT);
         $road_id = '999999999999';
         
-        // postcode_addresses 테이블에 삽입한다.
+        // 시작 ~ 끝번호를 정리한다.
         
         $startnum = $range_start_major . ($range_start_minor ? ('-' . $range_start_minor) : '');
         $endnum = $range_end_major . ($range_end_minor ? ('-' . $range_end_minor) : '');
         if ($endnum === '' || $endnum === '-') $endnum = null;
         $insert_name = $pobox_name . ' ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum));
         
+        // 영문 주소를 생성한다.
+        
+        $english = 'P.O.Box ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum));
+        if (trim($line[4]) !== '' && isset($english_cache[trim($line[4])])) $english .= ', ' . $english_cache[trim($line[4])];
+        if (trim($line[3]) !== '' && isset($english_cache[trim($line[3])])) $english .= ', ' . $english_cache[trim($line[3])];
+        if (trim($line[2]) !== '' && isset($english_cache[trim($line[2])])) $english .= ', ' . $english_cache[trim($line[2])];
+        
+        // postcode_addresses 테이블에 삽입한다.
+        
         $ps_address_insert->execute(array($address_id, null, $postcode6, $road_id, '00', trim($insert_name),
-            null, null, 0, $sido, $sigungu, $ilbangu, $eupmyeon));
+            null, null, 0, $sido, $sigungu, $ilbangu, $eupmyeon, $english));
         
         // 검색 키워드들을 정리하여 postcode_keywords_pobox 테이블에 삽입한다.
         
@@ -850,7 +898,7 @@ $elapsed = $elapsed - ($elapsed_hours * 3600);
 $elapsed_minutes = floor($elapsed / 60);
 $elapsed_seconds = $elapsed - ($elapsed_minutes * 60);
 
-echo '  <--  경과 시간 : ';
+echo '데이터 입력을 마쳤습니다. 경과 시간 : ';
 if ($elapsed_hours) echo $elapsed_hours . '시간 ';
 if ($elapsed_hours || $elapsed_minutes) echo $elapsed_minutes . '분 ';
 echo $elapsed_seconds . '초' . "\n\n";
@@ -859,10 +907,10 @@ echo $elapsed_seconds . '초' . "\n\n";
 // 인덱스를 생성한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 7/7] 인덱스를 생성하는 중. 아주 긴 시간이 걸릴 수 있습니다 ... ' . "\n\n";
+echo '[Step 7/7] 인덱스를 생성하는 중. 긴 시간이 걸릴 수 있습니다 ... ' . "\n\n";
 
 $indexes = array(
-    'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section'),
+    'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'updated'),
     'postcode_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcode_keywords_building' => array('address_id', 'keyword'),
@@ -890,7 +938,7 @@ while (count($indexes))
         $db = get_db();
         foreach ($columns as $column)
         {
-            $db->query('ALTER TABLE ' . $table_name . ' ADD INDEX (' . $column . ')');
+            $db->exec('ALTER TABLE ' . $table_name . ' ADD INDEX (' . $column . ')');
         }
         exit;
     }
@@ -913,19 +961,6 @@ while (count($children))
 }
 
 echo "\n";
-
-// 경과시간을 측정한다.
-
-$elapsed = time() - $start_time;
-$elapsed_hours = floor($elapsed / 3600);
-$elapsed = $elapsed - ($elapsed_hours * 3600);
-$elapsed_minutes = floor($elapsed / 60);
-$elapsed_seconds = $elapsed - ($elapsed_minutes * 60);
-
-echo '  <--  경과 시간 : ';
-if ($elapsed_hours) echo $elapsed_hours . '시간 ';
-if ($elapsed_hours || $elapsed_minutes) echo $elapsed_minutes . '분 ';
-echo $elapsed_seconds . '초' . "\n\n";
 
 // 끝!
 

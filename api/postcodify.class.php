@@ -27,7 +27,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.3.0';
+    const VERSION = '1.4.2';
     
     // 실제 검색을 수행하는 메소드.
     
@@ -164,6 +164,7 @@ class Postcodify
             $record->canonical = strval($row->dongri . ($row->jibeon ? (' ' . $row->jibeon) : ''));
             $record->extra_info_long = strval($address_extra_long);
             $record->extra_info_short = strval($address_extra_short);
+            $record->english_address = isset($row->english_address) ? strval($row->english_address) : '';
             $record->jibeon_address = strval($address_old);
             $record->other = strval($row->other_addresses);
             $result->results[] = $record;
@@ -470,6 +471,7 @@ class Postcodify_Result_Record
     public $canonical;
     public $extra_info_long;
     public $extra_info_short;
+    public $english_address;
     public $jibeon_address;
     public $other;
 }
