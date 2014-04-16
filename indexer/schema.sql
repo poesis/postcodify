@@ -164,7 +164,7 @@ CREATE PROCEDURE postcode_search_building(IN keyword VARCHAR(80))
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
-    WHERE pk.keyword LIKE CONCAT(keyword, '%')
+    WHERE pk.keyword LIKE CONCAT('%', keyword, '%')
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
     LIMIT 100;
 END;
@@ -227,7 +227,7 @@ CREATE PROCEDURE postcode_search_pobox(IN keyword VARCHAR(80),
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_pobox AS pk ON pa.id = pk.address_id
-    WHERE pk.keyword LIKE CONCAT(keyword, '%')
+    WHERE pk.keyword LIKE CONCAT('%', keyword, '%')
         AND (num1 IS NULL OR num1 BETWEEN pk.range_start_major AND pk.range_end_major)
         AND (num2 IS NULL OR num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
@@ -243,7 +243,7 @@ CREATE PROCEDURE postcode_search_pobox_in_area(IN keyword VARCHAR(80),
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
     INNER JOIN postcode_keywords_pobox AS pk ON pa.id = pk.address_id
-    WHERE pk.keyword LIKE CONCAT(keyword, '%')
+    WHERE pk.keyword LIKE CONCAT('%', keyword, '%')
         AND (num1 IS NULL OR num1 BETWEEN pk.range_start_major AND pk.range_end_major)
         AND (num2 IS NULL OR num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
         AND (area1 IS NULL OR pa.sido = area1)
