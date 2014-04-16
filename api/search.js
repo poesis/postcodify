@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.4.2
+ *  jQuery 플러그인 version 1.4.2.2
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  

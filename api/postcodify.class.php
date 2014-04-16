@@ -27,7 +27,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.4.2.1';
+    const VERSION = '1.4.2.2';
     
     // 실제 검색을 수행하는 메소드.
     
@@ -120,8 +120,7 @@ class Postcodify
         }
         catch (Exception $e)
         {
-            error_log($e->getMessage());
-            header('HTTP/1.0 500 Internal Server Error');
+            error_log('Postcodify ("' . $kw . '"): ' . $e->getMessage());
             return new Postcodify_Result('Database Error');
         }
         
@@ -438,6 +437,22 @@ class Postcodify
 
 class Postcodify_Keywords
 {
+    public function __toString()
+    {
+        $result = array();
+        if ($this->sido !== null) $result[] = $this->sido;
+        if ($this->sigungu !== null) $result[] = $this->sigungu;
+        if ($this->ilbangu !== null) $result[] = $this->ilbangu;
+        if ($this->eupmyeon !== null) $result[] = $this->eupmyeon;
+        if ($this->dongri !== null) $result[] = $this->dongri;
+        if ($this->road !== null) $result[] = $this->road;
+        if ($this->building !== null) $result[] = $this->building;
+        if ($this->pobox !== null) $result[] = $this->pobox;
+        if (isset($this->numbers[0])) $result[] = $this->numbers[0] .
+            (isset($this->numbers[1]) ? ('-' . $this->numbers[1]) : '');
+        return implode(' ', $result);
+    }
+    
     public $sido;
     public $sigungu;
     public $ilbangu;
