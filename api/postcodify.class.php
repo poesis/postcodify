@@ -27,7 +27,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.4.2';
+    const VERSION = '1.4.2.1';
     
     // 실제 검색을 수행하는 메소드.
     
@@ -122,7 +122,7 @@ class Postcodify
         {
             error_log($e->getMessage());
             header('HTTP/1.0 500 Internal Server Error');
-            return new Postcodify_Result('Database Error: ' . $e->getMessage());
+            return new Postcodify_Result('Database Error');
         }
         
         // 검색 결과 오브젝트를 생성한다.
@@ -204,7 +204,7 @@ class Postcodify
         
         if ($dbh === null)
         {
-            if (class_exists('PDOx') && in_array('mysql', PDO::getAvailableDrivers()))
+            if (class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers()))
             {
                 $dbh_extension = 'pdo';
                 $dbh = new PDO('mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_DBNAME . ';charset=utf8',
@@ -245,7 +245,9 @@ class Postcodify
                 $placeholders = implode(', ', array_fill(0, count($params), '?'));
                 $ps = $dbh->prepare('CALL ' . $name . '(' . $placeholders . ')');
                 $ps->execute($params);
-                return $ps->fetchAll(PDO::FETCH_OBJ);
+                $result = $ps->fetchAll(PDO::FETCH_OBJ);
+                $ps->nextRowset();
+                return $result;
                 
             case 'mysqli':
                 $escaped_params = array();
@@ -260,6 +262,7 @@ class Postcodify
                 {
                     $result[] = $row;
                 }
+                $dbh->next_result();
                 return $result;
                 
             case 'mysql':
@@ -275,6 +278,10 @@ class Postcodify
                 while ($row = mysql_fetch_object($query))
                 {
                     $result[] = $row;
+                }
+                if ($name === 'postcode_search_jibeon' && !count($result))
+                {
+                    mysql_close($dbh); $dbh = null;
                 }
                 return $result;
                 
