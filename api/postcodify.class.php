@@ -168,6 +168,14 @@ class Postcodify
             $record->english_address = isset($row->english_address) ? strval($row->english_address) : '';
             $record->jibeon_address = strval($address_old);
             $record->other = strval($row->other_addresses);
+            if ($encoding !== 'UTF-8')
+            {
+                $properties = get_object_vars($record);
+                foreach ($properties as $key => $value)
+                {
+                    $record->$key = mb_convert_encoding($value, $encoding, 'UTF-8');
+                }
+            }
             $result->results[] = $record;
             $result->count++;
         }
