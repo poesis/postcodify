@@ -27,11 +27,11 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.4.2.2';
+    const VERSION = '1.4.2.3';
     
     // 실제 검색을 수행하는 메소드.
     
-    public static function search($kw)
+    public static function search($kw, $encoding = 'UTF-8')
     {
         // 검색 시작 시각을 기록한다.
         
@@ -39,22 +39,24 @@ class Postcodify
         
         // 검색 키워드의 유효성을 확인한다.
         
-        if (!($kw instanceof Postcodify_Keywords))
+        if ($kw === '')
         {
-            if ($kw === '')
-            {
-                return new Postcodify_Result('Keyword Not Supplied');
-            }
-            if (!mb_check_encoding($kw, 'UTF-8'))
-            {
-                return new Postcodify_Result('Keyword is Not Valid UTF-8');
-            }
-            if (($len = mb_strlen($kw, 'UTF-8')) < 3 || $len > 80)
-            {
-                return new Postcodify_Result('Keyword is Too Long or Too Short');
-            }
-            $kw = self::parse_keywords($kw);
+            return new Postcodify_Result('Keyword Not Supplied');
         }
+        if (!mb_check_encoding($kw, $encoding))
+        {
+            return new Postcodify_Result('Keyword is Not Valid ' . $encoding);
+        }
+        if ($encoding !== 'UTF-8')
+        {
+            $kw = mb_convert_encoding($kw, 'UTF-8', $encoding);
+        }
+        if (($len = mb_strlen($kw, 'UTF-8')) < 3 || $len > 80)
+        {
+            return new Postcodify_Result('Keyword is Too Long or Too Short');
+        }
+        
+        $kw = self::parse_keywords($kw);
         
         // DB에 연결하여 검색 쿼리를 실행한다.
         
@@ -181,7 +183,7 @@ class Postcodify
     
     // DB에 저장된 프로시저를 실행하고 결과를 반환하는 메소드.
     
-    public static function call_db_procedure($name, array $params, array $extra_params)
+    protected static function call_db_procedure($name, array $params, array $extra_params)
     {
         // DB 커넥션 핸들은 여기에 저장한다.
         
@@ -290,7 +292,7 @@ class Postcodify
     
     // 검색 키워드를 분해하여 각 구성요소를 정리하는 메소드.
     
-    public static function parse_keywords($str)
+    protected static function parse_keywords($str)
     {
         $kw = new Postcodify_Keywords;
         $str = preg_split('/\\s+/u', preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', strtolower($str)));
