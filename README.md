@@ -21,7 +21,7 @@
 
     <div id="postcode_search"></div>
     <script src="//code.jquery.com/jquery-1.10.2.min.js" charset="UTF-8"></script>
-    <script src="api/search.js" charset="UTF-8"></script>
+    <script src="//api.poesis.kr/post/search.js" charset="UTF-8"></script>
     <script type="text/javascript">
         $("#postcode_search").postcodify();
     </script>
