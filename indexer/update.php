@@ -55,7 +55,7 @@ while ($line = trim(fgets($fp)))
 {
     // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
     
-    $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+    $line = explode('|', iconv('CP949', 'UTF-8', $line));
     if (count($line) < 17 || !ctype_digit($line[0])) continue;
     
     // 도로ID, 도로명, 통과하는 읍면동별 구간번호, 소속 행정구역을 읽어들인다.
@@ -78,7 +78,7 @@ while ($line = trim(fgets($fp)))
     // 영문 주소를 읽어들인다.
     
     $english = array();
-    $english[] = $english_cache[trim($line[1])] = trim($line[2]);
+    $english[] = $english_cache[$road_name] = trim($line[2]);
     if ($eupmyeon !== '') $english[] = $english_cache[trim($line[8])] = trim($line[9]);
     $english[] = $english_cache[trim($line[6])] = trim($line[7]);
     $english[] = $english_cache[$sido] = str_replace('-si', '', trim($line[5]));
@@ -131,7 +131,7 @@ foreach ($files as $filename)
     {
         // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
         
-        $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+        $line = explode('|', iconv('CP949', 'UTF-8', $line));
         if (count($line) < 20 || !ctype_digit($line[0])) continue;
         
         // 상세 데이터를 읽어들인다.
@@ -226,7 +226,7 @@ function do_updates()
         {
             // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
             
-            $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+            $line = explode('|', iconv('CP949', 'UTF-8', $line));
             if (count($line) < 27 || !ctype_digit($line[0])) continue;
             
             // 상세 데이터를 읽어들인다.
@@ -255,6 +255,13 @@ function do_updates()
             $jibeon_major = (int)trim($line[6]); if (!$jibeon_major) $jibeon_major = null;
             $jibeon_minor = (int)trim($line[7]); if (!$jibeon_minor) $jibeon_minor = null;
             $is_mountain = (int)trim($line[5]);
+            
+            // 도로명의 '똠'자가 이상하게 표현된 경우를 파악한다.
+            
+            if ($sido === '전라남도' && preg_match('/^(.+)(.c|\\?|？)길$/u', $road_name, $matches))
+            {
+                $road_name = $matches[1] . '똠길';
+            }
             
             // 특별시/광역시 아래의 자치구와 행정시 아래의 일반구를 구분한다.
             

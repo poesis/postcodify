@@ -153,7 +153,7 @@ while ($line = trim(fgets($fp)))
 {
     // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
     
-    $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+    $line = explode('|', iconv('CP949', 'UTF-8', $line));
     if (count($line) < 17 || !ctype_digit($line[0])) continue;
     
     // 도로ID, 도로명, 통과하는 읍면동별 구간번호, 소속 행정구역을 읽어들인다.
@@ -242,7 +242,7 @@ while ($line = trim(fgets($fp)))
 {
     // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
     
-    $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+    $line = explode('|', iconv('CP949', 'UTF-8', $line));
     if (count($line) < 7 || !ctype_digit($line[0])) continue;
     
     // 관리번호와 건물명을 읽어들인다.
@@ -339,7 +339,7 @@ while (count($files))
             {
                 // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
                 
-                $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+                $line = explode('|', iconv('CP949', 'UTF-8', $line));
                 if (count($line) < 11 || !ctype_digit($line[0])) continue;
                 
                 // 상세 데이터를 읽어들인다.
@@ -485,7 +485,7 @@ while (count($files))
             {
                 // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
                 
-                $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+                $line = explode('|', iconv('CP949', 'UTF-8', $line));
                 if (count($line) < 11 || !ctype_digit($line[0])) continue;
                 
                 // 상세 데이터를 읽어들인다.
@@ -615,7 +615,7 @@ while (count($files))
             {
                 // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
                 
-                $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+                $line = explode('|', iconv('CP949', 'UTF-8', $line));
                 if (count($line) < 9 || !ctype_digit($line[0])) continue;
                 
                 // 상세 데이터를 읽어들인다.
@@ -760,7 +760,7 @@ while (count($files))
                 
                 if (isset($buildings[$address_id]))
                 {
-                    $keywords = $keywords + $buildings[$address_id];
+                    $keywords = $keywords + explode('|', $buildings[$address_id]);
                 }
                 
                 $keywords = array_unique($keywords);
@@ -867,7 +867,7 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
     $fp = $zip->getStream($zip->getNameIndex($fi));
     while ($line = trim(fgets($fp)))
     {
-        // 파일이 UTF-8인지 EUC-KR인지 판단한다.
+        // 파일이 UTF-8인지 CP949(EUC-KR)인지 판단한다.
         
         if ($poboxes_is_utf8 === null)
         {
@@ -876,7 +876,7 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
         }
         if ($poboxes_is_utf8 === false)
         {
-            $line = mb_convert_encoding($line, 'UTF-8', 'EUC-KR');
+            $line = mb_convert_encoding($line, 'UTF-8', 'CP949');
         }
         
         // 한 줄을 읽어 | 문자를 기준으로 데이터를 쪼갠다.
@@ -1015,6 +1015,8 @@ while (count($indexes))
     else
     {
         $db = get_db();
+        $db->exec('SET net_read_timeout = 3600');
+        $db->exec('SET net_write_timeout = 3600');
         foreach ($columns as $column)
         {
             $db->exec('ALTER TABLE ' . $table_name . ' ADD INDEX (' . $column . ')');
