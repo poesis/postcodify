@@ -127,7 +127,7 @@ function get_variations_of_dongri($str, &$dongs)
 
 function get_variations_of_building_name($str)
 {
-    // 건물명 관련 설정.
+    // 무시할 건물명 목록. 일부 지역에서는 이런 것까지 일일이 다 기록해 둔다.
     
     static $ignore_names = array(
         '주택', '단독주택', '창고', '축사', '화장실', '차고', '별관', '관사', '교회',
@@ -135,21 +135,15 @@ function get_variations_of_building_name($str)
         '관리사무소', '노인정', '이발관', '상가', '폐상가', '공가', '폐가', '(가건물)'
     );
     
-    // 불필요한 건물명은 제거한다.
-    
     if (in_array($str, $ignore_names)) return array();
     
     // 반환할 배열을 초기화한다.
     
     $keywords = array($str);
     
-    // 동수, 호수, 차수 등을 제거한다.
+    // 건물명 중간에 붙어 검색을 방해하는 동수, 호수, 차수 등을 제거한다.
     
-    if (preg_match('/^(.+)([0-9A-Za-z-]+(?:[동호차관]|단지)?)+$/uU', $str, $matches))
-    {
-        $keywords[] = $str = $matches[1];
-    }
-    elseif (preg_match('/^(.+)[0-9]+차(아파트|빌라|오피스텔)$/uU', $str, $matches))
+    if (preg_match('/^(.+)[0-9]+차(아파트|빌라|오피스텔)$/uU', $str, $matches))
     {
         $keywords[] = $str = $matches[1] . $matches[2];
     }
@@ -160,7 +154,9 @@ function get_variations_of_building_name($str)
     }
     
     // 일반적인 단체, 학교, 관공서명 등에 붙는 잡다한 접두사를 제거한다.
-    
+    // 1.4.2 버전부터는 건물명 검색을 LIKE %검색어%로 하기 때문에 이 부분은 필요없게 되었으나
+    // 나중에 검색 방법을 변경할 경우에 대비해 주석처리만 해둔다.
+    /*
     if (preg_match('/^(?:대한예수교장로회|기독교대한감리회|대한예수교연합침례회|사회복지법인|학교법인)(.+)$/uU', $str, $matches))
     {
         $keywords[] = $str = $matches[1];
@@ -174,6 +170,7 @@ function get_variations_of_building_name($str)
     {
         $keywords[] = $str = $matches[1] . $matches[2];
     }
+    */
     
     // 복잡한 아파트 명칭의 단순한 형태를 추가한다.
     
