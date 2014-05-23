@@ -67,6 +67,12 @@ if (!file_exists(TXT_DIRECTORY . '/도로명코드_전체분.zip'))
     exit(1);
 }
 
+if (!file_exists(TXT_DIRECTORY . '/상세건물명.zip'))
+{
+    echo '[ERROR] 상세건물명.zip 파일을 찾을 수 없습니다.' . "\n\n";
+    exit(1);
+}
+
 if (count(glob(TXT_DIRECTORY . '/주소_*.zip')) < 14)
 {
     echo '[ERROR] 주소_*.zip 파일을 찾을 수 없거나 일부 누락되었습니다.' . "\n\n";
@@ -95,7 +101,7 @@ if (!file_exists(TXT_DIRECTORY . '/newaddr_pobox_DB.zip'))
 // DB에 연결하고 테이블 및 검색 프로시저를 생성한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 1/7] 테이블과 프로시저를 생성하는 중 ... ' . "\n\n";
+echo '[Step 1/8] 테이블과 프로시저를 생성하는 중 ... ' . "\n\n";
 
 get_db()->exec(file_get_contents(__DIR__ . '/schema.sql'));
 
@@ -125,10 +131,10 @@ while (!$gotdate)
 echo "\n";
 
 // -------------------------------------------------------------------------------------------------
-// 전체 도로명 코드 및 소속 행정구역 데이터를 구하여 입력한다.
+// 전체 도로명 코드 및 소속 행정구역 데이터를 메모리로 불러온다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 2/7] 도로 목록 및 영문 명칭을 메모리에 읽어들이는 중 ... ' . "\n\n";
+echo '[Step 2/8] 도로 목록 및 영문 명칭을 메모리에 읽어들이는 중 ... ' . "\n\n";
 
 $english_cache = array();
 $roads = array();
@@ -215,10 +221,75 @@ $zip->close();
 unset($zip);
 
 // -------------------------------------------------------------------------------------------------
+// 상세건물명 데이터를 메모리로 불러온다. 나중에 부가정보와 함께 DB에 입력된다.
+// -------------------------------------------------------------------------------------------------
+
+echo '[Step 3/8] 상세건물명 데이터를 메모리에 읽어들이는 중 ... ' . "\n\n";
+
+$buildings = array();
+$buildings_count = 0;
+
+// 파일을 연다.
+
+$filename = TXT_DIRECTORY . '/상세건물명.zip';
+echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
+
+$zip = new ZipArchive;
+$zip->open($filename);
+$fp = $zip->getStream($zip->getNameIndex(0));
+
+while ($line = trim(fgets($fp)))
+{
+    // 한 줄을 읽어 UTF-8로 변환하고, | 문자를 기준으로 데이터를 쪼갠다.
+    
+    $line = explode('|', iconv('EUC-KR', 'UTF-8', $line));
+    if (count($line) < 7 || !ctype_digit($line[0])) continue;
+    
+    // 관리번호와 건물명을 읽어들인다.
+    
+    $address_id = $line[5];
+    $building_name = array_map('trim', explode(',', $line[6]));
+    $building_names = array();
+    foreach ($building_name as $building_name_i)
+    {
+        $building_names = $building_names + get_variations_of_building_name(get_canonical($building_name_i));
+    }
+    $building_names = array_unique($building_names);
+    
+    // 도로 정보를 메모리에 저장한다.
+    
+    if (count($building_names))
+    {
+        $buildings[$address_id] = implode('|', $building_names);
+    }
+    
+    // 상태를 표시한다.
+    
+    if ($buildings_count % 1024 == 0)
+    {
+        echo "\033[10D" . str_pad(number_format($buildings_count, 0), 10, ' ', STR_PAD_LEFT);
+    }
+    
+    $buildings_count++;
+    
+    // 가비지 컬렉션.
+    
+    unset($building_name);
+    unset($building_names);
+    unset($line);
+}
+
+// 마무리...
+
+echo "\033[10D" . str_pad(number_format($buildings_count, 0), 10, ' ', STR_PAD_LEFT) . "\n\n";
+$zip->close();
+unset($zip);
+
+// -------------------------------------------------------------------------------------------------
 // 시도별 주소 파일에서 도로명주소 데이터를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 3/7] 쓰레드를 사용하여 "주소" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 4/8] 쓰레드를 사용하여 "주소" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/주소_*.zip');
 $children = array();
@@ -360,7 +431,7 @@ unset($roads);
 // 시도별 지번 파일에서 지번주소와 도로명주소간의 맵핑 데이터를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 4/7] 쓰레드를 사용하여 "지번" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 5/8] 쓰레드를 사용하여 "지번" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/지번_*.zip');
 $children = array();
@@ -487,7 +558,7 @@ echo "\n";
 // 시도별 부가정보 파일에서 행정동명, 건물명, 6자리 우편번호를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 5/7] 쓰레드를 사용하여 "부가정보" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 6/8] 쓰레드를 사용하여 "부가정보" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/부가정보_*.zip');
 $children = array();
@@ -604,6 +675,8 @@ while (count($files))
                     $other_addresses[] = $dongname . ' ' . implode(', ', $numbers);
                 }
                 
+                $keywords_nums = array_unique($keywords_nums);
+                
                 // 지번 및 기타주소 정리 : 행정동명을 추가한다.
                 
                 if ($admin_dong !== '' && $legal_dong !== '' && $admin_dong !== $legal_dong)
@@ -683,8 +756,14 @@ while (count($files))
                     $keywords = $keywords + get_variations_of_building_name(get_canonical($building3));
                 }
                 
+                // 아까 메모리에 저장해 둔 상세건물명을 목록에 추가하고, 중복을 제거한다.
+                
+                if (isset($buildings[$address_id]))
+                {
+                    $keywords = $keywords + $buildings[$address_id];
+                }
+                
                 $keywords = array_unique($keywords);
-                $keywords_nums = array_unique($keywords_nums);
                 
                 // 지번 검색 키워드들을 postcode_keywords_jibeon 테이블에 삽입한다.
                 
@@ -757,7 +836,7 @@ echo "\n";
 // 사서함 파일을 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 6/7] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
+echo '[Step 7/8] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
 
 // 준비.
 
@@ -907,7 +986,7 @@ echo $elapsed_seconds . '초' . "\n\n";
 // 인덱스를 생성한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 7/7] 인덱스를 생성하는 중. 긴 시간이 걸릴 수 있습니다 ... ' . "\n\n";
+echo '[Step 8/8] 인덱스를 생성하는 중. 긴 시간이 걸릴 수 있습니다 ... ' . "\n\n";
 
 $indexes = array(
     'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'updated'),
