@@ -27,7 +27,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.4.2.3';
+    const VERSION = '1.5';
     
     // 실제 검색을 수행하는 메소드.
     

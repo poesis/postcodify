@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.4.2.3
+ *  jQuery 플러그인 version 1.5
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
@@ -97,7 +97,7 @@
             var results = $(settings.results);
             $('<div class="postcode_search_status empty">검색 결과가 없습니다.</div>').appendTo(results).show();
             $('<div class="postcode_search_status error">검색 중 오류가 발생하였습니다.</div>').appendTo(results).hide();
-            $('<div class="postcode_search_status quota">무료 API가 허용하는 일일 쿼리수를 초과하였습니다.</div>').appendTo(results).hide();
+            $('<div class="postcode_search_status quota">일일 허용 쿼리수를 초과하였습니다.</div>').appendTo(results).hide();
             $('<div class="postcode_search_status too_short">검색어는 3글자 이상 입력해 주시기 바랍니다.</div>').appendTo(results).hide();
             $('<div class="postcode_search_status too_many">검색 결과가 너무 많아 100건까지만 표시합니다.<br />' +
                 '행정구역명, 번지수 등을 사용하여 좀더 자세히 검색해 주시기 바랍니다.</div>').appendTo(results).hide();
@@ -239,7 +239,7 @@
                                 if (result.other) {
                                     var old_addresses_show = $('<a href="#" class="show_old_addresses" title="관련지번 보기">▼</a>');
                                     old_addresses_show.appendTo(option.find("div.address"));
-                                    var old_addresses_div = $('<div class="old_addresses"></div>').text(result.other);
+                                    var old_addresses_div = $('<div class="old_addresses" style="display:none"></div>').text(result.other);
                                     old_addresses_div.appendTo(option);
                                 }
                                 

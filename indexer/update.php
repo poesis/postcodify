@@ -16,7 +16,7 @@ $start_time = time();
 
 // 설정과 함수 파일을 인클루드한다.
 
-define('INDEXER_VERSION', '4.2');
+define('INDEXER_VERSION', '1.5');
 require dirname(__FILE__) . '/config.php';
 require dirname(__FILE__) . '/functions.php';
 echo "\n";
