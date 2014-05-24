@@ -127,25 +127,20 @@ function get_variations_of_dongri($str, &$dongs)
 
 function get_variations_of_building_name($str)
 {
-    // 무시할 건물명 목록. 일부 지역에서는 이런 것까지 일일이 다 기록해 둔다.
+    // 무의미한 건물명은 무시한다.
     
-    static $ignore_names = array(
-        '주택', '단독주택', '창고', '화장실', '차고', '본관', '본관동', '별관', '별관동', '증축', '관사', '교회',
-        '소매점', '일반음식점', '음식점', '우체국', '미술관', '주유소', '사무실', '관리실', '대웅전',
-        '관리사무소', '노인정', '이발관', '상가', '폐상가', '공가', '폐가', '축사', '폐축사', '(가건물)'
-    );
-    
-    if (in_array($str, $ignore_names)) return array();
+    if (isset($GLOBALS['ignore_building_names_ordered'][$str])) return array();
     
     // 그 밖에 불필요한 건물명을 제거한다.
     
-    if (preg_match('/^([0-9a-zA-Z]+|에이|비|씨|디|[가나다라마바사아자차카타파하])동$/u', $str)) return array();
+    if (ctype_digit($str)) return array();
+    if (preg_match('/^(주|주건축물제|제)([0-9a-zA-Z]+|에이|비|씨|디|[가나다라마바사아자차카타파하])(호|동|호동)$/u', $str)) return array();
     
     // 반환할 배열을 초기화한다.
     
     $keywords = array($str);
     
-    // 건물명 중간에 붙어 검색을 방해하는 동수, 호수, 차수 등을 제거한다.
+    // 건물명 중간에 붙어 검색을 방해하는 동수, 호수, 차수 등을 제거하여 ○○3차아파트를 ○○아파트로도 검색할 수 있도록 한다.
     
     if (preg_match('/^(.+)[0-9]+차(아파트|빌라|오피스텔)$/uU', $str, $matches))
     {
@@ -176,7 +171,7 @@ function get_variations_of_building_name($str)
     }
     */
     
-    // 복잡한 아파트 명칭의 단순한 형태를 추가한다.
+    // 일관성 없는 아파트 명칭의 단순한 형태를 추가한다.
     
     $keywords[] = str_replace('e-편한세상', 'e편한세상', $str);
     
@@ -184,3 +179,25 @@ function get_variations_of_building_name($str)
     
     return array_unique($keywords);
 }
+
+// 무시할 건물명 목록. 일부 지역에서는 이런 것까지 일일이 다 기록해 둔다.
+    
+$ignore_building_names = array(
+    '주택', '단독주택', '창고', '화장실', '차고', '본관', '본관동', '별관', '별관동', '증축', '관사', '교회',
+    '소매점', '일반음식점', '음식점', '우체국', '미술관', '주유소', '사무실', '관리실', '대웅전',
+    '관리사무소', '노인정', '이발관', '상가', '폐상가', '공가', '폐가', '축사', '폐축사', '가건물',
+    '다세대주택', '공장', '정비공장', '제실', '컨테이너', '사무소', '무벽건물', '재실', '철거', '제각', '퇴비사',
+    '슈퍼', '민박', '경로당', '정자', '비닐하우스', '하우스', '우사', '돈사', '견사', '양계장', '건물',
+    '빈집', '다가구주택', '상점', '고물상', '원룸', '폐창고', '농막', '사찰', '회관', '관리사', '폐공장',
+    '식당', '주차장', '사당', '온실', '빌라', '일반공장', '공중화장실', '마을공동시설', '방앗간',
+    '여관', '학원', '수리점', '약국', '다세대', '다가구', '미용실', '고시원', '세탁소', '공사중',
+);
+
+$ignore_building_names_ordered = array();
+
+foreach ($ignore_building_names as $ignore_building_name)
+{
+    $ignore_building_names_ordered[$ignore_building_name] = true;
+}
+unset($ignore_building_names);
+unset($ignore_building_name);
