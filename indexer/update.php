@@ -16,7 +16,7 @@ $start_time = time();
 
 // 설정과 함수 파일을 인클루드한다.
 
-define('INDEXER_VERSION', '1.5');
+define('INDEXER_VERSION', '1.5.1');
 require dirname(__FILE__) . '/config.php';
 require dirname(__FILE__) . '/functions.php';
 echo "\n";
@@ -115,12 +115,6 @@ $files = @glob(TXT_DIRECTORY . '/Updates/AlterD.JUSUZC.*');
 if (!$files) $files = array();
 foreach ($files as $filename)
 {
-    // 이미 적용한 업데이트는 건너뛴다.
-    
-    $filename_date = substr(basename($filename), 14, 8);
-    if (!ctype_digit($filename_date)) continue;
-    if ($filename_date <= $updated) continue;
-    
     // 파일을 연다.
     
     echo '  -->  ' . basename($filename) . ' ... ';
