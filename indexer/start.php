@@ -992,7 +992,7 @@ $indexes = array(
     'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'updated'),
     'postcode_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
-    'postcode_keywords_building' => array('address_id', 'keyword'),
+    'postcode_keywords_building' => array('address_id'),
     'postcode_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
 );
 
