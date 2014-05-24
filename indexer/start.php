@@ -16,16 +16,16 @@ $start_time = time();
 
 // 설정과 함수 파일을 인클루드한다.
 
-define('INDEXER_VERSION', '1.5');
+define('INDEXER_VERSION', '1.5.1');
 require dirname(__FILE__) . '/config.php';
 require dirname(__FILE__) . '/functions.php';
 echo "\n";
 
 // 필요한 기능이 모두 있는지 확인한다.
 
-if (version_compare(PHP_VERSION, '5.3.0', '<'))
+if (version_compare(PHP_VERSION, '5.3', '<'))
 {
-    echo '[ERROR] PHP 버전은 5.3.0 이상이어야 합니다.' . "\n\n";
+    echo '[ERROR] PHP 버전은 5.3 이상이어야 합니다.' . "\n\n";
     exit(1);
 }
 
