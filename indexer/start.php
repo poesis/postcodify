@@ -107,24 +107,45 @@ get_db()->exec(file_get_contents(__DIR__ . '/schema.sql'));
 
 // 기본 설정을 입력한다.
 
-$lastmonth = strtotime('-1 month');
-$stdin = fopen('php://stdin', 'r');
 $gotdate = false;
-while (!$gotdate)
+
+if (file_exists(TXT_DIRECTORY . '/도로명코드_기준일.txt'))
 {
-    echo '데이터 기준일을 입력해 주십시오. 예: ' . date('Y년 n월 25일', $lastmonth) . ' = ' . date('Ym25', $lastmonth) . ' : ';
-    $line = trim(fgets($stdin));
-    if (preg_match('/^20[0-9][0-9][0-1][0-9][0-3][0-9]$/', $line))
+    $savedate = trim(file_get_contents(TXT_DIRECTORY . '/도로명코드_기준일.txt'));
+    if (preg_match('/^20[0-9]{6}$/', $savedate))
     {
-        get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('version', " . INDEXER_VERSION . ")");
-        get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('updated', '" . $line . "')");
-        fclose($stdin);
-        break;
+        $filedate = date('Ymd', filemtime(TXT_DIRECTORY . '/도로명코드_전체분.zip'));
+        if ($filedate > $savedate)
+        {
+            echo '파일에서 데이터 기준일을 읽어 사용합니다. 기준일은 ' . $savedate . '입니다.' . "\n";
+            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
+            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('updated', '" . $savedate . "')");
+            $gotdate = true;
+        }
     }
-    else
+}
+
+if (!$gotdate)
+{
+    $lastmonth = strtotime('-1 month');
+    $stdin = fopen('php://stdin', 'r');
+
+    while (!$gotdate)
     {
-        echo '입력 형태가 틀립니다. ' . date('Ym25', $lastmonth) . ' 형태로 입력해 주십시오.' . "\n";
-        continue;
+        echo '데이터 기준일을 입력해 주십시오. 예: ' . date('Y년 n월 25일', $lastmonth) . ' = ' . date('Ym25', $lastmonth) . ' : ';
+        $line = trim(fgets($stdin));
+        if (preg_match('/^20[0-9][0-9][0-1][0-9][0-3][0-9]$/', $line))
+        {
+            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
+            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('updated', '" . $line . "')");
+            fclose($stdin);
+            break;
+        }
+        else
+        {
+            echo '입력 형태가 틀립니다. ' . date('Ym25', $lastmonth) . ' 형태로 입력해 주십시오.' . "\n";
+            continue;
+        }
     }
 }
 
