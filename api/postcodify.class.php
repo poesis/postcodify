@@ -137,7 +137,7 @@ class Postcodify
             $address_base = trim($row->sido . ' ' . ($row->sigungu ? ($row->sigungu . ' ') : '') .
                 ($row->ilbangu ? ($row->ilbangu . ' ') : '') . ($row->eupmyeon ? ($row->eupmyeon . ' ') : ''));
                 
-            $address_road = $address_base . ' ' . $row->road_name . ' ' . ($row->is_basement ? '지하 ' : '') . ($row->num_major ?: '') . ($row->num_minor ? ('-' . $row->num_minor) : '');
+            $address_road = $address_base . ' ' . $row->road_name . ' ' . ($row->is_basement ? '지하 ' : '') . ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : '');
             $address_old = $address_base . ' ' . $row->dongri . ($row->jibeon ? (' ' . $row->jibeon) : '');
             
             // 추가정보를 정리한다.
