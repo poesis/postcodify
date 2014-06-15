@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.5
+ *  jQuery 플러그인 version 1.5.1
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
@@ -69,6 +69,7 @@
                 api : "//api.poesis.kr/post/search.php",
                 controls : this,
                 results : this,
+                searchButtonContent : "검색",
                 insertDbid : null,
                 insertPostcode5 : null,
                 insertPostcode6 : null,
@@ -89,7 +90,7 @@
             
             var controls = $('<div class="postcode_search_controls"></div>');
             var keyword_input = $('<input type="text" class="keyword" value="" />').appendTo(controls);
-            var search_button = $('<button type="button" class="search_button">검색</button>').appendTo(controls);
+            var search_button = $('<button type="button" class="search_button"></button>').html(settings.searchButtonContent).appendTo(controls);
             controls.prependTo(settings.controls);
             
             // 검색 결과창을 생성한다.
@@ -160,7 +161,7 @@
                 if (navigator.userAgent && navigator.userAgent.match(/MSIE [5-8]\./)) {
                     search_button.text('...');
                 } else {
-                    search_button.html('<img alt="검색" src="' + $.fn.postcodify.gif + '" />');
+                    search_button.html('<img class="searching" alt="검색" src="' + $.fn.postcodify.gif + '" />');
                 }
                 
                 // 스크롤 위치를 기억한다.
@@ -278,7 +279,7 @@
                         
                         // 검색 단추를 다시 사용할 수 있도록 한다.
                         
-                        search_button.removeAttr("disabled").text("검색");
+                        search_button.removeAttr("disabled").html(settings.searchButtonContent);
                     }
                 });
             });
