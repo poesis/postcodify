@@ -61,7 +61,7 @@
  *          onComplete : function() {
  *              // 검색 완료시 호출할 콜백
  *          },
- *          focusKeyword : true,  // 페이지 로딩 직후 키워드 입력란으로 포커스 이동
+ *          focusKeyword : true,  // 페이지 로딩 직후 키워드 입력란으로 포커스 이동 여부
  *          useFullJibeon : true  // false인 경우 참고항목에 법정동과 공동주택명만 표시
  *                                // true인 경우 대표지번도 표시 (택배 등의 편의를 위해)
  *              // 익스플로러 호환성을 위해 마지막 항목 뒤에는 쉼표(,) 입력 금지

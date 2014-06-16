@@ -33,6 +33,8 @@
     $("#검색란을_표시할_div의_id").postcodify({
         api : "api/search.php",  // 서버측 검색 API를 직접 설치하신 경우에만 설정
         controls : "#키워드_입력란을_표시할_div의_id",
+        searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
+        hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
         insertDbid : "#안행부_관리번호를_입력할_input의_id",
         insertPostcode5 : "#기초구역번호를_입력할_input의_id",
         insertPostcode6 : "#우편번호를_입력할_input의_id",
@@ -53,14 +55,23 @@
         afterSelect : function(selectedEntry) {
             // 선택한 주소를 input에 입력한 직후에 호출할 콜백
         },
-        focusKeyword : true,  // 페이지 로딩 직후 키워드 입력란으로 포커스 이동
+        onSuccess : function() {
+            // 검색 성공시 호출할 콜백
+        },
+        onError : function() {
+            // 검색 실패시 호출할 콜백
+        },
+        onComplete : function() {
+            // 검색 완료시 호출할 콜백
+        },
+        focusKeyword : true,  // 페이지 로딩 직후 키워드 입력란으로 포커스 이동 여부
         useFullJibeon : true  // false인 경우 참고항목에 법정동과 공동주택명만 표시
                               // true인 경우 대표지번도 표시 (택배 등의 편의를 위해)
             // 익스플로러 호환성을 위해 마지막 항목 뒤에는 쉼표(,) 입력 금지
     });
 
 콜백 함수를 사용하면 더 다양한 기능도 구현할 수 있습니다.
-버전 1.2.1부터는 콜백 함수에서 `false`를 반환할 경우 검색을 중단합니다.
+콜백 함수에서 `false`를 반환할 경우 검색을 중단합니다.
 
 스타일 지정은 CSS를 사용하시면 됩니다.
 F12 키를 눌러 웹브라우저의 개발자도구를 사용하시면
