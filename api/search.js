@@ -52,6 +52,15 @@
  *          afterSelect : function(selectedEntry) {
  *              // 선택한 주소를 input에 입력한 직후에 호출할 콜백
  *          },
+ *          onSuccess : function() {
+ *              // 검색 성공시 호출할 콜백
+ *          },
+ *          onError : function() {
+ *              // 검색 실패시 호출할 콜백
+ *          },
+ *          onComplete : function() {
+ *              // 검색 완료시 호출할 콜백
+ *          },
  *          focusKeyword : true,  // 페이지 로딩 직후 키워드 입력란으로 포커스 이동
  *          useFullJibeon : true  // false인 경우 참고항목에 법정동과 공동주택명만 표시
  *                                // true인 경우 대표지번도 표시 (택배 등의 편의를 위해)
@@ -85,6 +94,9 @@
                 afterSearch : function(keywords, results) { },
                 beforeSelect : function(selectedEntry) { },
                 afterSelect : function(selectedEntry) { },
+                onSuccess : function() { },
+                onError : function() { },
+                onComplete : function() { },
                 focusKeyword : true,
                 useFullJibeon : false
             }, options);
@@ -100,7 +112,7 @@
             
             var results = $(settings.results);
             $('<div class="postcode_search_status empty">검색 결과가 없습니다.</div>').appendTo(results).show();
-            $('<div class="postcode_search_status error">검색 중 오류가 발생하였습니다.</div>').appendTo(results).hide();
+            $('<div class="postcode_search_status error">검색 서버에 연결 중 오류가 발생하였습니다.</div>').appendTo(results).hide();
             $('<div class="postcode_search_status quota">일일 허용 쿼리수를 초과하였습니다.</div>').appendTo(results).hide();
             $('<div class="postcode_search_status too_short">검색어는 3글자 이상 입력해 주시기 바랍니다.</div>').appendTo(results).hide();
             $('<div class="postcode_search_status too_many">검색 결과가 너무 많아 100건까지만 표시합니다.<br />' +
@@ -262,6 +274,10 @@
                                 results.find("div.postcode_search_status.too_many").show();
                             }
                         }
+                        
+                        // 검색 성공 콜백 함수를 실행한다.
+                        
+                        settings.onSuccess();
                     },
                     
                     // 요청이 실패한 경우 이 함수를 호출한다.
@@ -272,6 +288,10 @@
                         
                         results.find("div.postcode_search_status.error").show();
                         $.fn.postcodify.previous = "";
+                        
+                        // 검색 실패 콜백 함수를 실행한다.
+                        
+                        settings.onError();
                     },
                     
                     // 요청 후에는 이 함수를 호출한다.
@@ -285,6 +305,10 @@
                         // 검색 단추를 다시 사용할 수 있도록 한다.
                         
                         search_button.removeAttr("disabled").html(settings.searchButtonContent);
+                        
+                        // 검색 완료 콜백 함수를 실행한다.
+                        
+                        settings.onComplete();
                     }
                 });
             });
