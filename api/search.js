@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.5.1
+ *  jQuery 플러그인 version 1.5.2
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
@@ -70,6 +70,7 @@
                 controls : this,
                 results : this,
                 searchButtonContent : "검색",
+                hideOldAddresses : true,
                 insertDbid : null,
                 insertPostcode5 : null,
                 insertPostcode6 : null,
@@ -224,7 +225,8 @@
                                 
                                 // 클릭할 링크를 생성한다.
                                 
-                                var selector = $('<a class="selector" href="#"></a>').text(result.address);
+                                var selector = $('<a class="selector" href="#"></a>');
+                                selector.append($('<span class="address_info"></span>').text(result.address));
                                 if (result.extra_info_long) {
                                     selector.append($('<span class="extra_info"></span>').append("(" + result.extra_info_long + ")"));
                                 }
@@ -240,7 +242,8 @@
                                 if (result.other) {
                                     var old_addresses_show = $('<a href="#" class="show_old_addresses" title="관련지번 보기">▼</a>');
                                     old_addresses_show.appendTo(option.find("div.address"));
-                                    var old_addresses_div = $('<div class="old_addresses" style="display:none"></div>').text(result.other);
+                                    var old_addresses_div = $('<div class="old_addresses"></div>').text(result.other);
+                                    if (settings.hideOldAddresses) old_addresses_div.css("display", "none");
                                     old_addresses_div.appendTo(option);
                                 }
                                 
