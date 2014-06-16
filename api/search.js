@@ -30,6 +30,8 @@
  *      $("#검색란을_표시할_div의_id").postcodify({
  *          api : "서버측 API의 주소",  // 지정하지 않으면 api.poesis.kr의 무료 서버 사용
  *          controls : "#키워드_입력란을_표시할_div의_id",  // 지정하지 않으면 검색창에 함께 표시
+ *          searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
+ *          hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
  *          insertDbid : "#안행부_관리번호를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertPostcode5 : "#기초구역번호를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertPostcode6 : "#우편번호를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
