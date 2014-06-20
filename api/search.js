@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.5.2
+ *  jQuery 플러그인 version 1.5.3
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
@@ -62,6 +62,7 @@
  *              // 검색 완료시 호출할 콜백
  *          },
  *          focusKeyword : true,  // 페이지 로딩 직후 키워드 입력란으로 포커스 이동 여부
+ *          focusDetails : true,  // 주소 선택 후 상세주소 입력란으로 포커스 이동 여부
  *          useFullJibeon : true  // false인 경우 참고항목에 법정동과 공동주택명만 표시
  *                                // true인 경우 대표지번도 표시 (택배 등의 편의를 위해)
  *              // 익스플로러 호환성을 위해 마지막 항목 뒤에는 쉼표(,) 입력 금지
@@ -98,6 +99,7 @@
                 onError : function() { },
                 onComplete : function() { },
                 focusKeyword : true,
+                focusDetails : true,
                 useFullJibeon : false
             }, options);
             
@@ -355,7 +357,7 @@
                 
                 // 상세주소를 입력하는 칸으로 포커스를 이동한다.
                 
-                if (settings.insertDetails) {
+                if (settings.insertDetails && settings.focusDetails) {
                     $(settings.insertDetails).focus();
                 }
             });
