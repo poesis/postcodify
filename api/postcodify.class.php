@@ -27,7 +27,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.5';
+    const VERSION = '1.5.3';
     
     // 실제 검색을 수행하는 메소드.
     
@@ -302,7 +302,16 @@ class Postcodify
     
     protected static function parse_keywords($str)
     {
+        // 숫자 앞에 공백에 있는 경우 붙여쓴다.
+        
+        $str = preg_replace('/\s+([0-9]+번?)([로길동리가])/u', '$1$2', $str);
+        
+        // 키워드 목록 객체를 초기화한다.
+        
         $kw = new Postcodify_Keywords;
+        
+        // 단어별로 분리한다.
+        
         $str = preg_split('/\\s+/u', preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', strtolower($str)));
         
         foreach ($str as $id => $keyword)
