@@ -29,7 +29,7 @@ function crc32_x64($str)
 function get_canonical($str)
 {
     $str = str_replace(array('(주)', '(유)', '(사)', '(재)', '(아)'), '', $str);
-    return preg_replace('/[^ㄱ-ㅎ가-힣a-z0-9-]/U', '', strtolower($str));
+    return preg_replace('/[^ㄱ-ㅎ가-힣a-z0-9-]/uU', '', strtolower($str));
 }
 
 // 도로명의 일반적인 변형들을 구하는 함수.
