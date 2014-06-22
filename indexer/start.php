@@ -1038,6 +1038,7 @@ while (count($indexes))
         $db = get_db();
         $db->exec('SET net_read_timeout = 3600');
         $db->exec('SET net_write_timeout = 3600');
+        $db->exec('SET wait_timeout = 3600');
         foreach ($columns as $column)
         {
             $db->exec('ALTER TABLE ' . $table_name . ' ADD INDEX (' . $column . ')');
