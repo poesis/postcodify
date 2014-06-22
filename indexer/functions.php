@@ -24,6 +24,38 @@ function crc32_x64($str)
     return ($crc32 >= 0) ? $crc32 : ($crc32 + 0x100000000);
 }
 
+// 파일 다운로드 함수.
+
+function download($url, $target_filename = false)
+{
+    $ch = curl_init($url);
+    if ($target_filename)
+    {
+        $fp = fopen($target_filename, 'w');
+        curl_setopt($ch, CURLOPT_FILE, $fp);
+    }
+    else
+    {
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    }
+    curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_USERAGENT, CURL_USER_AGENT);
+    $result = curl_exec($ch);
+    curl_close($ch);
+    if ($target_filename)
+    {
+        fclose($fp);
+    }
+    else
+    {
+        if (!preg_match('/charset=utf-?8/i', $result))
+        {
+            $result = iconv('CP949', 'UTF-8', $result);
+        }
+    }
+    return $result;
+}
+
 // 검색 키워드에서 불필요한 문자와 띄어쓰기를 제거하는 함수.
 
 function get_canonical($str)

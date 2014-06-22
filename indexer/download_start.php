@@ -10,11 +10,12 @@ date_default_timezone_set('UTC');
 error_reporting(-1);
 gc_enable();
 
-// 설정 파일을 인클루드한다.
+// 설정과 함수 파일을 인클루드한다.
 
 require dirname(__FILE__) . '/config.php';
+require dirname(__FILE__) . '/functions.php';
 
-// 정규식 목록.
+// 주소사이트 검색에 사용할 정규식 및 URL 목록.
 
 define('CURL_USER_AGENT', 'Mozilla/5.0 (Compatible; Postcodify Downloader)');
 define('RELATIVE_DOMAIN', 'http://www.juso.go.kr');
@@ -25,38 +26,6 @@ define('FIND_LINKS_IN_ENTRY_REGEXP', '#<a href="([^"]+)">#iU');
 define('FIND_DATA_DATE_REGEXP', '#\\((20[0-9][0-9])년 ([0-9]+)월 ([0-9]+)일 기준\\)#uU');
 define('FIND_DOWNLOAD_REGEXP', '#<a href="(/dn\\.do\\?[^"]+)">([^<]+\\.zip)</a>#iU');
 define('DOWNLOAD_PATH', TXT_DIRECTORY);
-
-// 파일 다운로드 함수.
-
-function download($url, $target_filename = false)
-{
-    $ch = curl_init($url);
-    if ($target_filename)
-    {
-        $fp = fopen($target_filename, 'w');
-        curl_setopt($ch, CURLOPT_FILE, $fp);
-    }
-    else
-    {
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    }
-    curl_setopt($ch, CURLOPT_HEADER, 0);
-    curl_setopt($ch, CURLOPT_USERAGENT, CURL_USER_AGENT);
-    $result = curl_exec($ch);
-    curl_close($ch);
-    if ($target_filename)
-    {
-        fclose($fp);
-    }
-    else
-    {
-        if (!preg_match('/charset=utf-?8/i', $result))
-        {
-            $result = iconv('CP949', 'UTF-8', $result);
-        }
-    }
-    return $result;
-}
 
 // 게시물 목록을 다운로드한다.
 
