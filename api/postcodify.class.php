@@ -27,7 +27,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.5.3';
+    const VERSION = '1.5.4';
     
     // 실제 검색을 수행하는 메소드.
     
@@ -335,11 +335,23 @@ class Postcodify
             
             // 시군구읍면을 확인한다.
             
-            if (preg_match('/.+([시군구읍면])$/u', $keyword, $matches))
+            if (preg_match('/.*([시군구읍면])$/u', $keyword, $matches))
             {
                 if ($matches[1] === '읍' || $matches[1] === '면')
                 {
-                    $kw->eupmyeon = $keyword;
+                    if (!$kw->sigungu && preg_match('/^(.+)군([읍면])$/u', $keyword, $gun) && in_array($gun[1] . '군', Postcodify_Areas::$sigungu))
+                    {
+                        $kw->sigungu = $gun[1] . '군';
+                        $kw->eupmyeon = $gun[1] . $gun[2];
+                    }
+                    elseif ($kw->sigungu && ($keyword === '읍' || $keyword === '면'))
+                    {
+                        $kw->eupmyeon = preg_replace('/군$/u', $keyword, $kw->sigungu);
+                    }
+                    else
+                    {
+                        $kw->eupmyeon = $keyword;
+                    }
                     $kw->use_area = true;
                     continue;
                 }
