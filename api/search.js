@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.5.3
+ *  jQuery 플러그인 version 1.5.4
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
@@ -289,7 +289,6 @@
                         // 오류 메시지를 보여준다.
                         
                         results.find("div.postcode_search_status.error").show();
-                        $.fn.postcodify.previous = "";
                         
                         // 검색 실패 콜백 함수를 실행한다.
                         
