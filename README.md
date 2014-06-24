@@ -1,8 +1,8 @@
 
 ### 저작권 및 라이선스 ###
 
-포에시스(poesis.kr)의 [도로명주소 우편번호 검색 예제](http://post.poesis.kr/)에 사용된 API를
-직접 구현하는 데 필요한 인덱서 스크립트와 서버측 검색 API, 클라이언트 API 일체를 오픈소스로 공개합니다.
+[포에시스](http://www.poesis.kr/)에서 만든 [새주소 검색](http://newaddress.kr/) API를
+직접 구현하는 데 필요한 DB 생성 스크립트와 서버측 검색 API, 클라이언트 API 일체를 오픈소스로 공개합니다.
 
 라이선스는 LGPLv3을 따릅니다. 누구나 자유롭게 사용, 변형, 배포, 상용 프로그램에 포함하여 판매하실 수 있으나,
 기능을 개선하신 경우 가능하면 GitHub을 통해 공개하셔서
@@ -19,11 +19,11 @@
 우편번호 검색 기능이 필요한 웹페이지에 아래와 같이 `<div>`를 생성한 후
 최근 버전의 jQuery와 `api/search.js` 파일을 로딩하면 됩니다.
 
-    <div id="postcode_search"></div>
-    <script src="//code.jquery.com/jquery-1.10.2.min.js" charset="UTF-8"></script>
+    <div id="postcodify"></div>
+    <script src="//code.jquery.com/jquery-1.11.1.min.js" charset="UTF-8"></script>
     <script src="//api.poesis.kr/post/search.js" charset="UTF-8"></script>
     <script type="text/javascript">
-        $("#postcode_search").postcodify();
+        $("#postcodify").postcodify();
     </script>
 
 위의 예제는 기본 사용법입니다. `postcodify()`를 호출하면 즉시 검색 기능을 사용할 수 있으나,
@@ -31,7 +31,7 @@
 어떤 `<input>`에 어떻게 입력할지 지정해 주셔야 합니다.
 
     $("#검색란을_표시할_div의_id").postcodify({
-        api : "api/search.php",  // 서버측 검색 API를 직접 설치하신 경우에만 설정
+        api : "search.php",  // 서버측 검색 API를 직접 설치하신 경우에만 설정
         controls : "#키워드_입력란을_표시할_div의_id",
         searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
         hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
@@ -43,6 +43,9 @@
         insertExtraInfo : "#참고항목을_입력할_input의_id",
         insertEnglishAddress : "#영문주소를_입력할_input의_id",
         insertJibeonAddress : "#지번주소를_입력할_input의_id",
+        ready : function() {
+            // Postcodify 셋팅 완료시 호출할 콜백 
+        },
         beforeSearch : function(keywords) {
             // 검색 직전에 호출할 콜백
         },
@@ -89,7 +92,7 @@ F12 키를 눌러 웹브라우저의 개발자도구를 사용하시면
 
 여기서 제공하는 인덱서를 사용하여 우편번호 DB를 생성하고 서버측 검색 API를 설치하면 직접 검색서버를 구축하실 수 있습니다.
 중간 사양 이상의 가상서버라면 하루 1백만 건 이상의 우편번호 검색이 가능하고,
-고사양 단독서버라면 1천만 건 이상도 가능할 것으로 추정됩니다.
+고사양 단독서버를 잘 튜닝하면 하루 1천만 건 이상도 가능할 것입니다.
 
 서버측 검색 API는 PHP 클래스 형태로 제공됩니다.
 `search.php`를 직접 호출하면 클라이언트 API와 호환되는 JSON 또는 JSONP 포맷으로 검색 결과를 출력합니다.
@@ -98,12 +101,16 @@ F12 키를 눌러 웹브라우저의 개발자도구를 사용하시면
 
     $results = Postcodify::search('검색 키워드 123-4');
 
-서버 API를 구동하려면 PHP 5.2 이상, MySQL (또는 MariaDB) 5.1 이상, InnoDB, UTF-8 환경, mbstring 모듈이 필요합니다.
+서버 API를 구동하려면 PHP 5.2 이상, MySQL (또는 MariaDB) 5.1 이상, InnoDB, mbstring 모듈이 필요합니다.
 (그 이하의 버전에서도 실행이 가능할 수 있으나, 성능 및 호환성을 보장할 수 없습니다.)
-PHP에서 DB에 연결하는 방식은 PDO, MySQLi, MySQL을 모두 지원하며, 서버 환경에 따라 자동으로 선택합니다.
 
+EUC-KR (CP949) 환경의 서버에서 검색하려면 아래와 같이 문자셋을 지정해 주면 됩니다.
+
+    $results = Postcodify::search('검색 키워드 123-4', 'CP949');
+
+DB에 연결하는 방식은 PDO, MySQLi, MySQL을 모두 지원하며, 서버 환경에 따라 자동으로 선택합니다.
 빠른 검색을 위해 InnoDB의 버퍼 크기를 최소 500MB, 가능하면 1GB 이상으로 설정하시기 바랍니다.
-메모리 용량이 1GB 미만인 가상서버를 사용하는 경우 검색 성능이 낮아질 수 있습니다.
+메모리 용량이 1GB 미만인 서버를 사용하는 경우 검색 성능이 낮아질 수 있습니다.
 
 서버 API를 사용하실 때는 `api/config-example.php` 파일을 `config.php`로 복사하여
 DB 접속 정보를 입력한 후, 클라이언트 API의 `api` 설정을 변경하여
@@ -193,6 +200,11 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
 세종시, 울산광역시, 대전광역시 등 용량이 얼마 되지 않는 시도의 파일로 테스트하시면 편리합니다.
 단, 원하시는 시도의 주소/지번/부가정보 파일 3개는 꼭 넣으셔야 합니다.
 
+※ 인덱서에 포함된 `download_start.php` 스크립트를 사용하면
+안정행정부와 우체국에서 최신 DB 파일을 한꺼번에 다운로드할 수 있습니다.
+수십 개의 파일을 일일이 다운로드하기가 불편하시다면 이 스크립트를 사용하셔도 됩니다.
+단, 해당 기관에서 웹사이트를 개편하여 링크 주소가 달라질 경우 다운로드 스크립트가 작동하지 않을 수도 있습니다.
+
 #### 3단계 : 설정 ####
 
 `indexer/config-example.php` 파일을 `config.php`로 복사하여
@@ -206,7 +218,8 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
 
 정부에서 제공한 월별 데이터에는 최종 변경 날짜가 누락되어 있으므로
 나중에 정확하게 업데이트를 적용하려면 기준일을 직접 입력해 주어야 합니다.
-현재는 매월 25일 기준 데이터가 제공되고 있습니다.
+현재는 매월 23~25일 기준 데이터가 제공되고 있습니다.
+(위에서 언급한 다운로드 스크립트를 사용할 경우 기준일이 자동으로 입력됩니다.)
 
     $ php start.php
     
@@ -369,6 +382,9 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
 
 **반드시 TI_SPRD_STRET와 MatchingTable 파일을 모두 사용하셔야 합니다.**
 
+※ 인덱서에 포함된 `download_update.php` 스크립트를 사용하면
+필요한 업데이트 파일을 한꺼번에 다운로드할 수 있습니다.
+
 다운로드받은 업데이트를 적용하려면 터미널에서 `php update.php`를 실행하면 됩니다.
 
 1단계에서 다운로드한 도로명코드/주소/지번/부가정보 파일의 기준일 이전 업데이트는 필요하지 않습니다.
@@ -394,4 +410,11 @@ DB를 방금 생성하였거나 백업/복구한 경우 인덱스가 아직 버�
 일반적인 `mysqldump` 명령에 별다른 옵션을 주지 않고 DB를 백업하면
 검색에 반드시 필요한 stored procedure가 포함되지 않아서 나중에 복구할 경우 문제가 생깁니다.
 필요한 모든 정보가 백업에 포함되도록 반드시 `--opt --routines` 옵션을 사용하시기 바랍니다.
-첨부한 `indexer/mysqldump.sh` 스크립트를 참조하시면 편리합니다.
+
+Stored procedure의 경우 덤프를 생성한 사용자와 복구하는 사용자가 다르면
+`DEFINER` 부분이 오류를 일으킬 수 있습니다.
+만약 이런 문제가 발생한다면 덤프 파일에서 `DEFINER` 부분을 제거하거나
+원래와 동일한 사용자 계정을 사용해야 합니다.
+
+첨부한 `indexer/mysqldump.sh` 스크립트는 위의 문제들을 우회할 수 있도록 작성했으니
+이 스크립트를 참조하여 백업하시면 편리합니다.
