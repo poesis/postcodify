@@ -27,7 +27,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.5.4';
+    const VERSION = '1.5.5';
     
     // 실제 검색을 수행하는 메소드.
     
@@ -302,7 +302,11 @@ class Postcodify
     
     protected static function parse_keywords($str)
     {
-        // 숫자 앞에 공백에 있는 경우 붙여쓴다.
+        // 지번을 00번지 0호로 쓴 경우 검색 가능한 형태로 변환한다.
+        
+        $str = preg_replace('/([0-9]+)번지\\s?([0-9]+)호(?:\\s|$)/u', '$1-$2', $str);
+        
+        // 행정동, 도로명 등의 숫자 앞에 공백에 있는 경우 붙여쓴다.
         
         $str = preg_replace('/\s+([동서남북]?[0-9]+번?[가나다라마바사아자차카타파하동서남북안]?[로길동리가])(?=\s|\d|$)/u', '$1', $str);
         

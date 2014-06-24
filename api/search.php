@@ -37,5 +37,6 @@ $result = Postcodify::search($keywords);
 header('Content-Type: application/javascript; charset=UTF-8');
 header('Cache-Control: private, must-revalidate, post-check=0, pre-check=0');
 header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
-echo ($callback ? ($callback . '(') : '') . json_encode($result) . ($callback ? ');' : '') . "\n";
+$json_options = (PHP_SAPI === 'cli' && defined('JSON_PRETTY_PRINT')) ? 384 : 0;
+echo ($callback ? ($callback . '(') : '') . json_encode($result, $json_options) . ($callback ? ');' : '') . "\n";
 exit;
