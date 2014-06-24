@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<!--
+ *  Postcodify - 도로명주소 우편번호 검색 프로그램 (예제 스타일)
+ * 
+ *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ * 
+ *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
+ *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
+ *  또는 그 이후의 판을 임의로 선택하여, 그 규정에 따라 이 프로그램을
+ *  개작하거나 재배포할 수 있습니다.
+ * 
+ *  이 프로그램은 유용하게 사용될 수 있으리라는 희망에서 배포되고 있지만,
+ *  특정한 목적에 맞는 적합성 여부나 판매용으로 사용할 수 있으리라는 묵시적인
+ *  보증을 포함한 어떠한 형태의 보증도 제공하지 않습니다. 보다 자세한 사항에
+ *  대해서는 GNU 약소 일반 공중 사용 허가서를 참고하시기 바랍니다.
+ * 
+ *  GNU 약소 일반 공중 사용 허가서는 이 프로그램과 함께 제공됩니다.
+ *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
+ *
+ *-->
+<html dir="ltr" lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>우편번호 검색</title>
+    <link rel="stylesheet" type="text/css" href="example.css" media="all" />
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.1.min.js" charset="UTF-8"></script>
+    <script type="text/javascript" src="//api.poesis.kr/post/search.js" charset="UTF-8"></script>
+</head>
+<body>
+
+<!-- 페이지 제목 표시 -->
+
+<h1>우편번호 검색</h1>
+
+<!-- 헤더 배경 -->
+
+<div id="background"></div>
+
+<!-- 검색 기능이 표시되는 <div> -->
+
+<div id="postcodify"></div>
+
+<!-- Postcodify 셋팅 -->
+
+<script type="text/javascript">
+    $("#postcodify").postcodify({
+        insertPostcode6 : "#entry_postcode6",
+        insertAddress : "#entry_address",
+        insertDetails : "#entry_details",
+        insertExtraInfo : "#entry_extra_info",
+        insertEnglishAddress : "#entry_english_address",
+        insertJibeonAddress : "#entry_jibeon_address",
+        useFullJibeon : true,
+        ready : function() {
+            $("#postcodify div.postcode_search_status.empty").hide();
+        },
+        beforeSearch : function(keywords) {
+            $("#entry_box").hide();
+        },
+        afterSelect : function(selectedEntry) {
+            $("#postcodify div.postcode_search_result").remove();
+            $("#postcodify div.postcode_search_status.summary").hide();
+            $("#entry_box").show();
+            $("#entry_details").focus();
+            // 팝업창을 닫거나 다른 폼에 주소를 입력하는 등의 작업은
+            // 이곳에 jQuery 코드를 추가하여 사용하십시오.
+        }
+    });
+</script>
+
+<!-- 검색결과 입력란 -->
+
+<div id="entry_box">
+    <p><label>우편번호</label><input type="text" id="entry_postcode6" /></p>
+    <p><label>도로명주소</label><input type="text" id="entry_address" /></p>
+    <p><label>상세주소</label><input type="text" id="entry_details" /></p>
+    <p><label>참고항목</label><input type="text" id="entry_extra_info" /></p>
+    <p><label>영문주소</label><input type="text" id="entry_english_address" /></p>
+    <p><label>지번주소</label><input type="text" id="entry_jibeon_address" /></p>
+</div>
+
+<!-- 검색 도움말 -->
+
+<div id="search_guide">
+    1. 도로명주소로 검색 : 도로명과 건물번호를 입력하세요. 예) 중앙로12길 345-6<br />
+    2. 지번 주소로 검색 : "동" 또는 "리" 이름과 번지수를 입력하세요. 예) 우편동 123-45, 번호리 67<br />
+    3. 건물명으로 검색 : 빌딩 또는 아파트 이름을 입력하세요. 예) 국제빌딩, 래미안, 주공3차아파트<br />
+    4. 사서함으로 검색 : 사서함명과 번호를 입력하세요. 예) 광화문우체국사서함 123-4<br />
+    <hr />
+    &nbsp; &nbsp; ※ 비슷한 지명이 전국에 여러 군데가 있는 경우 "삼척시 교동 60", "방배동 래미안", 등 <br />
+    &nbsp; &nbsp; &#12288; 시/군/구/읍/면/동/리 이름을 넣어서 검색하시면 더욱 정확한 결과를 얻을 수 있습니다.<br />
+    <hr />
+    &nbsp; &nbsp; ※ 건물명보다는 정확한 도로명주소 또는 지번 주소로 검색하시는 것이 확실합니다.<br /> 
+</div>    
+
+</body>
+</html>
