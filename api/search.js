@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.5.4
+ *  jQuery 플러그인 version 1.5.5
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
@@ -40,6 +40,9 @@
  *          insertExtraInfo : "#참고항목을_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertEnglishAddress : "#영문주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertJibeonAddress : "#지번주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
+ *          ready : function() {
+ *              // Postcodify 셋팅 완료시 호출할 콜백 
+ *          },
  *          beforeSearch : function(keywords) {
  *              // 검색 직전에 호출할 콜백
  *          },
@@ -91,6 +94,7 @@
                 insertExtraInfo : null,
                 insertEnglishAddress : null,
                 insertJibeonAddress : null,
+                ready : function() { },
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results) { },
                 beforeSelect : function(selectedEntry) { },
@@ -378,6 +382,10 @@
             // 키워드 입력란에 포커스를 준다.
             
             if (settings.focusKeyword) keyword_input.focus();
+            
+            // 셋팅 완료 콜백을 호출한다.
+            
+            settings.ready();
             
             // jQuery 관례에 따라 this를 반환한다.
             
