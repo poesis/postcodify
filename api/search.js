@@ -89,6 +89,7 @@
                 searchButtonContent : "검색",
                 hideOldAddresses : true,
                 mapLinkProvider : false,
+                mapLinkContent : "지도",
                 insertDbid : null,
                 insertPostcode5 : null,
                 insertPostcode6 : null,
@@ -275,7 +276,7 @@
                                 if (settings.mapLinkProvider && typeof $.fn.postcodify.mapurl[settings.mapLinkProvider] !== "undefined") {
                                     var mapurl = $.fn.postcodify.mapurl[settings.mapLinkProvider];
                                     mapurl = mapurl.replace(/%s$/, encodeURIComponent(result.address).replace(/%20/g, '+'));
-                                    var maplink = $('<a target="_blank">지도</a>').attr("href", mapurl);
+                                    var maplink = $('<a target="_blank"></a>').attr("href", mapurl).html(settings.mapLinkContent);
                                     $('<div class="map_link"></div>').append(maplink).appendTo(option);
                                 }
                                 
