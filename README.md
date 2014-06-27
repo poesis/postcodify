@@ -33,6 +33,8 @@
         controls : "#키워드_입력란을_표시할_div의_id",
         searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
         hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
+        mapLinkProvider : "google",  // 지도 링크를 표시할지 여부 (daum, naver, google, 또는 false)
+        mapLinkContent : "지도",  // 지도 링크에 표시할 내용 (HTML 사용 가능)
         insertDbid : "#안행부_관리번호를_입력할_input의_id",
         insertPostcode5 : "#기초구역번호를_입력할_input의_id",
         insertPostcode6 : "#우편번호를_입력할_input의_id",
@@ -74,6 +76,9 @@
 
 콜백 함수를 사용하면 더 다양한 기능도 구현할 수 있습니다.
 콜백 함수에서 `false`를 반환할 경우 검색을 중단합니다.
+
+지도 링크 기능은 1.6 버전부터 지원되며, 다음, 네이버, 구글 지도 중 선택할 수 있습니다.
+지도 링크시에는 해당 서비스 제공자의 서비스 약관을 유념해야 합니다.
 
 디자인 변경은 `example` 폴더의 HTML과 CSS를 참조하시면 됩니다.
 F12 키를 눌러 웹브라우저의 개발자도구를 사용하시면

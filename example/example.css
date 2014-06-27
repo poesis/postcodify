@@ -44,8 +44,12 @@ div.postcode_search_result div.address { clear: both; margin-left: 58px; positio
 div.postcode_search_result div.address a.selector { text-decoration: none; cursor: pointer; }
 div.postcode_search_result div.address a.selector span.address_info { color: #000; display: inline-block; margin-right: 8px; }
 div.postcode_search_result div.address a.selector span.extra_info { color: #444; display: inline-block; }
-div.postcode_search_result div.address a.show_old_addresses { position: absolute; right: 6px; color: #888; font-size: 9pt; text-decoration: none; }
+div.postcode_search_result div.address a.show_old_addresses { position: absolute; right: 32px; color: #888; font-size: 9pt; text-decoration: none; }
+div.postcode_search_result div.address a.show_old_addresses:hover { color: #b55; }
 div.postcode_search_result div.old_addresses { clear: both; color: #888; margin: 4px 0 0 60px; cursor: pointer; }
+div.postcode_search_result div.map_link { position: absolute; right: 6px; top: 4px; }
+div.postcode_search_result div.map_link a { color: #444; font-size: 8pt; text-decoration: none; }
+div.postcode_search_result div.map_link a:hover { text-decoration: underline; }
 
 /* 검색 상태 및 오류 메시지 스타일 */
 

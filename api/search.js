@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.5.5
+ *  jQuery 플러그인 version 1.6
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
@@ -32,6 +32,8 @@
  *          controls : "#키워드_입력란을_표시할_div의_id",  // 지정하지 않으면 검색창에 함께 표시
  *          searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
  *          hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
+ *          mapLinkProvider : "google",  // 지도 링크를 표시할지 여부 (daum, naver, google, 또는 false)
+ *          mapLinkContent : "지도",  // 지도 링크에 표시할 내용 (HTML 사용 가능)
  *          insertDbid : "#안행부_관리번호를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertPostcode5 : "#기초구역번호를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertPostcode6 : "#우편번호를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
@@ -86,6 +88,7 @@
                 results : this,
                 searchButtonContent : "검색",
                 hideOldAddresses : true,
+                mapLinkProvider : false,
                 insertDbid : null,
                 insertPostcode5 : null,
                 insertPostcode6 : null,
@@ -194,7 +197,7 @@
                 $.ajax({
                     "url": settings.api,
                     "type": "get",
-                    "data": { "v": "1.1", "q": keywords, "ref": window.location.hostname },
+                    "data": { "v": "1.6", "q": keywords, "ref": window.location.hostname },
                     "dataType": "jsonp",
                     "processData": true,
                     "cache": false,
@@ -265,6 +268,15 @@
                                     var old_addresses_div = $('<div class="old_addresses"></div>').text(result.other);
                                     if (settings.hideOldAddresses) old_addresses_div.css("display", "none");
                                     old_addresses_div.appendTo(option);
+                                }
+                                
+                                // 지도 링크를 추가한다.
+                                
+                                if (settings.mapLinkProvider && typeof $.fn.postcodify.mapurl[settings.mapLinkProvider] !== "undefined") {
+                                    var mapurl = $.fn.postcodify.mapurl[settings.mapLinkProvider];
+                                    mapurl = mapurl.replace(/%s$/, encodeURIComponent(result.address).replace(/%20/g, '+'));
+                                    var maplink = $('<a target="_blank">지도</a>').attr("href", mapurl);
+                                    $('<div class="map_link"></div>').append(maplink).appendTo(option);
                                 }
                                 
                                 option.appendTo(results);
@@ -396,6 +408,14 @@
     // 단시간내 중복 검색을 방지하기 위해 직전 검색어를 기억하는 변수.
     
     $.fn.postcodify.previous = "";
+    
+    // 지도 링크 설정.
+    
+    $.fn.postcodify.mapurl = {
+        daum : "http://map.daum.net/?map_type=TYPE_MAP&urlLevel=3&q=%s",
+        naver : "http://map.naver.com/?mapMode=0&dlevel=12&query=%s",
+        google : "http://www.google.com/maps/place/대한민국+%s"
+    };
     
     // 로딩중임을 표시하는 GIF 애니메이션 파일.
     // 불필요한 요청을 줄이기 위해 base64 인코딩하여 여기에 직접 저장한다.
