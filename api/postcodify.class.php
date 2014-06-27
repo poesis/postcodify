@@ -27,7 +27,26 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.5.5';
+    const VERSION = '1.6';
+    
+    // DB 설정.
+    
+    protected static $db_host;
+    protected static $db_port;
+    protected static $db_user;
+    protected static $db_pass;
+    protected static $db_dbname;
+    
+    // DB 설정을 전달하는 메소드.
+    
+    public static function dbconfig($host, $port, $user, $pass, $dbname)
+    {
+        self::$db_host = $host;
+        self::$db_port = $port;
+        self::$db_user = $user;
+        self::$db_pass = $pass;
+        self::$db_dbname = $dbname;
+    }
     
     // 실제 검색을 수행하는 메소드.
     
@@ -216,8 +235,8 @@ class Postcodify
             if (class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers()))
             {
                 $dbh_extension = 'pdo';
-                $dbh = new PDO('mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_DBNAME . ';charset=utf8',
-                    DB_USER, DB_PASS, array(
+                $dbh = new PDO('mysql:host=' . self::$db_host . ';port=' . self::$db_port . ';dbname=' . self::$db_dbname . ';charset=utf8',
+                    self::$db_user, self::$db_pass, array(
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                         PDO::ATTR_EMULATE_PREPARES => false,
                         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
@@ -227,7 +246,7 @@ class Postcodify
             elseif (class_exists('mysqli'))
             {
                 $dbh_extension = 'mysqli';
-                $dbh = @mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_DBNAME, DB_PORT);
+                $dbh = @mysqli_connect(self::$db_host, self::$db_user, self::$db_pass, self::$db_dbname, self::$db_port);
                 if ($dbh->connect_error) throw new Exception($dbh->connect_error);
                 $charset = @$dbh->set_charset('utf8');
                 if (!$charset) throw new Exception($dbh->error);
@@ -237,9 +256,9 @@ class Postcodify
             elseif (function_exists('mysql_connect'))
             {
                 $dbh_extension = 'mysql';
-                $dbh = @mysql_connect(DB_HOST . ':' . DB_PORT, DB_USER, DB_PASS);
+                $dbh = @mysql_connect(self::$db_host . ':' . self::$db_port, self::$db_user, self::$db_pass);
                 if (!$dbh) throw new Exception(mysql_error($dbh));
-                $seldb = @mysql_select_db(DB_DBNAME, $dbh);
+                $seldb = @mysql_select_db(self::$db_dbname, $dbh);
                 if (!$seldb) throw new Exception(mysql_error($dbh));
                 $charset = function_exists('mysql_set_charset') ? @mysql_set_charset('utf8', $dbh) : @mysql_query('SET NAMES utf8', $dbh);
                 if (!$charset) throw new Exception(mysql_error($dbh));
@@ -317,6 +336,8 @@ class Postcodify
         // 단어별로 분리한다.
         
         $str = preg_split('/\\s+/u', preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', strtolower($str)));
+        
+        // 각 단어의 의미를 파악한다.
         
         foreach ($str as $id => $keyword)
         {
