@@ -18,7 +18,7 @@
 최근 버전의 jQuery와 `api/search.js` 파일을 로딩하면 됩니다.
 
     <div id="postcodify"></div>
-    <script src="//code.jquery.com/jquery-1.11.1.min.js" charset="UTF-8"></script>
+    <script src="//api.poesis.kr/common/jquery-1.11.1.min.js" charset="UTF-8"></script>
     <script src="//api.poesis.kr/post/search.js" charset="UTF-8"></script>
     <script type="text/javascript">
         $("#postcodify").postcodify();
