@@ -62,11 +62,14 @@
  *          onSuccess : function() {
  *              // 검색 성공시 호출할 콜백
  *          },
+ *          onBackup : function() {
+ *              // 검색에 실패하여 백업 API로 재시도할 경우 호출할 콜백
+ *          },
  *          onError : function() {
- *              // 검색 실패시 호출할 콜백
+ *              // 검색에 실패한 경우 호출할 콜백
  *          },
  *          onComplete : function() {
- *              // 검색 완료시 호출할 콜백
+ *              // 검색 완료 후 호출할 콜백 (성공 여부와 무관함)
  *          },
  *          focusKeyword : true,  // 페이지 로딩 직후 키워드 입력란으로 포커스 이동 여부
  *          focusDetails : true,  // 주소 선택 후 상세주소 입력란으로 포커스 이동 여부
