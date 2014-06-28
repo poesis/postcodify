@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.6
+ *  jQuery 플러그인 version 1.7
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
@@ -42,6 +42,7 @@
  *          insertExtraInfo : "#참고항목을_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertEnglishAddress : "#영문주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertJibeonAddress : "#지번주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
+ *          timeout : 2500,  // 검색 타임아웃 (1/1000초 단위)
  *          ready : function() {
  *              // Postcodify 셋팅 완료시 호출할 콜백 
  *          },
@@ -98,6 +99,7 @@
                 insertExtraInfo : null,
                 insertEnglishAddress : null,
                 insertJibeonAddress : null,
+                timeout : 2500,
                 ready : function() { },
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results) { },
@@ -196,16 +198,17 @@
                 // 검색 서버로 AJAX (JSONP) 요청을 전송한다.
                 
                 $.ajax({
-                    "url": settings.api,
-                    "type": "get",
-                    "data": { "v": "1.6", "q": keywords, "ref": window.location.hostname },
-                    "dataType": "jsonp",
-                    "processData": true,
-                    "cache": false,
+                    url : settings.api,
+                    type : "get",
+                    data : { "v": "1.6", "q": keywords, "ref": window.location.hostname },
+                    dataType : "jsonp",
+                    timeout : settings.timeout,
+                    processData : true,
+                    cache : false,
                     
                     // 요청이 성공한 경우 이 함수를 호출한다.
                     
-                    "success": function(data, textStatus, jqXHR) {
+                    success : function(data, textStatus, jqXHR) {
                         
                         // 검색후 콜백 함수를 실행한다.
                         
@@ -301,7 +304,7 @@
                     
                     // 요청이 실패한 경우 이 함수를 호출한다.
                     
-                    "error": function(jqXHR, textStatus, errorThrown) {
+                    error : function(jqXHR, textStatus, errorThrown) {
                         
                         // 오류 메시지를 보여준다.
                         
@@ -314,7 +317,7 @@
                     
                     // 요청 후에는 이 함수를 호출한다.
                     
-                    "complete": function(jqXHR, textStatus) {
+                    complete : function(jqXHR, textStatus) {
                         
                         // 스크롤 위치를 복구한다.
                         
