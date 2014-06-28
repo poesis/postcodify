@@ -29,6 +29,7 @@
  * 
  *      $("#검색란을_표시할_div의_id").postcodify({
  *          api : "서버측 API의 주소",  // 지정하지 않으면 api.poesis.kr의 무료 서버 사용
+ *          apiBackup : "백업 API의 주소",  // 서버 접속 실패시 재시도할 다른 서버의 주소
  *          controls : "#키워드_입력란을_표시할_div의_id",  // 지정하지 않으면 검색창에 함께 표시
  *          searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
  *          hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
@@ -85,6 +86,7 @@
             
             var settings = $.extend({
                 api : "//api.poesis.kr/post/search.php",
+                apiBackup : false,
                 controls : this,
                 results : this,
                 searchButtonContent : "검색",
@@ -106,6 +108,7 @@
                 beforeSelect : function(selectedEntry) { },
                 afterSelect : function(selectedEntry) { },
                 onSuccess : function() { },
+                onBackup : function() { },
                 onError : function() { },
                 onComplete : function() { },
                 focusKeyword : true,
@@ -124,7 +127,7 @@
             
             var results = $(settings.results);
             $('<div class="postcode_search_status empty">검색 결과가 없습니다.</div>').appendTo(results).show();
-            $('<div class="postcode_search_status error">검색 서버에 연결 중 오류가 발생하였습니다.</div>').appendTo(results).hide();
+            $('<div class="postcode_search_status error">검색 서버에 연결 중 오류가 발생하였습니다.<br />잠시 후 다시 시도해 주시기 바랍니다.</div>').appendTo(results).hide();
             $('<div class="postcode_search_status quota">일일 허용 쿼리수를 초과하였습니다.</div>').appendTo(results).hide();
             $('<div class="postcode_search_status too_short">검색어는 3글자 이상 입력해 주시기 바랍니다.</div>').appendTo(results).hide();
             $('<div class="postcode_search_status too_many">검색 결과가 너무 많아 100건까지만 표시합니다.<br />' +
@@ -195,142 +198,180 @@
                 
                 var scroll_top = $(window).scrollTop();
                 
+                // AJAX 요청 후에는 스크롤 위치를 복구하고 검색 단추를 원래대로 되돌리도록 예약한다.
+                
+                var ajax_complete = function() {
+                    $(window).scrollTop(scroll_top);
+                    search_button.removeAttr("disabled").html(settings.searchButtonContent);
+                };
+                
+                // AJAX 요청 성공시 실행할 함수를 정의한다.
+                
+                var ajax_success = function(data, textStatus, jqXHR) {
+                    
+                    // 백업 API로 검색에 성공했다면 이후에도 백업 API만 사용하도록 설정한다.
+                    
+                    if (settings.currentRequestUrl === settings.apiBackup) {
+                        settings.api = settings.apiBackup;
+                    }
+                    
+                    // 검색후 콜백 함수를 실행한다.
+                    
+                    if (settings.afterSearch(keywords, data.results) === false) return;
+                    
+                    // 서버가 오류를 반환한 경우...
+                    
+                    if (data.error && data.error.toLowerCase().indexOf("quota") > -1) {
+                        results.find("div.postcode_search_status.quota").show();
+                        $.fn.postcodify.previous = "";
+                    }
+                    else if (data.error) {
+                        results.find("div.postcode_search_status.error").show();
+                        $.fn.postcodify.previous = "";
+                    }
+                    
+                    // 검색 결과가 없는 경우...
+                    
+                    else if (data.count === 0) {
+                        results.find("div.postcode_search_status.empty").show();
+                    }
+                    
+                    // 검색 결과가 있는 경우 DOM에 추가한다.
+                    
+                    else {
+                        
+                        for (var i = 0; i < data.count; i++) {
+                            
+                            // 검색 결과 항목을 작성한다.
+                            
+                            var result = data.results[i];
+                            var option = $('<div class="postcode_search_result"></div>');
+                            option.data("dbid", result.dbid);
+                            option.data("code6", result.code6);
+                            option.data("code5", result.code5);
+                            option.data("address", result.address);
+                            option.data("english_address", result.english_address !== undefined ? result.english_address : "");  // v1.4.2+
+                            option.data("jibeon_address", result.jibeon_address);  // v1.2+
+                            option.data("extra_info_long", result.extra_info_long);
+                            option.data("extra_info_short", result.extra_info_short);
+                            
+                            // 클릭할 링크를 생성한다.
+                            
+                            var selector = $('<a class="selector" href="#"></a>');
+                            selector.append($('<span class="address_info"></span>').text(result.address));
+                            if (result.extra_info_long) {
+                                selector.append($('<span class="extra_info"></span>').append("(" + result.extra_info_long + ")"));
+                            }
+                            
+                            // 우편번호, 기초구역번호, 주소 등을 항목에 추가한다.
+                            
+                            $('<div class="code6"></div>').text(result.code6).appendTo(option);
+                            $('<div class="code5"></div>').text(result.code5).appendTo(option);
+                            $('<div class="address"></div>').append(selector).appendTo(option);
+                            
+                            // 예전 주소 및 검색어 목록을 추가한다.
+                            
+                            if (result.other) {
+                                var old_addresses_show = $('<a href="#" class="show_old_addresses" title="관련지번 보기">▼</a>');
+                                old_addresses_show.appendTo(option.find("div.address"));
+                                var old_addresses_div = $('<div class="old_addresses"></div>').text(result.other);
+                                if (settings.hideOldAddresses) old_addresses_div.css("display", "none");
+                                old_addresses_div.appendTo(option);
+                            }
+                            
+                            // 지도 링크를 추가한다.
+                            
+                            if (settings.mapLinkProvider && typeof $.fn.postcodify.mapurl[settings.mapLinkProvider] !== "undefined") {
+                                var mapurl = $.fn.postcodify.mapurl[settings.mapLinkProvider];
+                                mapurl = mapurl.replace(/%s$/, encodeURIComponent(result.address).replace(/%20/g, '+'));
+                                var maplink = $('<a target="_blank"></a>').attr("href", mapurl).html(settings.mapLinkContent);
+                                $('<div class="map_link"></div>').append(maplink).appendTo(option);
+                            }
+                            
+                            option.appendTo(results);
+                        }
+                        
+                        // 검색 결과 요약을 작성한다.
+                        
+                        results.find("div.postcode_search_status.summary").detach().appendTo(results).show();
+                        results.find("div.postcode_search_status.summary div.result_count span").text(data.count);
+                        results.find("div.postcode_search_status.summary div.search_time span").text(data.time);
+                        
+                        if (data.count >= 100) {
+                            results.find("div.postcode_search_status.too_many").show();
+                        }
+                    }
+                    
+                    // 검색 성공 콜백 함수를 실행한다.
+                    
+                    ajax_complete();
+                    settings.onSuccess();
+                    settings.onComplete();
+                };
+                
+                // AJAX 요청 2차 실패시 실행할 함수를 정의한다.
+                
+                var ajax_error_second = function(jqXHR, textStatus, errorThrown) {
+                    
+                    // 오류 메시지를 보여준다.
+                    
+                    results.find("div.postcode_search_status.error").show();
+                    
+                    // 검색 실패 콜백 함수를 실행한다.
+                    
+                    ajax_complete();
+                    settings.onError();
+                    settings.onComplete();
+                };
+                
+                // AJAX 요청 1차 실패시 실행할 함수를 정의한다.
+                
+                var ajax_error_first = function(jqXHR, textStatus, errorThrown) {
+                    
+                    // 백업 API가 있는 경우...
+                    
+                    if (settings.apiBackup && (textStatus === "timeout" || textStatus === "error")) {
+                    
+                        // 백업 API 시도전 콜백 함수를 실행한다.
+                        
+                        settings.onBackup();
+                        
+                        // 타임아웃을 2배로 주고 다시 한 번 AJAX 요청을 전송한다.
+                        
+                        settings.currentRequestUrl = settings.apiBackup;
+                        
+                        $.ajax({
+                            url : settings.apiBackup,
+                            data : { "v": "1.7", "q": keywords, "ref": window.location.hostname },
+                            dataType : "jsonp",
+                            timeout : settings.timeout * 2,
+                            success : ajax_success,
+                            error : ajax_error_second,
+                            processData : true,
+                            cache : false
+                        });
+                    }
+                    
+                    // 그 밖의 경우...
+                    
+                    else {
+                        ajax_error_second(jqXHR, textStatus, errorThrown);
+                    }
+                };
+                
                 // 검색 서버로 AJAX (JSONP) 요청을 전송한다.
+                
+                settings.currentRequestUrl = settings.api;
                 
                 $.ajax({
                     url : settings.api,
-                    type : "get",
-                    data : { "v": "1.6", "q": keywords, "ref": window.location.hostname },
+                    data : { "v": "1.7", "q": keywords, "ref": window.location.hostname },
                     dataType : "jsonp",
                     timeout : settings.timeout,
+                    success : ajax_success,
+                    error : ajax_error_first,
                     processData : true,
-                    cache : false,
-                    
-                    // 요청이 성공한 경우 이 함수를 호출한다.
-                    
-                    success : function(data, textStatus, jqXHR) {
-                        
-                        // 검색후 콜백 함수를 실행한다.
-                        
-                        if (settings.afterSearch(keywords, data.results) === false) return;
-                        
-                        // 서버가 오류를 반환한 경우...
-                        
-                        if (data.error && data.error.toLowerCase().indexOf("quota") > -1) {
-                            results.find("div.postcode_search_status.quota").show();
-                            $.fn.postcodify.previous = "";
-                        }
-                        else if (data.error) {
-                            results.find("div.postcode_search_status.error").show();
-                            $.fn.postcodify.previous = "";
-                        }
-                        
-                        // 검색 결과가 없는 경우...
-                        
-                        else if (data.count === 0) {
-                            results.find("div.postcode_search_status.empty").show();
-                        }
-                        
-                        // 검색 결과가 있는 경우 DOM에 추가한다.
-                        
-                        else {
-                            
-                            for (var i = 0; i < data.count; i++) {
-                                
-                                // 검색 결과 항목을 작성한다.
-                                
-                                var result = data.results[i];
-                                var option = $('<div class="postcode_search_result"></div>');
-                                option.data("dbid", result.dbid);
-                                option.data("code6", result.code6);
-                                option.data("code5", result.code5);
-                                option.data("address", result.address);
-                                option.data("english_address", result.english_address !== undefined ? result.english_address : "");  // v1.4.2+
-                                option.data("jibeon_address", result.jibeon_address);  // v1.2+
-                                option.data("extra_info_long", result.extra_info_long);
-                                option.data("extra_info_short", result.extra_info_short);
-                                
-                                // 클릭할 링크를 생성한다.
-                                
-                                var selector = $('<a class="selector" href="#"></a>');
-                                selector.append($('<span class="address_info"></span>').text(result.address));
-                                if (result.extra_info_long) {
-                                    selector.append($('<span class="extra_info"></span>').append("(" + result.extra_info_long + ")"));
-                                }
-                                
-                                // 우편번호, 기초구역번호, 주소 등을 항목에 추가한다.
-                                
-                                $('<div class="code6"></div>').text(result.code6).appendTo(option);
-                                $('<div class="code5"></div>').text(result.code5).appendTo(option);
-                                $('<div class="address"></div>').append(selector).appendTo(option);
-                                
-                                // 예전 주소 및 검색어 목록을 추가한다.
-                                
-                                if (result.other) {
-                                    var old_addresses_show = $('<a href="#" class="show_old_addresses" title="관련지번 보기">▼</a>');
-                                    old_addresses_show.appendTo(option.find("div.address"));
-                                    var old_addresses_div = $('<div class="old_addresses"></div>').text(result.other);
-                                    if (settings.hideOldAddresses) old_addresses_div.css("display", "none");
-                                    old_addresses_div.appendTo(option);
-                                }
-                                
-                                // 지도 링크를 추가한다.
-                                
-                                if (settings.mapLinkProvider && typeof $.fn.postcodify.mapurl[settings.mapLinkProvider] !== "undefined") {
-                                    var mapurl = $.fn.postcodify.mapurl[settings.mapLinkProvider];
-                                    mapurl = mapurl.replace(/%s$/, encodeURIComponent(result.address).replace(/%20/g, '+'));
-                                    var maplink = $('<a target="_blank"></a>').attr("href", mapurl).html(settings.mapLinkContent);
-                                    $('<div class="map_link"></div>').append(maplink).appendTo(option);
-                                }
-                                
-                                option.appendTo(results);
-                            }
-                            
-                            // 검색 결과 요약을 작성한다.
-                            
-                            results.find("div.postcode_search_status.summary").detach().appendTo(results).show();
-                            results.find("div.postcode_search_status.summary div.result_count span").text(data.count);
-                            results.find("div.postcode_search_status.summary div.search_time span").text(data.time);
-                            
-                            if (data.count >= 100) {
-                                results.find("div.postcode_search_status.too_many").show();
-                            }
-                        }
-                        
-                        // 검색 성공 콜백 함수를 실행한다.
-                        
-                        settings.onSuccess();
-                    },
-                    
-                    // 요청이 실패한 경우 이 함수를 호출한다.
-                    
-                    error : function(jqXHR, textStatus, errorThrown) {
-                        
-                        // 오류 메시지를 보여준다.
-                        
-                        results.find("div.postcode_search_status.error").show();
-                        
-                        // 검색 실패 콜백 함수를 실행한다.
-                        
-                        settings.onError();
-                    },
-                    
-                    // 요청 후에는 이 함수를 호출한다.
-                    
-                    complete : function(jqXHR, textStatus) {
-                        
-                        // 스크롤 위치를 복구한다.
-                        
-                        $(window).scrollTop(scroll_top);
-                        
-                        // 검색 단추를 다시 사용할 수 있도록 한다.
-                        
-                        search_button.removeAttr("disabled").html(settings.searchButtonContent);
-                        
-                        // 검색 완료 콜백 함수를 실행한다.
-                        
-                        settings.onComplete();
-                    }
+                    cache : false
                 });
             });
             
@@ -338,6 +379,7 @@
             
             results.on("click", "div.code6,div.code5,div.old_addresses", function(event) {
                 event.preventDefault();
+                event.stopPropagation();
                 $(this).parent().find("a.selector").click();
             });
             
