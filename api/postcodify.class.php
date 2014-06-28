@@ -19,7 +19,7 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-require dirname(__FILE__) . '/postcodify.areas.php';
+require_once dirname(__FILE__) . '/postcodify.areas.php';
 
 // Postcodify 검색 엔진 클래스.
 
@@ -27,25 +27,29 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.6';
+    const VERSION = '1.7';
     
     // DB 설정.
     
+    protected static $dbh;
+    protected static $dbh_extension;
     protected static $db_host;
     protected static $db_port;
     protected static $db_user;
     protected static $db_pass;
     protected static $db_dbname;
+    protected static $db_driver;
     
     // DB 설정을 전달하는 메소드.
     
-    public static function dbconfig($host, $port, $user, $pass, $dbname)
+    public static function dbconfig($host, $port, $user, $pass, $dbname, $driver = 'mysql')
     {
         self::$db_host = $host;
         self::$db_port = $port;
         self::$db_user = $user;
         self::$db_pass = $pass;
         self::$db_dbname = $dbname;
+        self::$db_driver = $driver;
     }
     
     // 실제 검색을 수행하는 메소드.
@@ -210,32 +214,35 @@ class Postcodify
     
     // DB에 저장된 프로시저를 실행하고 결과를 반환하는 메소드.
     
-    protected static function call_db_procedure($name, array $params, array $extra_params)
+    protected static function call_db_procedure($proc_name, array $params, array $extra_params)
     {
-        // DB 커넥션 핸들은 여기에 저장한다.
-        
-        static $dbh = null;
-        static $dbh_extension = null;
-        
         // 파라미터 목록을 정리한다.
         
         if (count($extra_params))
         {
-            $name .= '_in_area';
+            $proc_name .= '_in_area';
             foreach ($extra_params as $param)
             {
                 $params[] = $param;
             }
         }
         
-        // 최초 호출시 DB에 연결한다.
+        // SQLite인 경우 별도의 클래스로 쿼리를 전달한다.
         
-        if ($dbh === null)
+        if (self::$db_driver === 'sqlite')
+        {
+            require_once dirname(__FILE__) . '/postcodify.sqlite.php';
+            return Postcodify_SQLite::query(self::$db_dbname, $proc_name, $params);
+        }
+        
+        // MySQL인 경우 최초 호출시 DB에 연결한다.
+        
+        if (self::$dbh === null || self::$dbh_extension === null)
         {
             if (class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers()))
             {
-                $dbh_extension = 'pdo';
-                $dbh = new PDO('mysql:host=' . self::$db_host . ';port=' . self::$db_port . ';dbname=' . self::$db_dbname . ';charset=utf8',
+                self::$dbh_extension = 'pdo';
+                self::$dbh = new PDO('mysql:host=' . self::$db_host . ';port=' . self::$db_port . ';dbname=' . self::$db_dbname . ';charset=utf8',
                     self::$db_user, self::$db_pass, array(
                         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                         PDO::ATTR_EMULATE_PREPARES => false,
@@ -245,33 +252,33 @@ class Postcodify
             }
             elseif (class_exists('mysqli'))
             {
-                $dbh_extension = 'mysqli';
-                $dbh = @mysqli_connect(self::$db_host, self::$db_user, self::$db_pass, self::$db_dbname, self::$db_port);
-                if ($dbh->connect_error) throw new Exception($dbh->connect_error);
-                $charset = @$dbh->set_charset('utf8');
-                if (!$charset) throw new Exception($dbh->error);
+                self::$dbh_extension = 'mysqli';
+                self::$dbh = @mysqli_connect(self::$db_host, self::$db_user, self::$db_pass, self::$db_dbname, self::$db_port);
+                if (self::$dbh->connect_error) throw new Exception(self::$dbh->connect_error);
+                $charset = @self::$dbh->set_charset('utf8');
+                if (!$charset) throw new Exception(self::$dbh->error);
                 $driver = new MySQLi_Driver;
                 $driver->report_mode = MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT;
             }
             elseif (function_exists('mysql_connect'))
             {
-                $dbh_extension = 'mysql';
-                $dbh = @mysql_connect(self::$db_host . ':' . self::$db_port, self::$db_user, self::$db_pass);
-                if (!$dbh) throw new Exception(mysql_error($dbh));
-                $seldb = @mysql_select_db(self::$db_dbname, $dbh);
-                if (!$seldb) throw new Exception(mysql_error($dbh));
-                $charset = function_exists('mysql_set_charset') ? @mysql_set_charset('utf8', $dbh) : @mysql_query('SET NAMES utf8', $dbh);
-                if (!$charset) throw new Exception(mysql_error($dbh));
+                self::$dbh_extension = 'mysql';
+                self::$dbh = @mysql_connect(self::$db_host . ':' . self::$db_port, self::$db_user, self::$db_pass);
+                if (!self::$dbh) throw new Exception(mysql_error(self::$dbh));
+                $seldb = @mysql_select_db(self::$db_dbname, self::$dbh);
+                if (!$seldb) throw new Exception(mysql_error(self::$dbh));
+                $charset = function_exists('mysql_set_charset') ? @mysql_set_charset('utf8', self::$dbh) : @mysql_query('SET NAMES utf8', self::$dbh);
+                if (!$charset) throw new Exception(mysql_error(self::$dbh));
             }
         }
         
         // 프로시저를 실행한다.
         
-        switch ($dbh_extension)
+        switch (self::$dbh_extension)
         {
             case 'pdo':
                 $placeholders = implode(', ', array_fill(0, count($params), '?'));
-                $ps = $dbh->prepare('CALL ' . $name . '(' . $placeholders . ')');
+                $ps = self::$dbh->prepare('CALL ' . $proc_name . '(' . $placeholders . ')');
                 $ps->execute($params);
                 $result = $ps->fetchAll(PDO::FETCH_OBJ);
                 $ps->nextRowset();
@@ -281,35 +288,35 @@ class Postcodify
                 $escaped_params = array();
                 foreach ($params as $param)
                 {
-                   $escaped_params[] = $param === null ? 'null' : ("'" . $dbh->real_escape_string($param) . "'");
+                   $escaped_params[] = $param === null ? 'null' : ("'" . self::$dbh->real_escape_string($param) . "'");
                 }
                 $escaped_params = implode(', ', $escaped_params);
-                $query = $dbh->query('CALL ' . $name . '(' . $escaped_params . ')');
+                $query = self::$dbh->query('CALL ' . $proc_name . '(' . $escaped_params . ')');
                 $result = array();
                 while ($row = $query->fetch_object())
                 {
                     $result[] = $row;
                 }
-                $dbh->next_result();
+                self::$dbh->next_result();
                 return $result;
                 
             case 'mysql':
                 $escaped_params = array();
                 foreach ($params as $param)
                 {
-                   $escaped_params[] = $param === null ? 'null' : ("'" . mysql_real_escape_string($param, $dbh) . "'");
+                   $escaped_params[] = $param === null ? 'null' : ("'" . mysql_real_escape_string($param, self::$dbh) . "'");
                 }
                 $escaped_params = implode(', ', $escaped_params);
-                $query = @mysql_query('CALL ' . $name . '(' . $escaped_params . ')', $dbh);
-                if (!$query) throw new Exception(mysql_error($dbh));
+                $query = @mysql_query('CALL ' . $proc_name . '(' . $escaped_params . ')', self::$dbh);
+                if (!$query) throw new Exception(mysql_error(self::$dbh));
                 $result = array();
                 while ($row = mysql_fetch_object($query))
                 {
                     $result[] = $row;
                 }
-                if ($name === 'postcode_search_jibeon' && !count($result))
+                if ($proc_name === 'postcode_search_jibeon' && !count($result))
                 {
-                    mysql_close($dbh); $dbh = null;
+                    mysql_close(self::$dbh); self::$dbh = null;
                 }
                 return $result;
                 
