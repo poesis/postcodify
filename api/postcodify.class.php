@@ -19,20 +19,19 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-require_once dirname(__FILE__) . '/postcodify.areas.php';
-
-// Postcodify 검색 엔진 클래스.
-
 class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.7';
+    const VERSION = '1.7.1';
     
-    // DB 설정.
+    // DB 커넥션 핸들을 저장하는 변수들.
     
     protected static $dbh;
     protected static $dbh_extension;
+    
+    // DB 설정을 저장하는 변수들.
+    
     protected static $db_host;
     protected static $db_port;
     protected static $db_user;
@@ -40,7 +39,8 @@ class Postcodify
     protected static $db_dbname;
     protected static $db_driver;
     
-    // DB 설정을 전달하는 메소드.
+    // DB 설정을 전달하는 메소드. search() 메소드 호출 전에 반드시 먼저 호출해야 한다.
+    // SQLite 사용시에는 $dbname에 파일명을 입력해 주도록 한다.
     
     public static function dbconfig($host, $port, $user, $pass, $dbname, $driver = 'mysql')
     {
@@ -52,7 +52,9 @@ class Postcodify
         self::$db_driver = $driver;
     }
     
-    // 실제 검색을 수행하는 메소드.
+    // 실제 검색을 수행하는 메소드. Postcodify_Result 객체를 반환한다.
+    // 인코딩의 경우 EUC-KR을 사용하려면 CP949라고 입력해 주어야 한다.
+    // 새주소 중 EUC-KR에서 지원되지 않는 문자가 포함된 것도 있기 때문이다.
     
     public static function search($kw, $encoding = 'UTF-8')
     {
@@ -239,6 +241,8 @@ class Postcodify
         
         if (self::$dbh === null || self::$dbh_extension === null)
         {
+            // PDO 모듈 사용 (기본값, 권장).
+            
             if (class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers()))
             {
                 self::$dbh_extension = 'pdo';
@@ -250,6 +254,9 @@ class Postcodify
                     )
                 );
             }
+            
+            // MySQLi 모듈 사용 (차선책).
+            
             elseif (class_exists('mysqli'))
             {
                 self::$dbh_extension = 'mysqli';
@@ -260,6 +267,9 @@ class Postcodify
                 $driver = new MySQLi_Driver;
                 $driver->report_mode = MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT;
             }
+            
+            // MySQL 모듈 사용 (최후의 수단).
+            
             elseif (function_exists('mysql_connect'))
             {
                 self::$dbh_extension = 'mysql';
@@ -270,12 +280,22 @@ class Postcodify
                 $charset = function_exists('mysql_set_charset') ? @mysql_set_charset('utf8', self::$dbh) : @mysql_query('SET NAMES utf8', self::$dbh);
                 if (!$charset) throw new Exception(mysql_error(self::$dbh));
             }
+            
+            // 아무 것도 사용할 수 없는 경우 빈 결과를 반환한다.
+            
+            else
+            {
+                return array();
+            }
         }
         
         // 프로시저를 실행한다.
+        // 동리 + 지번 검색처럼 곧이어 다른 검색을 할 경우에 대비하여 쿼리 결과를 깨끗하게 닫아 주어야 한다.
         
         switch (self::$dbh_extension)
         {
+            // PDO 모듈 사용 (기본값, 권장).
+            
             case 'pdo':
                 $placeholders = implode(', ', array_fill(0, count($params), '?'));
                 $ps = self::$dbh->prepare('CALL ' . $proc_name . '(' . $placeholders . ')');
@@ -284,6 +304,8 @@ class Postcodify
                 $ps->nextRowset();
                 return $result;
                 
+            // MySQLi 모듈 사용 (차선책).
+            
             case 'mysqli':
                 $escaped_params = array();
                 foreach ($params as $param)
@@ -300,6 +322,8 @@ class Postcodify
                 self::$dbh->next_result();
                 return $result;
                 
+            // MySQL 모듈 사용 (최후의 수단).
+            
             case 'mysql':
                 $escaped_params = array();
                 foreach ($params as $param)
@@ -320,11 +344,13 @@ class Postcodify
                 }
                 return $result;
                 
+            // 아무 것도 사용할 수 없는 경우 빈 결과를 반환한다.
+            
             default: return array();
         }
     }
     
-    // 검색 키워드를 분해하여 각 구성요소를 정리하는 메소드.
+    // 검색어를 분해, 분석하여 키워드 목록을 생성하는 메소드.
     
     protected static function parse_keywords($str)
     {
@@ -340,9 +366,13 @@ class Postcodify
         
         $kw = new Postcodify_Keywords;
         
-        // 단어별로 분리한다.
+        // 검색어를 단어별로 분리한다.
         
         $str = preg_split('/\\s+/u', preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', strtolower($str)));
+        
+        // 대한민국 행정구역 목록 파일을 로딩한다.
+        
+        require_once dirname(__FILE__) . '/postcodify.areas.php';
         
         // 각 단어의 의미를 파악한다.
         

@@ -40,6 +40,7 @@ class Postcodify_SQLite
         }
         
         // 쿼리문을 분석하여 파라미터를 삽입한다.
+        // 반복되는 파라미터는 2번씩 삽입해야 하므로 주의한다.
         
         if (!isset(self::$procs[$proc_name])) return array();
         
@@ -72,6 +73,9 @@ class Postcodify_SQLite
     }
 
     // SQLite는 저장 프로시저를 지원하지 않으므로 직접 쿼리를 작성해야 한다.
+    // 이런 포맷을 사용하면 위에서 별도로 분석을 거쳐 파라미터를 반복해야 한다는 단점이 있으나,
+    // MySQL에서 정의한 저장 프로시저 구조와 기존 Postcodify 클래스와의 호환성 유지를 위해
+    // 일단은 이렇게 해두고 사용하려고 한다. 실제 성능에 미치는 영향은 거의 없다.
     
     protected static $procs = array(
     
