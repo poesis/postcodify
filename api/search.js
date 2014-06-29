@@ -321,6 +321,7 @@
                     // 오류 메시지를 보여준다.
                     
                     results.find("div.postcode_search_status.error").show();
+                    $.fn.postcodify.previous = "";
                     
                     // 검색 실패 콜백 함수를 실행한다.
                     
