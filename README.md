@@ -44,7 +44,8 @@
         insertExtraInfo : "#참고항목을_입력할_input의_id",
         insertEnglishAddress : "#영문주소를_입력할_input의_id",
         insertJibeonAddress : "#지번주소를_입력할_input의_id",
-        timeout : 2500,  // 검색 타임아웃 (1/1000초 단위)
+        timeout : 3000,  // 검색 타임아웃 (1/1000초 단위)
+        timeoutBackup : 6000,  // 백업 API 검색 타임아웃 (1/1000초 단위)
         ready : function() {
             // Postcodify 셋팅 완료시 호출할 콜백 
         },

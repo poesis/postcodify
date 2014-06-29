@@ -43,7 +43,8 @@
  *          insertExtraInfo : "#참고항목을_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertEnglishAddress : "#영문주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
  *          insertJibeonAddress : "#지번주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
- *          timeout : 2500,  // 검색 타임아웃 (1/1000초 단위)
+ *          timeout : 3000,  // 검색 타임아웃 (1/1000초 단위)
+ *          timeoutBackup : 6000,  // 백업 API 검색 타임아웃 (1/1000초 단위)
  *          ready : function() {
  *              // Postcodify 셋팅 완료시 호출할 콜백 
  *          },
@@ -89,7 +90,7 @@
             
             var settings = $.extend({
                 api : "//api.poesis.kr/post/search.php",
-                apiBackup : false,
+                apiBackup : null,
                 controls : this,
                 results : this,
                 searchButtonContent : "검색",
@@ -104,7 +105,8 @@
                 insertExtraInfo : null,
                 insertEnglishAddress : null,
                 insertJibeonAddress : null,
-                timeout : 2500,
+                timeout : 3000,
+                timeoutBackup : 6000,
                 ready : function() { },
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results) { },
@@ -347,7 +349,7 @@
                             url : settings.apiBackup,
                             data : { "v": "1.7", "q": keywords, "ref": window.location.hostname },
                             dataType : "jsonp",
-                            timeout : settings.timeout * 2,
+                            timeout : settings.timeoutBackup,
                             success : ajax_success,
                             error : ajax_error_second,
                             processData : true,
