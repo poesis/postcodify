@@ -1,4 +1,15 @@
 <!DOCTYPE html>
+<html dir="ltr" lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>우편번호 검색</title>
+    <link rel="stylesheet" type="text/css" href="example.css" media="all" />
+    <script src="//d1p7wdleee1q2z.cloudfront.net/common/jquery-1.11.1.min.js"></script>
+    <script src="//d1p7wdleee1q2z.cloudfront.net/post/search.js"></script>
+</head>
+<body>
+
 <!--
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (예제 스타일)
  * 
@@ -18,28 +29,6 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  *
  *-->
-<html dir="ltr" lang="ko">
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>우편번호 검색</title>
-    <link rel="stylesheet" type="text/css" href="example.css" media="all" />
-    <script type="text/javascript" src="//api.poesis.kr/common/jquery-1.11.1.min.js"></script>
-    <script type="text/javascript" src="//api.poesis.kr/post/search.js"></script>
-    <script type="text/javascript">
-        // 무료 API 서버에서 스크립트 로딩에 실패한 경우 백업 서버에서 로딩하고, 검색도 백업 서버를 사용하도록 한다.
-        if (typeof window.jQuery === "undefined" || typeof window.jQuery.fn.postcodify === "undefined") {
-            document.write('<script type="text/javascript" src="//backup.api.poesis.kr/common/jquery-1.11.1.min.js"><\/script>');
-            document.write('<script type="text/javascript" src="//backup.api.poesis.kr/post/search.js"><\/script>');
-            var postcodifyCallBackupFirst = true;
-        } else {
-            var postcodifyCallBackupFirst = false;
-        }
-    </script>
-</head>
-<body>
-
-<!-- 페이지 제목 표시 -->
 
 <h1>우편번호 검색</h1>
 
@@ -55,7 +44,6 @@
 
 <script type="text/javascript">
     $("#postcodify").postcodify({
-        callBackupFirst : postcodifyCallBackupFirst,
         insertPostcode6 : "#entry_postcode6",
         insertAddress : "#entry_address",
         insertDetails : "#entry_details",

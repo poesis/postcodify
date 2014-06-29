@@ -14,12 +14,13 @@
 
 클라이언트 API는 [jQuery](http://www.jquery.com/) 플러그인으로 제공됩니다.
 
-우편번호 검색 기능이 필요한 웹페이지에 아래와 같이 `<div>`를 생성한 후
-최근 버전의 jQuery와 `api/search.js` 파일을 로딩하면 됩니다.
+우편번호 검색 기능이 필요한 웹페이지에 아래와 같이 `<div>`를 생성한 후,
+최근 버전의 jQuery와 `search.js` 파일을 로딩하면 됩니다.
+이미 jQuery를 사용하고 있는 경우에는 `search.js` 파일만 로딩하십시오.
 
     <div id="postcodify"></div>
-    <script src="//api.poesis.kr/common/jquery-1.11.1.min.js" charset="UTF-8"></script>
-    <script src="//api.poesis.kr/post/search.js" charset="UTF-8"></script>
+    <script src="//d1p7wdleee1q2z.cloudfront.net/common/jquery-1.11.1.min.js"></script>
+    <script src="//d1p7wdleee1q2z.cloudfront.net/post/search.js"></script>
     <script type="text/javascript">
         $("#postcodify").postcodify();
     </script>
@@ -116,8 +117,9 @@ F12 키를 눌러 웹브라우저의 개발자도구를 사용하시면
 도로명주소의 특성상, 기존 방식처럼 읍/면/동 또는 도로명까지만 입력할 경우
 검색 결과가 너무 많이 나와서 사용자 입장에서도 불편하고 검색 속도도 느려지게 됩니다.
 
-버전 1.7.1부터는 무료 API 서버가 다운될 경우 자동으로 백업 API 서버를 호출합니다.
-백업서버 자동 전환 기능을 사용하려면 포함된 예제를 참고하시기 바랍니다.
+버전 1.7.1부터는 검색서버와 별도의 CDN에서 jQuery 플러그인을 로딩할 수 있고,
+무료 API 서버가 다운되거나 점검중일 경우 자동으로 백업 API 서버를 호출하므로
+서버 문제 때문에 검색이 안 되는 일은 극히 드물게 되었습니다.
 
 #### 검색서버 직접 구축시 유의사항 ####
 

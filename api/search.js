@@ -2,8 +2,6 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.7.1
- * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
@@ -18,72 +16,23 @@
  * 
  *  GNU 약소 일반 공중 사용 허가서는 이 프로그램과 함께 제공됩니다.
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
- *  
- * -----------------------------------------------------------------------------
- * 
- *  기본 사용법: 검색창을 표시할 div를 생성한 후 아래와 같이 호출
- *  
- *      $("#검색란을_표시할_div의_id").postcodify();
- * 
- *  고급 사용법:
- * 
- *      $("#검색란을_표시할_div의_id").postcodify({
- *          api : "서버측 API의 주소",  // 지정하지 않으면 api.poesis.kr의 무료 서버 사용
- *          apiBackup : "백업 API의 주소",  // 서버 접속 실패시 재시도할 다른 서버의 주소
- *          callBackupFirst : false,  // 백업 API를 먼저 호출할지 여부
- *          controls : "#키워드_입력란을_표시할_div의_id",  // 지정하지 않으면 검색창에 함께 표시
- *          searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
- *          hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
- *          mapLinkProvider : "google",  // 지도 링크를 표시할지 여부 (daum, naver, google, 또는 false)
- *          mapLinkContent : "지도",  // 지도 링크에 표시할 내용 (HTML 사용 가능)
- *          insertDbid : "#안행부_관리번호를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
- *          insertPostcode5 : "#기초구역번호를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
- *          insertPostcode6 : "#우편번호를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
- *          insertAddress : "#도로명주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
- *          insertDetails : "#상세주소를_입력할_input의_id",  // 지정하지 않으면 포커스 이동하지 않음
- *          insertExtraInfo : "#참고항목을_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
- *          insertEnglishAddress : "#영문주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
- *          insertJibeonAddress : "#지번주소를_입력할_input의_id",  // 지정하지 않으면 입력하지 않음
- *          timeout : 3000,  // 검색 타임아웃 (1/1000초 단위)
- *          timeoutBackup : 6000,  // 백업 API 검색 타임아웃 (1/1000초 단위)
- *          ready : function() {
- *              // Postcodify 셋팅 완료시 호출할 콜백 
- *          },
- *          beforeSearch : function(keywords) {
- *              // 검색 직전에 호출할 콜백
- *          },
- *          afterSearch : function(keywords, results) {
- *              // 검색 완료 직후에 호출할 콜백
- *          },
- *          beforeSelect : function(selectedEntry) {
- *              // 선택한 주소를 input에 입력하기 직전에 호출할 콜백
- *          },
- *          afterSelect : function(selectedEntry) {
- *              // 선택한 주소를 input에 입력한 직후에 호출할 콜백
- *          },
- *          onSuccess : function() {
- *              // 검색 성공시 호출할 콜백
- *          },
- *          onBackup : function() {
- *              // 검색에 실패하여 백업 API로 재시도할 경우 호출할 콜백
- *          },
- *          onError : function() {
- *              // 검색에 실패한 경우 호출할 콜백
- *          },
- *          onComplete : function() {
- *              // 검색 완료 후 호출할 콜백 (성공 여부와 무관함)
- *          },
- *          focusKeyword : true,  // 페이지 로딩 직후 키워드 입력란으로 포커스 이동 여부
- *          focusDetails : true,  // 주소 선택 후 상세주소 입력란으로 포커스 이동 여부
- *          useFullJibeon : true  // false인 경우 참고항목에 법정동과 공동주택명만 표시
- *                                // true인 경우 대표지번도 표시 (택배 등의 편의를 위해)
- *              // 익스플로러 호환성을 위해 마지막 항목 뒤에는 쉼표(,) 입력 금지
- *      });
  */
 
 (function($) {
     
+    // 같은 플러그인을 2번 인클루드한 경우 무시하도록 한다.
+    
+    if (typeof $.fn.postcodify !== "undefined") return;
+    
+    // 버전을 선언한다.
+    
+    var version = "1.7.1";
+    
+    // 플러그인을 선언한다.
+    
     $.fn.postcodify = function(options) {
+        
+        // jQuery 플러그인 관례대로 each()의 결과를 반환하도록 한다.
         
         return this.each(function() {
             
@@ -359,7 +308,7 @@
                         
                         $.ajax({
                             url : settings.currentRequestUrl,
-                            data : { "v": "1.7", "q": keywords, "ref": window.location.hostname },
+                            data : { "v": version, "q": keywords, "ref": window.location.hostname },
                             dataType : "jsonp",
                             timeout : settings.timeoutBackup,
                             success : ajax_success,
@@ -386,7 +335,7 @@
                 
                 $.ajax({
                     url : settings.currentRequestUrl,
-                    data : { "v": "1.7", "q": keywords, "ref": window.location.hostname },
+                    data : { "v": version, "q": keywords, "ref": window.location.hostname },
                     dataType : "jsonp",
                     timeout : settings.timeout,
                     success : ajax_success,
