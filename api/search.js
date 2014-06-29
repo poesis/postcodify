@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  jQuery 플러그인 version 1.7
+ *  jQuery 플러그인 version 1.7.1
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  *  
@@ -30,6 +30,7 @@
  *      $("#검색란을_표시할_div의_id").postcodify({
  *          api : "서버측 API의 주소",  // 지정하지 않으면 api.poesis.kr의 무료 서버 사용
  *          apiBackup : "백업 API의 주소",  // 서버 접속 실패시 재시도할 다른 서버의 주소
+ *          callBackupFirst : false,  // 백업 API를 먼저 호출할지 여부
  *          controls : "#키워드_입력란을_표시할_div의_id",  // 지정하지 않으면 검색창에 함께 표시
  *          searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
  *          hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
@@ -96,6 +97,7 @@
             var settings = $.extend({
                 api : freeapi.defaultUrl,
                 apiBackup : null,
+                callBackupFirst : false,
                 controls : this,
                 results : this,
                 searchButtonContent : "검색",
@@ -356,7 +358,7 @@
                         settings.currentRequestUrl = settings.apiBackup;
                         
                         $.ajax({
-                            url : settings.apiBackup,
+                            url : settings.currentRequestUrl,
                             data : { "v": "1.7", "q": keywords, "ref": window.location.hostname },
                             dataType : "jsonp",
                             timeout : settings.timeoutBackup,
@@ -376,10 +378,14 @@
                 
                 // 검색 서버로 AJAX (JSONP) 요청을 전송한다.
                 
-                settings.currentRequestUrl = settings.api;
+                if (settings.callBackupFirst) {
+                    settings.currentRequestUrl = settings.apiBackup;
+                } else {
+                    settings.currentRequestUrl = settings.api;
+                }
                 
                 $.ajax({
-                    url : settings.api,
+                    url : settings.currentRequestUrl,
                     data : { "v": "1.7", "q": keywords, "ref": window.location.hostname },
                     dataType : "jsonp",
                     timeout : settings.timeout,

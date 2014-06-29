@@ -31,6 +31,7 @@
     $("#검색란을_표시할_div의_id").postcodify({
         api : "search.php",  // 서버측 검색 API를 직접 설치하신 경우에만 설정
         apiBackup : "백업 API의 주소",  // 서버 접속 실패시 재시도할 다른 서버의 주소
+        callBackupFirst : false,  // 백업 API를 먼저 호출할지 여부
         controls : "#키워드_입력란을_표시할_div의_id",
         searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
         hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
