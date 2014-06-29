@@ -49,7 +49,7 @@ $sqlite->exec('PRAGMA page_size = 4096');
 $sqlite->exec('PRAGMA synchronous = OFF');
 $sqlite->exec('PRAGMA journal_mode = OFF');
 $sqlite->exec('PRAGMA encoding = "UTF-8"');
-$sqlite->exec(file_get_contents(__DIR__ . '/resources/sqlite-schema.sql'));
+$sqlite->exec(file_get_contents(__DIR__ . '/resources/schema-sqlite.sql'));
 
 // 테이블을 복사한다.
 

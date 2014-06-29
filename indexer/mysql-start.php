@@ -100,10 +100,10 @@ if (!file_exists(TXT_DIRECTORY . '/newaddr_pobox_DB.zip'))
 // -------------------------------------------------------------------------------------------------
 // DB에 연결하고 테이블 및 검색 프로시저를 생성한다.
 // -------------------------------------------------------------------------------------------------
-
+    
 echo '[Step 1/8] 테이블과 프로시저를 생성하는 중 ... ' . "\n\n";
 
-get_db()->exec(file_get_contents(__DIR__ . '/resources/mysql-schema.sql'));
+get_db()->exec(file_get_contents(__DIR__ . '/resources/schema-mysql.sql'));
 
 // 기본 설정을 입력한다.
 
