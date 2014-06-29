@@ -88,8 +88,13 @@
             
             // 기본 설정을 정의한다.
             
+            var freeapi = {
+                defaultUrl : "//api.poesis.kr/post/search.php",
+                backupUrl : "//backup.api.poesis.kr/post/search.php",
+            };
+            
             var settings = $.extend({
-                api : "//api.poesis.kr/post/search.php",
+                api : freeapi.defaultUrl,
                 apiBackup : null,
                 controls : this,
                 results : this,
@@ -120,6 +125,10 @@
                 focusDetails : true,
                 useFullJibeon : false
             }, options);
+            
+            if (settings.api === freeapi.defaultUrl && settings.apiBackup === null) {
+                settings.apiBackup = freeapi.backupUrl;
+            }
             
             // 검색 컨트롤을 생성한다.
             
@@ -336,7 +345,7 @@
                     
                     // 백업 API가 있는 경우...
                     
-                    if (settings.apiBackup && (textStatus === "timeout" || textStatus === "error")) {
+                    if (settings.apiBackup) {
                     
                         // 백업 API 시도전 콜백 함수를 실행한다.
                         
