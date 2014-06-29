@@ -19,7 +19,7 @@
 이미 jQuery를 사용하고 있는 경우에는 `search.js` 파일만 로딩하십시오.
 
     <div id="postcodify"></div>
-    <script src="//d1p7wdleee1q2z.cloudfront.net/common/jquery-1.11.1.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="//d1p7wdleee1q2z.cloudfront.net/post/search.js"></script>
     <script type="text/javascript">
         $("#postcodify").postcodify();
