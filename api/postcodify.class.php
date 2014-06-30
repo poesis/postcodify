@@ -368,7 +368,8 @@ class Postcodify
         
         // 검색어를 단어별로 분리한다.
         
-        $str = preg_split('/\\s+/u', preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', strtolower($str)));
+        $str = str_replace(array(',', '(', ')'), ' ', strtolower($str));
+        $str = preg_split('/\\s+/u', preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', $str));
         
         // 대한민국 행정구역 목록 파일을 로딩한다.
         
