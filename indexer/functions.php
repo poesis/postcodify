@@ -74,10 +74,12 @@ function get_variations_of_road_name($str)
     {
         $keywords[] = $matches[1] . '로';
         $keywords[] = $matches[1] . $matches[3] . '로';
+        $keywords[] = $matches[1] . $matches[3];
         if ($matches[2])
         {
             $keywords[] = $matches[1] . $matches[2] . '로';
             $keywords[] = $matches[1] . $matches[2] . $matches[3] . '로';
+            $keywords[] = $matches[1] . $matches[2] . $matches[3];
         }
     }
     elseif (preg_match('/^(.+)([동서남북]?)([0-9-]+)번?([가나라다마바사아자차카타파하동서남북안]?)길$/uU', $str, $matches))
@@ -85,15 +87,18 @@ function get_variations_of_road_name($str)
         if (preg_match('/[로길]$/uU', $matches[1]))
         {
             $keywords[] = $matches[1];
+            $keywords[] = $matches[1] . $matches[3];
         }
         else
         {
             $keywords[] = $matches[1] . '길';
             $keywords[] = $matches[1] . $matches[3] . '길';
+            $keywords[] = $matches[1] . $matches[3];
             if ($matches[2])
             {
                 $keywords[] = $matches[1] . $matches[2] . '길';
                 $keywords[] = $matches[1] . $matches[2] . $matches[3] . '길';
+                $keywords[] = $matches[1] . $matches[2] . $matches[3];
             }
             if ($matches[4])
             {
@@ -183,25 +188,6 @@ function get_variations_of_building_name($str)
         $keywords[] = $str = $matches[1] . '동' . $matches[2];
         $keywords[] = $str = $matches[1] . $matches[2];
     }
-    
-    // 일반적인 단체, 학교, 관공서명 등에 붙는 잡다한 접두사를 제거한다.
-    // 1.4.2 버전부터는 건물명 검색을 LIKE %검색어%로 하기 때문에 이 부분은 필요없게 되었으나
-    // 나중에 검색 방법을 변경할 경우에 대비해 주석처리만 해둔다.
-    /*
-    if (preg_match('/^(?:대한예수교장로회|기독교대한감리회|대한예수교연합침례회|사회복지법인|학교법인)(.+)$/uU', $str, $matches))
-    {
-        $keywords[] = $str = $matches[1];
-    }
-    
-    if (preg_match('/^(?:서울|부산|대구|대전|광주|인천|울산|성남|수원)(.+)((?:초등|중|여자중|고등|여자고등)학교)$/uU', $str, $matches))
-    {
-        $keywords[] = $str = $matches[1] . $matches[2];
-    }
-    elseif (preg_match('/^(?:서울|부산|대구|대전|광주|인천|울산|성남|수원)(.+)(우체국|경찰서|주민센터)$/uU', $str, $matches))
-    {
-        $keywords[] = $str = $matches[1] . $matches[2];
-    }
-    */
     
     // 일관성 없는 아파트 명칭의 단순한 형태를 추가한다.
     

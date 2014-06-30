@@ -97,6 +97,15 @@ class Postcodify
             {
                 $rows = self::call_db_procedure('postcode_search_juso',
                     array(self::crc32_x64($kw->road), $kw->numbers[0], $kw->numbers[1]), $extra_params);
+                
+                // 검색 결과가 없다면 도로번호를 건물번호로 잘못 해석했을 수도 있으므로 조합을 바꾸어 다시 시도해 본다.
+                
+                if (!count($rows) && $kw->numbers[1] === null)
+                {
+                    $possible_road_name = self::crc32_x64($kw->road . $kw->numbers[0] . '번길');
+                    $rows = self::call_db_procedure('postcode_search_juso',
+                        array($possible_road_name, $kw->extra_numbers[0], $kw->extra_numbers[1]), $extra_params);
+                }
             }
             
             // 동리 + 지번으로 검색하는 경우...
@@ -456,6 +465,7 @@ class Postcodify
                 if (isset($matches[3]) && $matches[3])
                 {
                     $kw->numbers = $matches[3];
+                    $kw->extra_numbers = true;
                     break;
                 }
                 continue;
@@ -513,6 +523,25 @@ class Postcodify
             $kw->numbers = array(null, null);
         }
         
+        // 혹시 도로명+건물번호 외에 번호가 또 있는지 확인한다. (도로명에 숫자가 포함되어 있어 혼동의 우려가 있는 경우)
+        
+        if ($kw->extra_numbers & $kw->numbers[0] !== null && $kw->numbers[1] === null && isset($str[$id + 1]))
+        {
+            if (preg_match('/^(?:산|지하)?([0-9]+(?:-[0-9]+)?)(?:번지?)?$/u', $str[$id + 1], $matches))
+            {
+                $kw->extra_numbers = explode('-', $matches[1]);
+                if (!isset($kw->extra_numbers[1])) $kw->extra_numbers[1] = null;
+            }
+            else
+            {
+                $kw->extra_numbers = array(null, null);
+            }
+        }
+        else
+        {
+            $kw->extra_numbers = array(null, null);
+        }
+        
         // 분해 결과를 반환한다.
         
         return $kw;
@@ -556,6 +585,8 @@ class Postcodify_Keywords
     public $building;
     public $pobox;
     public $numbers;
+    public $extra_numbers;
+    public $extra_keywords;
     public $use_area = false;
 }
 
