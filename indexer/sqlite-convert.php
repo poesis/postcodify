@@ -59,6 +59,7 @@ $sqlite_tables = array(
     'postcode_keywords_jibeon' => array(5, 'seq'),
     'postcode_keywords_building' => array(3, 'seq'),
     'postcode_keywords_pobox' => array(7, 'seq'),
+    'postcode_keywords_replace' => array(3, 'seq'),
     'postcode_metadata' => array(2, 'k'),
 );
 
@@ -112,6 +113,7 @@ $sqlite_indexes = array(
     'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcode_keywords_building' => array('address_id'),
     'postcode_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
+    'postcode_keywords_replace' => array('original_crc32', 'replaced_crc32'),
 );
 
 foreach ($sqlite_indexes as $table_name => $columns)

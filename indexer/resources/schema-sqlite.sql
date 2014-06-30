@@ -63,6 +63,14 @@ CREATE TABLE postcode_keywords_pobox (
     range_end_minor INTEGER
 );
 
+-- 대체 키워드 테이블.
+
+CREATE TABLE postcode_keywords_replace (
+    seq INTEGER PRIMARY KEY,
+    original_crc32 INTEGER,
+    replaced_crc32 INTEGER
+);
+
 -- 각종 설정을 저장하는 테이블.
 
 CREATE TABLE postcode_metadata (

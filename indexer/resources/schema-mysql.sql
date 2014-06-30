@@ -83,6 +83,14 @@ CREATE TABLE postcode_keywords_pobox (
     range_end_minor SMALLINT(5) UNSIGNED                -- 끝 부번호
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
+-- 대체 키워드 테이블.
+
+CREATE TABLE postcode_keywords_replace (
+    seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,        -- PK
+    original_crc32 INT(10) UNSIGNED,                    -- 원본 키워드의 CRC32 값
+    replaced_crc32 INT(10) UNSIGNED                     -- 대체할 키워드의 CRC32 값
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
+
 -- 각종 설정을 저장하는 테이블.
 
 CREATE TABLE postcode_metadata (

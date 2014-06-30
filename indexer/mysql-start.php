@@ -16,7 +16,7 @@ $start_time = time();
 
 // 설정과 함수 파일을 인클루드한다.
 
-define('INDEXER_VERSION', '1.5.1');
+define('INDEXER_VERSION', '1.8');
 require dirname(__FILE__) . '/config.php';
 require dirname(__FILE__) . '/functions.php';
 echo "\n";
@@ -160,11 +160,16 @@ echo '[Step 2/8] 도로 목록 및 영문 명칭을 메모리에 읽어들이는
 $english_cache = array();
 $roads = array();
 $roads_count = 0;
+$replacements = array();
 
 // 파일을 연다.
 
 $filename = TXT_DIRECTORY . '/도로명코드_전체분.zip';
 echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
+
+$db = get_db();
+$ps_replace = $db->prepare('INSERT INTO postcode_keywords_replace (original_crc32, replaced_crc32) VALUES (?, ?)');
+$db->beginTransaction();
 
 $zip = new ZipArchive;
 $zip->open($filename);
@@ -220,9 +225,30 @@ while ($line = trim(fgets($fp)))
     $road_info = $road_name . '|' . $sido . '|' . $sigungu . '|' . $ilbangu . '|' . $eupmyeon . '|' . $english;
     $roads[$road_id][$road_section] = $road_info;
     
+    // 도로 정보를 대체 키워드 테이블에 저장한다.
+    
+    if ($eupmyeon !== '')
+    {
+        $replace_original = $eupmyeon . $road_name;
+    }
+    elseif ($ilbangu)
+    {
+        $replace_original = $ilbangu . $road_name;
+    }
+    else
+    {
+        $replace_original = $sigungu . $road_name;
+    }
+    
+    if (!isset($replacements[$replace_original]))
+    {
+        $replacements[$replace_original] = true;
+        $ps_replace->execute(array(crc32_x64($replace_original), crc32_x64($road_name)));
+    }
+    
     // 상태를 표시한다.
     
-    if ($roads_count % 1024 == 0)
+    if ($roads_count % 256 == 0)
     {
         echo "\033[10D" . str_pad(number_format($roads_count, 0), 10, ' ', STR_PAD_LEFT);
     }
@@ -240,6 +266,10 @@ while ($line = trim(fgets($fp)))
 echo "\033[10D" . str_pad(number_format($roads_count, 0), 10, ' ', STR_PAD_LEFT) . "\n\n";
 $zip->close();
 unset($zip);
+
+$db->commit();
+unset($ps_replace);
+unset($replacements);
 
 // -------------------------------------------------------------------------------------------------
 // 상세건물명 데이터를 메모리로 불러온다. 나중에 부가정보와 함께 DB에 입력된다.
@@ -286,7 +316,7 @@ while ($line = trim(fgets($fp)))
     
     // 상태를 표시한다.
     
-    if ($buildings_count % 1024 == 0)
+    if ($buildings_count % 256 == 0)
     {
         echo "\033[10D" . str_pad(number_format($buildings_count, 0), 10, ' ', STR_PAD_LEFT);
     }
@@ -1015,6 +1045,7 @@ $indexes = array(
     'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcode_keywords_building' => array('address_id'),
     'postcode_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
+    'postcode_keywords_replace' => array('original_crc32', 'replaced_crc32'),
 );
 
 while (count($indexes))
