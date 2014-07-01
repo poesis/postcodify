@@ -54,13 +54,13 @@ $sqlite->exec(file_get_contents(__DIR__ . '/resources/schema-sqlite.sql'));
 // 테이블을 복사한다.
 
 $sqlite_tables = array(
-    'postcode_addresses' => array(19, 'id'),
-    'postcode_keywords_juso' => array(5, 'seq'),
-    'postcode_keywords_jibeon' => array(5, 'seq'),
-    'postcode_keywords_building' => array(3, 'seq'),
-    'postcode_keywords_pobox' => array(7, 'seq'),
-    'postcode_keywords_synonyms' => array(3, 'seq'),
-    'postcode_metadata' => array(2, 'k'),
+    'postcodify_addresses' => array(19, 'id'),
+    'postcodify_keywords_juso' => array(5, 'seq'),
+    'postcodify_keywords_jibeon' => array(5, 'seq'),
+    'postcodify_keywords_building' => array(3, 'seq'),
+    'postcodify_keywords_pobox' => array(7, 'seq'),
+    'postcodify_keywords_synonyms' => array(3, 'seq'),
+    'postcodify_metadata' => array(2, 'k'),
 );
 
 foreach ($sqlite_tables as $table_name => $table_info)
@@ -109,11 +109,11 @@ echo $elapsed_seconds . '초' . "\n";
 // 인덱스를 생성한다.
 
 $sqlite_indexes = array(
-    'postcode_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
-    'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
-    'postcode_keywords_building' => array('address_id'),
-    'postcode_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
-    'postcode_keywords_synonyms' => array('original_crc32', 'canonical_crc32'),
+    'postcodify_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
+    'postcodify_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
+    'postcodify_keywords_building' => array('address_id'),
+    'postcodify_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
+    'postcodify_keywords_synonyms' => array('original_crc32', 'canonical_crc32'),
 );
 
 foreach ($sqlite_indexes as $table_name => $columns)
