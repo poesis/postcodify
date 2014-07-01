@@ -26,7 +26,7 @@
     
     // 버전을 선언한다.
     
-    var version = "1.7.1";
+    var version = "1.8";
     
     // 플러그인을 선언한다.
     
@@ -91,9 +91,9 @@
             // 검색 결과창을 생성한다.
             
             var results = $(settings.results);
-            $('<div class="postcode_search_status empty">검색 결과가 없습니다.</div>').appendTo(results).show();
-            $('<div class="postcode_search_status error">검색 서버에 연결 중 오류가 발생하였습니다.<br />잠시 후 다시 시도해 주시기 바랍니다.</div>').appendTo(results).hide();
-            $('<div class="postcode_search_status quota">일일 허용 쿼리수를 초과하였습니다.</div>').appendTo(results).hide();
+            $('<div class="postcode_search_status empty">검색 결과가 없습니다. 주소가 정확한지 다시 확인해 주십시오.<br />띄어쓰기에 유의하시기 바랍니다.</div>').appendTo(results).show();
+            $('<div class="postcode_search_status error">검색 서버와 통신 중 오류가 발생하였습니다.<br />잠시 후 다시 시도해 주시기 바랍니다.</div>').appendTo(results).hide();
+            $('<div class="postcode_search_status quota">일일 허용 쿼리수를 초과하였습니다.<br />관리자에게 문의해 주시기 바랍니다.</div>').appendTo(results).hide();
             $('<div class="postcode_search_status too_short">검색어는 3글자 이상 입력해 주시기 바랍니다.</div>').appendTo(results).hide();
             $('<div class="postcode_search_status too_many">검색 결과가 너무 많아 100건까지만 표시합니다.<br />' +
                 '행정구역명, 번지수 등을 사용하여 좀더 자세히 검색해 주시기 바랍니다.</div>').appendTo(results).hide();
