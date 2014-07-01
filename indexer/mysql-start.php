@@ -118,8 +118,8 @@ if (file_exists(TXT_DIRECTORY . '/도로명코드_기준일.txt'))
         if ($filedate > $savedate)
         {
             echo '파일에서 데이터 기준일을 읽어 사용합니다. 기준일은 ' . $savedate . '입니다.' . "\n";
-            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
-            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('updated', '" . $savedate . "')");
+            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
+            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('updated', '" . $savedate . "')");
             $gotdate = true;
         }
     }
@@ -136,8 +136,8 @@ if (!$gotdate)
         $line = trim(fgets($stdin));
         if (preg_match('/^20[0-9][0-9][0-1][0-9][0-3][0-9]$/', $line))
         {
-            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
-            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('updated', '" . $line . "')");
+            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
+            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('updated', '" . $line . "')");
             fclose($stdin);
             break;
         }
@@ -168,8 +168,8 @@ $filename = TXT_DIRECTORY . '/도로명코드_전체분.zip';
 echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
 
 $db = get_db();
-$ps_replace = $db->prepare('INSERT INTO postcode_keywords_replace (original_crc32, replaced_crc32) VALUES (?, ?)');
 $db->beginTransaction();
+$ps_syn = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
 
 $zip = new ZipArchive;
 $zip->open($filename);
@@ -243,7 +243,7 @@ while ($line = trim(fgets($fp)))
     if (!isset($replacements[$replace_original]))
     {
         $replacements[$replace_original] = true;
-        $ps_replace->execute(array(crc32_x64($replace_original), crc32_x64($road_name)));
+        $ps_syn->execute(array(crc32_x64($replace_original), crc32_x64($road_name)));
     }
     
     // 상태를 표시한다.
@@ -268,7 +268,7 @@ $zip->close();
 unset($zip);
 
 $db->commit();
-unset($ps_replace);
+unset($ps_syn);
 unset($replacements);
 
 // -------------------------------------------------------------------------------------------------
@@ -367,11 +367,11 @@ while (count($files))
         // 쓰레드를 초기화한다.
         
         $db = get_db();
-        $ps_address_insert = $db->prepare('INSERT INTO postcode_addresses ' .
+        $ps_address_insert = $db->prepare('INSERT INTO postcodify_addresses ' .
             '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
             'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, english_address) ' .
             'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $ps_keyword_insert = $db->prepare('INSERT INTO postcode_keywords_juso ' .
+        $ps_keyword_insert = $db->prepare('INSERT INTO postcodify_keywords_juso ' .
             '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
         
@@ -427,12 +427,12 @@ while (count($files))
                 $english = $num_major . ($num_minor ? ('-' . $num_minor) : '') . ', '. $road_info[5];
                 if ($is_basement) $english = 'Jiha ' . $english;
                 
-                // postcode_addresses 테이블에 삽입한다.
+                // postcodify_addresses 테이블에 삽입한다.
                 
                 $ps_address_insert->execute(array($address_id, $postcode5, null, $road_id, $road_section, $road_name,
                     $num_major, $num_minor, $is_basement, $sido, $sigungu, $ilbangu, $eupmyeon, $english));
                 
-                // 검색 키워드들을 정리하여 postcode_keywords_road 테이블에 삽입한다.
+                // 검색 키워드들을 정리하여 postcodify_keywords_road 테이블에 삽입한다.
                 
                 $keywords = get_variations_of_road_name(get_canonical($road_name));
                 foreach ($keywords as $keyword)
@@ -509,13 +509,13 @@ while (count($files))
         // 쓰레드를 초기화한다.
         
         $db = get_db();
-        $ps_address_update1 = $db->prepare('UPDATE postcode_addresses ' .
+        $ps_address_update1 = $db->prepare('UPDATE postcodify_addresses ' .
             'SET dongri = ?, jibeon = ? ' .
             'WHERE id = ?');
-        $ps_address_update2 = $db->prepare('UPDATE postcode_addresses ' .
+        $ps_address_update2 = $db->prepare('UPDATE postcodify_addresses ' .
             'SET other_addresses = CONCAT_WS(\'\\n\', other_addresses, ?) ' .
             'WHERE id = ?');
-        $ps_keyword_insert = $db->prepare('INSERT INTO postcode_keywords_jibeon ' .
+        $ps_keyword_insert = $db->prepare('INSERT INTO postcodify_keywords_jibeon ' .
             '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
         
@@ -550,7 +550,7 @@ while (count($files))
                 $is_mountain = (int)trim($line[7]);
                 $is_canonical = (int)trim($line[10]);
                 
-                // postcode_addresses 테이블의 해당 레코드에 법정동 및 지번 정보를 추가한다.
+                // postcodify_addresses 테이블의 해당 레코드에 법정동 및 지번 정보를 추가한다.
                 
                 $insert_jibeon = (($is_mountain ? '산' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : ''));
                 
@@ -563,7 +563,7 @@ while (count($files))
                     $ps_address_update2->execute(array($dongri . ' ' . $insert_jibeon, $address_id));
                 }
                 
-                // 검색 키워드들을 정리하여 postcode_keywords_jibeon 테이블에 삽입한다.
+                // 검색 키워드들을 정리하여 postcodify_keywords_jibeon 테이블에 삽입한다.
                 
                 $keywords = get_variations_of_dongri($dongri, $dongs[$filename]);
                 foreach ($keywords as $keyword)
@@ -637,15 +637,15 @@ while (count($files))
         
         $db = get_db();
         $ps_address_select = $db->prepare('SELECT dongri, jibeon, other_addresses ' .
-            'FROM postcode_addresses ' .
+            'FROM postcodify_addresses ' .
             'WHERE id = ?');
-        $ps_address_update = $db->prepare('UPDATE postcode_addresses ' .
+        $ps_address_update = $db->prepare('UPDATE postcodify_addresses ' .
             'SET postcode6 = ?, building_name = ?, other_addresses = ? ' .
             'WHERE id = ?');
-        $ps_keyword_jibeon_insert = $db->prepare('INSERT INTO postcode_keywords_jibeon ' .
+        $ps_keyword_jibeon_insert = $db->prepare('INSERT INTO postcodify_keywords_jibeon ' .
             '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
-        $ps_keyword_building_insert = $db->prepare('INSERT INTO postcode_keywords_building ' .
+        $ps_keyword_building_insert = $db->prepare('INSERT INTO postcodify_keywords_building ' .
             '(address_id, keyword) ' .
             'VALUES (?, ?)');
         
@@ -816,7 +816,7 @@ while (count($files))
                 
                 $keywords = array_unique($keywords);
                 
-                // 지번 검색 키워드들을 postcode_keywords_jibeon 테이블에 삽입한다.
+                // 지번 검색 키워드들을 postcodify_keywords_jibeon 테이블에 삽입한다.
                 
                 foreach ($keywords_dongs as $keyword)
                 {
@@ -827,7 +827,7 @@ while (count($files))
                     }
                 }
                 
-                // 건물명 검색 키워드들을 postcode_keywords_building 테이블에 삽입한다.
+                // 건물명 검색 키워드들을 postcodify_keywords_building 테이블에 삽입한다.
                 
                 foreach ($keywords as $keyword)
                 {
@@ -892,11 +892,11 @@ echo '[Step 7/8] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
 // 준비.
 
 $db = get_db();
-$ps_address_insert = $db->prepare('INSERT INTO postcode_addresses ' .
+$ps_address_insert = $db->prepare('INSERT INTO postcodify_addresses ' .
     '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
     'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, english_address) ' .
     'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-$ps_keyword_insert = $db->prepare('INSERT INTO postcode_keywords_pobox ' .
+$ps_keyword_insert = $db->prepare('INSERT INTO postcodify_keywords_pobox ' .
     '(address_id, keyword, range_start_major, range_start_minor, range_end_major, range_end_minor) ' .
     'VALUES (?, ?, ?, ?, ?, ?)');
 $poboxes_count = 0;
@@ -979,12 +979,12 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
         if (trim($line[3]) !== '' && isset($english_cache[trim($line[3])])) $english .= ', ' . $english_cache[trim($line[3])];
         if (trim($line[2]) !== '' && isset($english_cache[trim($line[2])])) $english .= ', ' . $english_cache[trim($line[2])];
         
-        // postcode_addresses 테이블에 삽입한다.
+        // postcodify_addresses 테이블에 삽입한다.
         
         $ps_address_insert->execute(array($address_id, null, $postcode6, $road_id, '00', trim($insert_name),
             null, null, 0, $sido, $sigungu, $ilbangu, $eupmyeon, $english));
         
-        // 검색 키워드들을 정리하여 postcode_keywords_pobox 테이블에 삽입한다.
+        // 검색 키워드들을 정리하여 postcodify_keywords_pobox 테이블에 삽입한다.
         
         $keywords = array(get_canonical($pobox_name));
         
@@ -1040,12 +1040,12 @@ echo $elapsed_seconds . '초' . "\n\n";
 echo '[Step 8/8] 인덱스를 생성하는 중. 긴 시간이 걸릴 수 있습니다 ... ' . "\n\n";
 
 $indexes = array(
-    'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'updated'),
-    'postcode_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
-    'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
-    'postcode_keywords_building' => array('address_id'),
-    'postcode_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
-    'postcode_keywords_replace' => array('original_crc32', 'replaced_crc32'),
+    'postcodify_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'updated'),
+    'postcodify_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
+    'postcodify_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
+    'postcodify_keywords_building' => array('address_id'),
+    'postcodify_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
+    'postcodify_keywords_synonyms' => array('original_crc32', 'canonical_crc32'),
 );
 
 while (count($indexes))

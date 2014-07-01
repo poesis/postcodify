@@ -98,15 +98,15 @@ class Postcodify
                 // 지역명이 도로명과 붙어 있는 경우 분리한다.
                 
                 $kw_crc32 = self::crc32_x64($kw->road);
-                if (!count($extra_params) && preg_match('/[시군구읍면동]/U', $kw->road))
+                if (!count($extra_params) && preg_match('/[시군구읍면동].+$/U', $kw->road))
                 {
-                    $kwreplace = self::call_db_procedure('postcode_replace_keyword', array($kw_crc32), array());
-                    if (count($kwreplace)) $kw_crc32 = current($kwreplace)->replaced_crc32;
+                    $kwreplace = self::call_db_procedure('postcodify_get_synonym', array($kw_crc32), array());
+                    if (count($kwreplace)) $kw_crc32 = current($kwreplace)->result;
                 }
                 
                 // 일단 도로명으로 검색해 본다.
                 
-                $rows = self::call_db_procedure('postcode_search_juso',
+                $rows = self::call_db_procedure('postcodify_search_juso',
                     array($kw_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
                 
                 // 도로번호를 건물번호로 잘못 해석했을 수도 있으므로 조합을 바꾸어 다시 시도해 본다.
@@ -114,7 +114,7 @@ class Postcodify
                 if (count($rows) < 100 && $kw->numbers[1] === null)
                 {
                     $possible_road_name = self::crc32_x64($kw->road . $kw->numbers[0] . '번길');
-                    $rows = array_merge($rows, self::call_db_procedure('postcode_search_juso',
+                    $rows = array_merge($rows, self::call_db_procedure('postcodify_search_juso',
                         array($possible_road_name, $kw->extra_numbers[0], $kw->extra_numbers[1]), $extra_params));
                     $rows = array_slice($rows, 0, 100);
                 }
@@ -124,16 +124,25 @@ class Postcodify
             
             elseif ($kw->dongri !== null && $kw->building === null)
             {
+                // 지역명이 동리명과 붙어 있는 경우 분리한다.
+                
+                $kw_crc32 = self::crc32_x64($kw->dongri);
+                if (!count($extra_params) && preg_match('/[시군구읍면동].+$/U', $kw->dongri))
+                {
+                    $kwreplace = self::call_db_procedure('postcodify_get_synonym', array($kw_crc32), array());
+                    if (count($kwreplace)) $kw_crc32 = current($kwreplace)->result;
+                }
+                
                 // 일단 동리로 검색해 본다.
                 
-                $rows = self::call_db_procedure('postcode_search_jibeon',
-                    array(self::crc32_x64($kw->dongri), $kw->numbers[0], $kw->numbers[1]), $extra_params);
+                $rows = self::call_db_procedure('postcodify_search_jibeon',
+                    array($kw_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
                 
                 // 검색 결과가 없다면 건물명을 동리로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
                 
                 if ($kw->numbers[0] === null && $kw->numbers[1] === null && !count($rows))
                 {
-                    $rows = self::call_db_procedure('postcode_search_building', array($kw->dongri), $extra_params);
+                    $rows = self::call_db_procedure('postcodify_search_building', array($kw->dongri), $extra_params);
                 }
             }
             
@@ -141,7 +150,7 @@ class Postcodify
             
             elseif ($kw->building !== null && $kw->dongri === null)
             {
-                $rows = self::call_db_procedure('postcode_search_building',
+                $rows = self::call_db_procedure('postcodify_search_building',
                     array($kw->building), $extra_params);
             }
             
@@ -149,7 +158,7 @@ class Postcodify
             
             elseif ($kw->building !== null && $kw->dongri !== null)
             {
-                $rows = self::call_db_procedure('postcode_search_building_with_dongri',
+                $rows = self::call_db_procedure('postcodify_search_building_with_dongri',
                     array($kw->building, self::crc32_x64($kw->dongri)), $extra_params);
             }
             
@@ -157,7 +166,7 @@ class Postcodify
             
             elseif ($kw->pobox !== null)
             {
-                $rows = self::call_db_procedure('postcode_search_pobox',
+                $rows = self::call_db_procedure('postcodify_search_pobox',
                     array($kw->pobox, $kw->numbers[0], $kw->numbers[1]), $extra_params);
             }
             
@@ -243,13 +252,10 @@ class Postcodify
     {
         // 파라미터 목록을 정리한다.
         
-        if (count($extra_params))
+        if (strpos($proc_name, 'search') !== false)
         {
-            $proc_name .= '_in_area';
-            foreach ($extra_params as $param)
-            {
-                $params[] = $param;
-            }
+            $extra_params = count($extra_params) ? $extra_params : array(null, null, null, null);
+            $params = array_merge($params, $extra_params);
         }
         
         // SQLite인 경우 별도의 클래스로 쿼리를 전달한다.
@@ -361,7 +367,7 @@ class Postcodify
                 {
                     $result[] = $row;
                 }
-                if ($proc_name === 'postcode_search_jibeon' && !count($result))
+                if ($proc_name === 'postcodify_search_jibeon' && !count($result))
                 {
                     mysql_close(self::$dbh); self::$dbh = null;
                 }
