@@ -160,7 +160,7 @@ echo '[Step 2/8] 도로 목록 및 영문 명칭을 메모리에 읽어들이는
 $english_cache = array();
 $roads = array();
 $roads_count = 0;
-$replacements = array();
+$synonyms = array();
 
 // 파일을 연다.
 
@@ -229,21 +229,21 @@ while ($line = trim(fgets($fp)))
     
     if ($eupmyeon !== '')
     {
-        $replace_original = $eupmyeon . $road_name;
+        $syn_original = $eupmyeon . $road_name;
     }
     elseif ($ilbangu)
     {
-        $replace_original = $ilbangu . $road_name;
+        $syn_original = $ilbangu . $road_name;
     }
     else
     {
-        $replace_original = $sigungu . $road_name;
+        $syn_original = $sigungu . $road_name;
     }
     
-    if (!isset($replacements[$replace_original]))
+    if (!isset($synonyms[$syn_original]))
     {
-        $replacements[$replace_original] = true;
-        $ps_syn->execute(array(crc32_x64($replace_original), crc32_x64($road_name)));
+        $synonyms[$syn_original] = true;
+        $ps_syn->execute(array(crc32_x64($syn_original), crc32_x64($road_name)));
     }
     
     // 상태를 표시한다.
@@ -269,7 +269,7 @@ unset($zip);
 
 $db->commit();
 unset($ps_syn);
-unset($replacements);
+unset($synonyms);
 
 // -------------------------------------------------------------------------------------------------
 // 상세건물명 데이터를 메모리로 불러온다. 나중에 부가정보와 함께 DB에 입력된다.
@@ -432,7 +432,7 @@ while (count($files))
                 $ps_address_insert->execute(array($address_id, $postcode5, null, $road_id, $road_section, $road_name,
                     $num_major, $num_minor, $is_basement, $sido, $sigungu, $ilbangu, $eupmyeon, $english));
                 
-                // 검색 키워드들을 정리하여 postcodify_keywords_road 테이블에 삽입한다.
+                // 검색 키워드들을 정리하여 postcodify_keywords_juso 테이블에 삽입한다.
                 
                 $keywords = get_variations_of_road_name(get_canonical($road_name));
                 foreach ($keywords as $keyword)
@@ -636,7 +636,7 @@ while (count($files))
         // 쓰레드를 초기화한다.
         
         $db = get_db();
-        $ps_address_select = $db->prepare('SELECT dongri, jibeon, other_addresses ' .
+        $ps_address_select = $db->prepare('SELECT sigungu, ilbangu, eupmyeon, dongri, jibeon, other_addresses ' .
             'FROM postcodify_addresses ' .
             'WHERE id = ?');
         $ps_address_update = $db->prepare('UPDATE postcodify_addresses ' .
@@ -690,7 +690,7 @@ while (count($files))
                 // 지번 및 기타주소 정리 : 해당 주소와 연관된 모든 지번을 구한다.
                 
                 $ps_address_select->execute(array($address_id));
-                list($legal_dong, $legal_jibeon, $other_addresses) = $ps_address_select->fetch(PDO::FETCH_NUM);
+                list($sigungu, $ilbangu, $eupmyeon, $legal_dong, $legal_jibeon, $other_addresses) = $ps_address_select->fetch(PDO::FETCH_NUM);
                 $ps_address_select->closeCursor();
                 $other_addresses = strlen($other_addresses) ? explode("\n", $other_addresses) : array();
                 
