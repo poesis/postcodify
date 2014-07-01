@@ -5,13 +5,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <title>우편번호 검색</title>
     <link rel="stylesheet" type="text/css" href="example.css" media="all" />
-    <script src="//cdn.jsdelivr.net/jquery/1.11.1/jquery.min.js"></script>
-    <script src="//cdn.jsdelivr.net/jquery.postcodify/latest/search.min.js"></script>
+    <!-- jQuery (jsDelivr에서 로딩 시도, 실패시 구글 CDN에서 로딩 시도) -->
+    <script src="//cdn.jsdelivr.net/jquery/1.11.1/jquery.min.js" charset="UTF-8"></script>
+    <script>window.jQuery || document.write('<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"><\/script>');</script>
+    <!-- Postcodify 플러그인 (jsDelivr에서 로딩 시도, 실패시 CloudFront에서 로딩 시도) -->
+    <script src="//cdn.jsdelivr.net/jquery.postcodify/latest/search.min.js" charset="UTF-8"></script>
+    <script>window.jQuery.fn.postcodify || document.write('<script src="//d1p7wdleee1q2z.cloudfront.net/post/search.min.js"><\/script>');</script>
 </head>
 <body>
 
 <!--
- *  Postcodify - 도로명주소 우편번호 검색 프로그램 (예제 스타일)
+ *  Postcodify - 도로명주소 우편번호 검색 프로그램 (코딩 예제)
  * 
  *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
  * 
@@ -30,11 +34,11 @@
  *
  *-->
 
-<h1>우편번호 검색</h1>
+<h1 id="postcodify_title">우편번호 검색</h1>
 
 <!-- 헤더 배경 -->
 
-<div id="background"></div>
+<div id="postcodify_background"></div>
 
 <!-- 검색 기능이 표시되는 <div> -->
 
@@ -63,8 +67,15 @@
             $("#postcodify div.postcode_search_status.summary").hide();
             $("#entry_box").show();
             $("#entry_details").focus();
-            // 팝업창을 닫거나 다른 폼에 주소를 입력하는 등의 작업은
-            // 이곳에 jQuery 코드를 추가하여 사용하십시오.
+            /**
+             *  만약 팝업창에서 주소를 검색한 경우, 창을 닫거나 다른 폼에 주소를 입력하는 작업은
+             *  이곳에 자바스크립트 코드를 추가하여 사용하십시오.
+             *  예:
+             *  window.opener.document.getElementById("postcode").value = $("#entry_postcode6").val();
+             *  window.opener.document.getElementById("address1").value = $("#entry_address").val();
+             *  window.opener.document.getElementById("address2").value = $("#entry_extra_info").val();
+             *  window.close();
+             */
         }
     });
 </script>
@@ -83,15 +94,15 @@
 <!-- 검색 도움말 -->
 
 <div id="search_guide">
-    1. 도로명주소로 검색 : 도로명과 건물번호를 입력하세요. 예) 중앙로12길 345-6<br />
-    2. 지번 주소로 검색 : "동" 또는 "리" 이름과 번지수를 입력하세요. 예) 우편동 123-45, 번호리 67<br />
-    3. 건물명으로 검색 : 빌딩 또는 아파트 이름을 입력하세요. 예) 국제빌딩, 래미안, 주공3차아파트<br />
+    1. 도로명주소로 검색 : 도로명과 건물번호를 함께 입력하세요. 예) 세종대로 110<br />
+    2. 지번 주소로 검색 : "동" 또는 "리" 이름과 번지수를 함께 입력하세요. 예) 연산동 1000<br />
+    3. 건물명으로 검색 : 빌딩 또는 아파트 이름을 입력하세요. 예) 국제빌딩, 방배동 래미안, 주공3차<br />
     4. 사서함으로 검색 : 사서함명과 번호를 입력하세요. 예) 광화문우체국사서함 123-4<br />
     <hr />
-    &nbsp; &nbsp; ※ 비슷한 지명이 전국에 여러 군데가 있는 경우 "삼척시 교동 60", "방배동 래미안", 등 <br />
-    &nbsp; &nbsp; &#12288; 시/군/구/읍/면/동/리 이름을 넣어서 검색하시면 더욱 정확한 결과를 얻을 수 있습니다.<br />
+    &nbsp; &nbsp; ※ 시·군·구·읍·면 등은 쓰시지 않아도 되지만, 만약 쓰실 경우에는 반드시 <u>띄어쓰기</u>를 해주세요.<br />
     <hr />
-    &nbsp; &nbsp; ※ 건물명보다는 정확한 도로명주소 또는 지번 주소로 검색하시는 것이 확실합니다.<br /> 
+    &nbsp; &nbsp; ※ 건물명보다는 도로명주소 또는 지번 주소로 검색하시는 것이 빠르고 정확합니다.<br /> 
+    &nbsp; &nbsp; &#12288; 도로명에 "○○번길" 등의 숫자가 있는 경우에도 잊지 말고 써 주세요.
 </div>    
 
 </body>
