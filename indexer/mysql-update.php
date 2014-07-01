@@ -23,7 +23,7 @@ echo "\n";
 
 // 어디까지 업데이트했는지 찾아본다.
 
-$updated_query = get_db()->query('SELECT v FROM postcode_metadata WHERE k = \'updated\'');
+$updated_query = get_db()->query('SELECT v FROM postcodify_metadata WHERE k = \'updated\'');
 $updated = $updated_query->fetchColumn();
 $updated_query->closeCursor();
 
@@ -154,38 +154,38 @@ function do_updates()
 
     $db = get_db();
 
-    $ps_address_select1 = $db->prepare('SELECT postcode5, road_id, road_section FROM postcode_addresses ' .
-        'WHERE road_id = ? AND road_section = ? LIMIT 1');
-    $ps_address_select2 = $db->prepare('SELECT postcode5, road_id, road_section FROM postcode_addresses ' .
+    $ps_address_select1 = $db->prepare('SELECT postcode5, road_id, road_section FROM postcodify_addresses ' .
+        'WHERE road_id = ? AND road_section = ? AND (num_major % 2) = ? LIMIT 1');
+    $ps_address_select2 = $db->prepare('SELECT postcode5, road_id, road_section FROM postcodify_addresses ' .
         'WHERE postcode6 = ? LIMIT 1');
-    $ps_address_insert = $db->prepare('INSERT INTO postcode_addresses ' .
+    $ps_address_insert = $db->prepare('INSERT INTO postcodify_addresses ' .
         '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
         'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, ' .
         'dongri, jibeon, building_name, english_address, other_addresses, updated) ' .
         'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    $ps_keyword_juso_delete = $db->prepare('DELETE FROM postcode_keywords_juso ' .
+    $ps_keyword_juso_delete = $db->prepare('DELETE FROM postcodify_keywords_juso ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
         'AND keyword_crc32 = ? AND num_major = ? AND num_minor = ?');
-    $ps_keyword_juso_insert = $db->prepare('INSERT INTO postcode_keywords_juso ' .
+    $ps_keyword_juso_insert = $db->prepare('INSERT INTO postcodify_keywords_juso ' .
         '(address_id, keyword_crc32, num_major, num_minor) ' .
         'VALUES (?, ?, ?, ?)');
-    $ps_keyword_juso_update = $db->prepare('UPDATE postcode_keywords_juso ' .
+    $ps_keyword_juso_update = $db->prepare('UPDATE postcodify_keywords_juso ' .
         'SET address_id = ? WHERE address_id = ?');
-    $ps_keyword_jibeon_delete = $db->prepare('DELETE FROM postcode_keywords_jibeon ' .
+    $ps_keyword_jibeon_delete = $db->prepare('DELETE FROM postcodify_keywords_jibeon ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
         'AND keyword_crc32 = ? AND num_major = ? AND num_minor = ?');
-    $ps_keyword_jibeon_insert = $db->prepare('INSERT INTO postcode_keywords_jibeon ' .
+    $ps_keyword_jibeon_insert = $db->prepare('INSERT INTO postcodify_keywords_jibeon ' .
         '(address_id, keyword_crc32, num_major, num_minor) ' .
         'VALUES (?, ?, ?, ?)');
-    $ps_keyword_jibeon_update = $db->prepare('UPDATE postcode_keywords_jibeon ' .
+    $ps_keyword_jibeon_update = $db->prepare('UPDATE postcodify_keywords_jibeon ' .
         'SET address_id = ? WHERE address_id = ?');
-    $ps_keyword_building_delete = $db->prepare('DELETE FROM postcode_keywords_building ' .
+    $ps_keyword_building_delete = $db->prepare('DELETE FROM postcodify_keywords_building ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
         'AND keyword = ?');
-    $ps_keyword_building_insert = $db->prepare('INSERT INTO postcode_keywords_building ' .
+    $ps_keyword_building_insert = $db->prepare('INSERT INTO postcodify_keywords_building ' .
         '(address_id, keyword) ' .
         'VALUES (?, ?)');
-    $ps_keyword_building_update = $db->prepare('UPDATE postcode_keywords_building ' .
+    $ps_keyword_building_update = $db->prepare('UPDATE postcodify_keywords_building ' .
         'SET address_id = ? WHERE address_id = ?');
     
     $dongs = array();
@@ -298,7 +298,7 @@ function do_updates()
             {
                 // 다시 추가할 경우에 대비하여 기초구역번호와 나머지 레코드를 저장해 둔다.
                 
-                $q = $db->query('SELECT * FROM postcode_addresses WHERE id = \'' . $address_id . '\' LIMIT 1');
+                $q = $db->query('SELECT * FROM postcodify_addresses WHERE id = \'' . $address_id . '\' LIMIT 1');
                 if ($row = $q->fetch(PDO::FETCH_ASSOC))
                 {
                     $code5s[$row['road_id'] . $row['road_section']] = $row['postcode5'];
@@ -306,10 +306,10 @@ function do_updates()
                 }
                 $q->closeCursor();
                 
-                $db->query('DELETE FROM postcode_addresses WHERE id = \'' . $address_id . '\'');
-                $db->query('DELETE FROM postcode_keywords_juso WHERE address_id = \'' . $address_id . '\'');
-                $db->query('DELETE FROM postcode_keywords_jibeon WHERE address_id = \'' . $address_id . '\'');
-                $db->query('DELETE FROM postcode_keywords_building WHERE address_id = \'' . $address_id . '\'');
+                $db->query('DELETE FROM postcodify_addresses WHERE id = \'' . $address_id . '\'');
+                $db->query('DELETE FROM postcodify_keywords_juso WHERE address_id = \'' . $address_id . '\'');
+                $db->query('DELETE FROM postcodify_keywords_jibeon WHERE address_id = \'' . $address_id . '\'');
+                $db->query('DELETE FROM postcodify_keywords_building WHERE address_id = \'' . $address_id . '\'');
             }
             
             // 새 주소가 추가된 경우...
@@ -318,7 +318,7 @@ function do_updates()
             {
                 // 이미 존재하는 주소일 경우 건너뛴다. (실제로는 이런 일이 발생하면 안됨)
                 
-                $q = $db->query('SELECT 1 FROM postcode_addresses WHERE id = \'' . $address_id . '\' LIMIT 1');
+                $q = $db->query('SELECT 1 FROM postcodify_addresses WHERE id = \'' . $address_id . '\' LIMIT 1');
                 if ($q->fetchColumn())
                 {
                     unset($q);
@@ -358,7 +358,7 @@ function do_updates()
                 else
                 {
                     $postcode5 = null;
-                    $ps_address_select1->execute(array($road_id, $road_section));
+                    $ps_address_select1->execute(array($road_id, $road_section, $num_major % 2));
                     if ($c5row = $ps_address_select1->fetch(PDO::FETCH_NUM))
                     {
                         $postcode5 = $c5row[0];
@@ -405,7 +405,7 @@ function do_updates()
                 $buildings = array_unique($buildings);
                 natsort($buildings);
                 
-                // postcode_addresses 테이블에 삽입한다.
+                // postcodify_addresses 테이블에 삽입한다.
                 
                 $ps_address_insert->execute(array(
                     $address_id, $postcode5, $postcode6,
@@ -416,7 +416,7 @@ function do_updates()
                     $filename_date
                 ));
                 
-                // postcode_keywords_juso 테이블에 도로명주소 키워드를 저장한다.
+                // postcodify_keywords_juso 테이블에 도로명주소 키워드를 저장한다.
                 
                 $keywords = get_variations_of_road_name(get_canonical($road_name));
                 
@@ -425,7 +425,7 @@ function do_updates()
                     $ps_keyword_juso_insert->execute(array($address_id, crc32_x64($keyword), $num_major, $num_minor));
                 }
                 
-                // postcode_keywords_jibeon 테이블에 지번주소 키워드를 저장한다.
+                // postcodify_keywords_jibeon 테이블에 지번주소 키워드를 저장한다.
                 
                 $keywords = get_variations_of_dongri($dongri, $dongs);
                 if ($admin_dong) $keywords += get_variations_of_dongri($admin_dong, $dongs);
@@ -436,7 +436,7 @@ function do_updates()
                     $ps_keyword_jibeon_insert->execute(array($address_id, crc32_x64($keyword), $jibeon_major, $jibeon_minor));
                 }
                 
-                // postcode_keywords_building 테이블에 건물명 키워드를 저장한다.
+                // postcodify_keywords_building 테이블에 건물명 키워드를 저장한다.
                 
                 $keywords = array();
                 if ($building1 !== '')
@@ -481,13 +481,13 @@ function do_updates()
                     $old_address_id_is_different = false;
                 }
                 
-                $q = $db->query('SELECT * FROM postcode_addresses WHERE id = \'' . $address_id . '\' OR id = \'' . $old_address_id . '\' ORDER BY id LIMIT 1');
+                $q = $db->query('SELECT * FROM postcodify_addresses WHERE id = \'' . $address_id . '\' OR id = \'' . $old_address_id . '\' ORDER BY id LIMIT 1');
                 $row = $q->fetch(PDO::FETCH_ASSOC);
                 $q->closeCursor();
                 if ($row)
                 {
                     $code5s[$row['road_id'] . $row['road_section']] = $row['postcode5'];
-                    $q = $db->query('DELETE FROM postcode_addresses WHERE id = \'' . $address_id . '\' OR id = \'' . $old_address_id . '\'');
+                    $q = $db->query('DELETE FROM postcodify_addresses WHERE id = \'' . $address_id . '\' OR id = \'' . $old_address_id . '\'');
                 }
                 
                 // 기존의 데이터가 없는 경우 가장 가까운 기초구역번호를 구한다.
@@ -501,7 +501,7 @@ function do_updates()
                     else
                     {
                         $postcode5 = null;
-                        $ps_address_select1->execute(array($road_id, $road_section));
+                        $ps_address_select1->execute(array($road_id, $road_section, $num_major % 2));
                         if ($c5row = $ps_address_select1->fetch(PDO::FETCH_NUM))
                         {
                             $postcode5 = $c5row[0];
@@ -549,7 +549,7 @@ function do_updates()
                 $buildings = array_unique($buildings);
                 natsort($buildings);
                 
-                // postcode_addresses 테이블에 새 정보를 삽입한다.
+                // postcodify_addresses 테이블에 새 정보를 삽입한다.
                 
                 $ps_address_insert->execute(array(
                     $address_id, ($row ? $row['postcode5'] : $postcode5), $postcode6,
@@ -560,7 +560,7 @@ function do_updates()
                     $filename_date
                 ));
                 
-                // postcode_keywords_juso 테이블에 도로명주소 키워드를 저장한다.
+                // postcodify_keywords_juso 테이블에 도로명주소 키워드를 저장한다.
                 
                 $keywords = get_variations_of_road_name(get_canonical($road_name));
                 
@@ -570,7 +570,7 @@ function do_updates()
                     $ps_keyword_juso_insert->execute(array($address_id, crc32_x64($keyword), $num_major, $num_minor));
                 }
                 
-                // postcode_keywords_jibeon 테이블에 지번주소 키워드를 저장한다.
+                // postcodify_keywords_jibeon 테이블에 지번주소 키워드를 저장한다.
                 
                 $keywords = get_variations_of_dongri($dongri, $dongs);
                 if ($admin_dong) $keywords += get_variations_of_dongri($admin_dong, $dongs);
@@ -582,7 +582,7 @@ function do_updates()
                     $ps_keyword_jibeon_insert->execute(array($address_id, crc32_x64($keyword), $jibeon_major, $jibeon_minor));
                 }
                 
-                // postcode_keywords_building 테이블에 건물명 키워드를 저장한다.
+                // postcodify_keywords_building 테이블에 건물명 키워드를 저장한다.
                 
                 $keywords = array();
                 if ($building1 !== '')
@@ -643,7 +643,7 @@ function do_updates()
     
     if (isset($filename_date) && $filename_date > $updated)
     {
-        $db->query('UPDATE postcode_metadata SET v = \'' . $filename_date . '\' WHERE k = \'updated\'');
+        $db->query('UPDATE postcodify_metadata SET v = \'' . $filename_date . '\' WHERE k = \'updated\'');
     }
     else
     {
