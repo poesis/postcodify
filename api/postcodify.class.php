@@ -113,7 +113,7 @@ class Postcodify
                 
                 if (count($rows) < 100 && $kw->numbers[1] === null)
                 {
-                    $possible_road_name = self::crc32_x64($kw->road . $kw->numbers[0] . '번길');
+                    $possible_road_name = self::crc32_x64($kw->road . $kw->numbers[0]);
                     $rows = array_merge($rows, self::call_db_procedure('postcodify_search_juso',
                         array($possible_road_name, $kw->extra_numbers[0], $kw->extra_numbers[1]), $extra_params));
                     $rows = array_slice($rows, 0, 100);

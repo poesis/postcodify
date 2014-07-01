@@ -1,7 +1,7 @@
 
 -- 주소 정보를 저장하는 메인 테이블.
 
-CREATE TABLE postcode_addresses (
+CREATE TABLE postcodify_addresses (
     id CHAR(25) PRIMARY KEY,
     postcode5 CHAR(5),
     postcode6 CHAR(6),
@@ -25,7 +25,7 @@ CREATE TABLE postcode_addresses (
 
 -- 도로명주소 검색을 위한 키워드 테이블.
 
-CREATE TABLE postcode_keywords_juso (
+CREATE TABLE postcodify_keywords_juso (
     seq INTEGER PRIMARY KEY,
     address_id CHAR(25) NOT NULL,
     keyword_crc32 INTEGER,
@@ -35,7 +35,7 @@ CREATE TABLE postcode_keywords_juso (
 
 -- 지번 검색을 위한 키워드 테이블.
 
-CREATE TABLE postcode_keywords_jibeon (
+CREATE TABLE postcodify_keywords_jibeon (
     seq INTEGER PRIMARY KEY,
     address_id CHAR(25) NOT NULL,
     keyword_crc32 INTEGER,
@@ -45,7 +45,7 @@ CREATE TABLE postcode_keywords_jibeon (
 
 -- 건물명 검색을 위한 키워드 테이블.
 
-CREATE TABLE postcode_keywords_building (
+CREATE TABLE postcodify_keywords_building (
     seq INTEGER PRIMARY KEY,
     address_id CHAR(25) NOT NULL,
     keyword VARCHAR(40)
@@ -53,7 +53,7 @@ CREATE TABLE postcode_keywords_building (
 
 -- 사서함 검색을 위한 키워드 테이블.
 
-CREATE TABLE postcode_keywords_pobox (
+CREATE TABLE postcodify_keywords_pobox (
     seq INTEGER PRIMARY KEY,
     address_id CHAR(25) NOT NULL,
     keyword VARCHAR(40),
@@ -73,7 +73,7 @@ CREATE TABLE postcodify_keywords_synonyms (
 
 -- 각종 설정을 저장하는 테이블.
 
-CREATE TABLE postcode_metadata (
+CREATE TABLE postcodify_metadata (
     k VARCHAR(20) PRIMARY KEY,
     v VARCHAR(40)
 );
