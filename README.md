@@ -20,7 +20,7 @@
 
     <div id="postcodify"></div>
     <script src="//cdn.jsdelivr.net/jquery/1.11.1/jquery.min.js"></script>
-    <script src="//cdn.jsdelivr.net/jquery.postcodify/1.7.1/search.min.js"></script>
+    <script src="//cdn.jsdelivr.net/jquery.postcodify/latest/search.min.js"></script>
     <script type="text/javascript">
         $("#postcodify").postcodify();
     </script>
