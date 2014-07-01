@@ -27,7 +27,7 @@ define('DOWNLOAD_PATH', TXT_DIRECTORY . '/Updates');
 
 // 어디까지 업데이트했는지 찾아본다.
 
-$updated_query = get_db()->query('SELECT v FROM postcode_metadata WHERE k = \'updated\'');
+$updated_query = get_db()->query('SELECT v FROM postcodify_metadata WHERE k = \'updated\'');
 $updated = $updated_query->fetchColumn();
 $updated_query->closeCursor();
 if (!preg_match('/^20[0-9]{6}$/', $updated))
