@@ -79,6 +79,14 @@ class Postcodify_SQLite
     
     protected static $procs = array(
     
+        // 키워드 대체 프로시저.
+        
+        "postcode_replace_keyword" => "
+            SELECT replaced_crc32 FROM postcode_keywords_replace
+            WHERE original_crc32 = :keyword_crc32
+            LIMIT 1;
+        ",
+        
         // 도로명주소 검색 (단순) 프로시저.
         
         "postcode_search_juso" => "

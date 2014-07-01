@@ -8,6 +8,7 @@ DROP TABLE IF EXISTS postcode_keywords_building;
 DROP TABLE IF EXISTS postcode_keywords_pobox;
 DROP TABLE IF EXISTS postcode_metadata;
 
+DROP PROCEDURE IF EXISTS postcode_replace_keyword;
 DROP PROCEDURE IF EXISTS postcode_search_juso;
 DROP PROCEDURE IF EXISTS postcode_search_juso_in_area;
 DROP PROCEDURE IF EXISTS postcode_search_jibeon;
@@ -97,6 +98,15 @@ CREATE TABLE postcode_metadata (
     k VARCHAR(20) PRIMARY KEY,                          -- 설정 키
     v VARCHAR(40)                                       -- 설정 값
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
+
+-- 키워드 대체 프로시저.
+
+CREATE PROCEDURE postcode_replace_keyword(IN keyword_crc32 INT UNSIGNED)
+BEGIN
+    SELECT replaced_crc32 FROM postcode_keywords_replace
+    WHERE original_crc32 = keyword_crc32
+    LIMIT 1;
+END;
 
 -- 도로명주소 검색 (단순) 프로시저.
 
