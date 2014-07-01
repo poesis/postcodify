@@ -84,15 +84,15 @@ class Postcodify_SQLite
         "postcodify_get_synonym" => "
             SELECT canonical_crc32 AS result
             FROM postcodify_keywords_synonyms
-            WHERE original_crc32 = keyword_crc32
+            WHERE original_crc32 = :keyword_crc32
             LIMIT 1;
         ",
         
         // 도로명주소 검색 프로시저.
         
         "postcodify_search_juso" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_juso AS pk ON pa.id = pk.address_id
+            SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
+            INNER JOIN postcodify_keywords_juso AS pk ON pa.id = pk.address_id
             WHERE pk.keyword_crc32 = :keyword_crc32
                 AND (:num1 IS NULL OR pk.num_major = :repeat_num1)
                 AND (:num2 IS NULL OR pk.num_minor = :repeat_num2)
@@ -107,8 +107,8 @@ class Postcodify_SQLite
         // 지번 검색 프로시저.
         
         "postcodify_search_jibeon" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_jibeon AS pk ON pa.id = pk.address_id
+            SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
+            INNER JOIN postcodify_keywords_jibeon AS pk ON pa.id = pk.address_id
             WHERE pk.keyword_crc32 = :keyword_crc32
                 AND (:num1 IS NULL OR pk.num_major = :repeat_num1)
                 AND (:num2 IS NULL OR pk.num_minor = :repeat_num2)
@@ -123,8 +123,8 @@ class Postcodify_SQLite
         // 건물명 검색 프로시저.
         
         "postcodify_search_building" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
+            SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
+            INNER JOIN postcodify_keywords_building AS pk ON pa.id = pk.address_id
             WHERE pk.keyword LIKE ('%' || :keyword || '%')
                 AND (:area1 IS NULL OR pa.sido = :repeat_area1)
                 AND (:area2 IS NULL OR pa.sigungu = :repeat_area2)
@@ -137,9 +137,9 @@ class Postcodify_SQLite
         // 건물명 + 동/리 검색 프로시저.
         
         "postcodify_search_building_with_dongri" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_building AS pkb ON pa.id = pkb.address_id
-            INNER JOIN postcode_keywords_jibeon AS pkj ON pa.id = pkj.address_id
+            SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
+            INNER JOIN postcodify_keywords_building AS pkb ON pa.id = pkb.address_id
+            INNER JOIN postcodify_keywords_jibeon AS pkj ON pa.id = pkj.address_id
             WHERE pkb.keyword LIKE ('%' || :keyword || '%')
                 AND pkj.keyword_crc32 = :dongri_crc32
                 AND (:area1 IS NULL OR pa.sido = :repeat_area1)
@@ -153,8 +153,8 @@ class Postcodify_SQLite
         // 사서함 검색 프로시저.
         
         "postcodify_search_pobox" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_pobox AS pk ON pa.id = pk.address_id
+            SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
+            INNER JOIN postcodify_keywords_pobox AS pk ON pa.id = pk.address_id
             WHERE pk.keyword LIKE ('%' || :keyword || '%')
                 AND (:num1 IS NULL OR :repeat_num1 BETWEEN pk.range_start_major AND pk.range_end_major)
                 AND (:num2 IS NULL OR :repeat_num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
