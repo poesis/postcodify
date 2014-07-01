@@ -98,7 +98,7 @@ class Postcodify
                 // 지역명이 도로명과 붙어 있는 경우 분리한다.
                 
                 $kw_crc32 = self::crc32_x64($kw->road);
-                if (preg_match('/[시군구읍면동]/U', $kw->road))
+                if (!count($extra_params) && preg_match('/[시군구읍면동]/U', $kw->road))
                 {
                     $kwreplace = self::call_db_procedure('postcode_replace_keyword', array($kw_crc32), array());
                     if (count($kwreplace)) $kw_crc32 = current($kwreplace)->replaced_crc32;

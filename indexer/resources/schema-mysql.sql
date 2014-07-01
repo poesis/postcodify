@@ -206,7 +206,7 @@ END;
 
 -- 건물명 + 동/리 검색 (단순) 프로시저.
 
-CREATE PROCEDURE postcode_search_building_with_dongri (IN keyword VARCHAR(80),
+CREATE PROCEDURE postcode_search_building_with_dongri(IN keyword VARCHAR(80),
     IN dongri_crc32 INT UNSIGNED)
 BEGIN
     SELECT DISTINCT pa.* FROM postcode_addresses AS pa
