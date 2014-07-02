@@ -125,6 +125,8 @@ foreach ($sqlite_indexes as $table_name => $columns)
     }
 }
 
+$sqlite->exec('ANALYZE');
+
 $elapsed = time() - $start_time;
 $elapsed_hours = floor($elapsed / 3600);
 $elapsed = $elapsed - ($elapsed_hours * 3600);
