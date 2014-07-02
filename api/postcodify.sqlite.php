@@ -157,7 +157,8 @@ class Postcodify_SQLite
             INNER JOIN postcodify_keywords_pobox AS pk ON pa.id = pk.address_id
             WHERE pk.keyword LIKE ('%' || :keyword || '%')
                 AND (:num1 IS NULL OR :repeat_num1 BETWEEN pk.range_start_major AND pk.range_end_major)
-                AND (:num2 IS NULL OR :repeat_num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
+                AND (:num2 IS NULL OR pk.range_start_minor IS NULL
+                    OR :repeat_num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
                 AND (:area1 IS NULL OR pa.sido = :repeat_area1)
                 AND (:area2 IS NULL OR pa.sigungu = :repeat_area2)
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
