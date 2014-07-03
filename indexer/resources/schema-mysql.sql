@@ -9,6 +9,8 @@ DROP TABLE IF EXISTS postcodify_keywords_pobox;
 DROP TABLE IF EXISTS postcodify_metadata;
 
 DROP PROCEDURE IF EXISTS postcodify_get_synonym;
+DROP PROCEDURE IF EXISTS postcodify_get_version;
+DROP PROCEDURE IF EXISTS postcodify_get_last_updated;
 DROP PROCEDURE IF EXISTS postcodify_search_juso;
 DROP PROCEDURE IF EXISTS postcodify_search_jibeon;
 DROP PROCEDURE IF EXISTS postcodify_search_building;
@@ -102,6 +104,24 @@ BEGIN
     FROM postcodify_keywords_synonyms
     WHERE original_crc32 = keyword_crc32
     LIMIT 1;
+END;
+
+-- 버전 검사 프로시저.
+
+CREATE PROCEDURE postcodify_get_version ()
+BEGIN
+    SELECT v AS version
+    FROM postcodify_metadata
+    WHERE k = 'version';
+END;
+
+-- 최근 업데이트 일자 검사 프로시저.
+
+CREATE PROCEDURE postcodify_get_last_updated ()
+BEGIN
+    SELECT v AS last_updated
+    FROM postcodify_metadata
+    WHERE k = 'updated';
 END;
 
 -- 도로명주소 검색 프로시저.
