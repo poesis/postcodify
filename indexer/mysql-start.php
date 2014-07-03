@@ -157,6 +157,7 @@ echo "\n";
 
 echo '[Step 2/8] 도로 목록 및 영문 명칭을 메모리에 읽어들이는 중 ... ' . "\n\n";
 
+$english_synonyms = array();
 $english_cache = array();
 $roads = array();
 $roads_count = 0;
@@ -165,6 +166,10 @@ $roads_count = 0;
 
 $filename = TXT_DIRECTORY . '/도로명코드_전체분.zip';
 echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
+
+$db = get_db();
+$db->beginTransaction();
+$ps_synonym = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
 
 $zip = new ZipArchive;
 $zip->open($filename);
@@ -209,11 +214,20 @@ while ($line = trim(fgets($fp)))
     // 영문 주소를 읽어들인다.
     
     $english = array();
-    $english[] = trim($line[2]);
+    $english[] = $english_road_name = trim($line[2]);
     if ($eupmyeon !== '') $english[] = $english_cache[trim($line[8])] = trim($line[9]);
     $english[] = $english_cache[trim($line[6])] = trim($line[7]);
     $english[] = $english_cache[$sido] = str_replace('-si', '', trim($line[5]));
     $english = str_replace(', , ', ', ', implode(', ', $english));
+    
+    // 영문 주소 -> 한글 주소 변환 테이블을 저장한다.
+    
+    if (!isset($english_synonyms[$road_name]))
+    {
+        $english_synonyms[$road_name] = true;
+        $english_road_name = preg_replace('/[^a-z0-9]/', '', strtolower($english_road_name));
+        $ps_synonym->execute(array(crc32_x64($english_road_name), crc32_x64($road_name)));
+    }
     
     // 도로 정보를 메모리에 저장한다.
     
@@ -240,6 +254,9 @@ while ($line = trim(fgets($fp)))
 echo "\033[10D" . str_pad(number_format($roads_count, 0), 10, ' ', STR_PAD_LEFT) . "\n\n";
 $zip->close();
 unset($zip);
+
+$db->commit();
+unset($ps_synonym);
 
 // -------------------------------------------------------------------------------------------------
 // 상세건물명 데이터를 메모리로 불러온다. 나중에 부가정보와 함께 DB에 입력된다.
