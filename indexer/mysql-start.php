@@ -100,7 +100,7 @@ if (!file_exists(TXT_DIRECTORY . '/newaddr_pobox_DB.zip'))
 // -------------------------------------------------------------------------------------------------
 // DB에 연결하고 테이블 및 검색 프로시저를 생성한다.
 // -------------------------------------------------------------------------------------------------
-    
+
 echo '[Step 1/8] 테이블과 프로시저를 생성하는 중 ... ' . "\n\n";
 
 get_db()->exec(file_get_contents(__DIR__ . '/resources/schema-mysql.sql'));
@@ -160,16 +160,11 @@ echo '[Step 2/8] 도로 목록 및 영문 명칭을 메모리에 읽어들이는
 $english_cache = array();
 $roads = array();
 $roads_count = 0;
-$synonyms = array();
 
 // 파일을 연다.
 
 $filename = TXT_DIRECTORY . '/도로명코드_전체분.zip';
 echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
-
-$db = get_db();
-$db->beginTransaction();
-$ps_syn = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
 
 $zip = new ZipArchive;
 $zip->open($filename);
@@ -225,27 +220,6 @@ while ($line = trim(fgets($fp)))
     $road_info = $road_name . '|' . $sido . '|' . $sigungu . '|' . $ilbangu . '|' . $eupmyeon . '|' . $english;
     $roads[$road_id][$road_section] = $road_info;
     
-    // 도로 정보를 대체 키워드 테이블에 저장한다.
-    
-    if ($eupmyeon !== '')
-    {
-        $syn_original = $eupmyeon . $road_name;
-    }
-    elseif ($ilbangu)
-    {
-        $syn_original = $ilbangu . $road_name;
-    }
-    else
-    {
-        $syn_original = $sigungu . $road_name;
-    }
-    
-    if (!isset($synonyms[$syn_original]))
-    {
-        $synonyms[$syn_original] = true;
-        $ps_syn->execute(array(crc32_x64($syn_original), crc32_x64($road_name)));
-    }
-    
     // 상태를 표시한다.
     
     if ($roads_count % 256 == 0)
@@ -266,10 +240,6 @@ while ($line = trim(fgets($fp)))
 echo "\033[10D" . str_pad(number_format($roads_count, 0), 10, ' ', STR_PAD_LEFT) . "\n\n";
 $zip->close();
 unset($zip);
-
-$db->commit();
-unset($ps_syn);
-unset($synonyms);
 
 // -------------------------------------------------------------------------------------------------
 // 상세건물명 데이터를 메모리로 불러온다. 나중에 부가정보와 함께 DB에 입력된다.
@@ -1045,7 +1015,6 @@ $indexes = array(
     'postcodify_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcodify_keywords_building' => array('address_id'),
     'postcodify_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
-    'postcodify_keywords_synonyms' => array('original_crc32'),
 );
 
 while (count($indexes))
