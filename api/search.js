@@ -170,6 +170,22 @@
                     search_button.removeAttr("disabled").html(settings.searchButtonContent);
                 };
                 
+                // AJAX 요청 최종 실패시 실행할 함수를 정의한다.
+                
+                var ajax_error_final = function(jqXHR, textStatus, errorThrown) {
+                    
+                    // 오류 메시지를 보여준다.
+                    
+                    results.find("div.postcode_search_status.error").show();
+                    $.fn.postcodify.previous = "";
+                    
+                    // 검색 실패 콜백 함수를 실행한다.
+                    
+                    ajax_complete();
+                    settings.onError();
+                    settings.onComplete();
+                };
+                
                 // AJAX 요청 성공시 실행할 함수를 정의한다.
                 
                 var ajax_success = function(data, textStatus, jqXHR) {
@@ -184,24 +200,52 @@
                     
                     if (settings.afterSearch(keywords, data.results) === false) return;
                     
-                    // 서버가 오류를 반환한 경우...
+                    // API 서버에서 데이터베이스 오류가 발생한 경우 백업 서버에서 검색을 다시 시도한다.
                     
-                    if (data.error && data.error.toLowerCase().indexOf("quota") > -1) {
-                        results.find("div.postcode_search_status.quota").show();
-                        $.fn.postcodify.previous = "";
+                    if (data.error && data.error.toLowerCase().indexOf("database") > -1) {
+                        if (settings.currentRequestUrl === settings.api && settings.apiBackup && settings.api !== settings.apiBackup) {
+                            
+                            // 백업 API 시도전 콜백 함수를 실행한다.
+                            
+                            settings.onBackup();
+                            
+                            // 타임아웃을 2배로 주고 다시 한 번 AJAX 요청을 전송한다.
+                            
+                            settings.currentRequestUrl = settings.apiBackup;
+                            
+                            $.ajax({
+                                url : settings.currentRequestUrl,
+                                data : { "v": version, "q": keywords, "ref": window.location.hostname },
+                                dataType : "jsonp",
+                                timeout : settings.timeoutBackup,
+                                success : ajax_success,
+                                error : ajax_error_final,
+                                processData : true,
+                                cache : false
+                            });
+                        }
                     }
+                    
+                    // 무료 API의 일일 검색 허용 횟수를 초과한 경우...
+                    
+                    else if (data.error && data.error.toLowerCase().indexOf("quota") > -1) {
+                        results.find("div.postcode_search_status.quota").show();
+                    }
+                    
+                    // 그 밖의 에러 발생시...
+                    
                     else if (data.error) {
                         results.find("div.postcode_search_status.error").show();
                         $.fn.postcodify.previous = "";
                     }
                     
-                    // 검색 결과가 없는 경우...
+                    // 정상 처리되었지만 검색 결과가 없는 경우...
                     
                     else if (data.count === 0) {
                         results.find("div.postcode_search_status.empty").show();
                     }
                     
-                    // 검색 결과가 있는 경우 DOM에 추가한다.
+                    // 검색 결과가 있는 경우...
                     
                     else {
                         
@@ -274,25 +318,9 @@
                     settings.onComplete();
                 };
                 
-                // AJAX 요청 2차 실패시 실행할 함수를 정의한다.
-                
-                var ajax_error_second = function(jqXHR, textStatus, errorThrown) {
-                    
-                    // 오류 메시지를 보여준다.
-                    
-                    results.find("div.postcode_search_status.error").show();
-                    $.fn.postcodify.previous = "";
-                    
-                    // 검색 실패 콜백 함수를 실행한다.
-                    
-                    ajax_complete();
-                    settings.onError();
-                    settings.onComplete();
-                };
-                
                 // AJAX 요청 1차 실패시 실행할 함수를 정의한다.
                 
-                var ajax_error_first = function(jqXHR, textStatus, errorThrown) {
+                var ajax_error_initial = function(jqXHR, textStatus, errorThrown) {
                     
                     // 백업 API가 있는 경우...
                     
@@ -312,7 +340,7 @@
                             dataType : "jsonp",
                             timeout : settings.timeoutBackup,
                             success : ajax_success,
-                            error : ajax_error_second,
+                            error : ajax_error_final,
                             processData : true,
                             cache : false
                         });
@@ -321,7 +349,7 @@
                     // 그 밖의 경우...
                     
                     else {
-                        ajax_error_second(jqXHR, textStatus, errorThrown);
+                        ajax_error_final(jqXHR, textStatus, errorThrown);
                     }
                 };
                 
@@ -339,7 +367,7 @@
                     dataType : "jsonp",
                     timeout : settings.timeout,
                     success : ajax_success,
-                    error : ajax_error_first,
+                    error : ajax_error_initial,
                     processData : true,
                     cache : false
                 });
