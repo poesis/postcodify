@@ -42,7 +42,7 @@ $checklist_data = array(
     'postcodify_keywords_jibeon' => array(10000000),
     'postcodify_keywords_building' => array(500000),
     'postcodify_keywords_pobox' => array(1000),
-    'postcodify_keywords_synonyms' => array(200000),
+    'postcodify_keywords_synonyms' => array(100000),
     'postcodify_metadata' => array(2),
 );
 
@@ -90,7 +90,7 @@ foreach ($checklist_indexes as $table_name => $indexes)
     try
     {
         $table_indexes_query = $db->query("SHOW INDEX FROM $table_name");
-        $table_indexes = $indexes_query->fetchAll(PDO::FETCH_NUM);
+        $table_indexes = $table_indexes_query->fetchAll(PDO::FETCH_NUM);
     }
     catch (PDOException $e)
     {
@@ -102,7 +102,7 @@ foreach ($checklist_indexes as $table_name => $indexes)
     $pk_found = false;
     foreach ($table_indexes as $table_index)
     {
-        if ($index[2] === 'PRIMARY')
+        if ($table_index[2] === 'PRIMARY')
         {
             $pk_found = true;
         }
@@ -113,12 +113,12 @@ foreach ($checklist_indexes as $table_name => $indexes)
         $all_indexes_exist = false;
     }
     
-    foreach ($indexes as $index)
+    foreach ($indexes as $index_name)
     {
         $found = false;
         foreach ($table_indexes as $table_index)
         {
-            if ($index[4] === $index_name)
+            if ($table_index[4] === $index_name)
             {
                 $found = true;
                 break;
