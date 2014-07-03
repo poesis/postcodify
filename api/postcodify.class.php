@@ -95,23 +95,15 @@ class Postcodify
             
             if ($kw->road !== null)
             {
-                // 지역명이 도로명과 붙어 있는 경우 분리한다.
-                
-                $kw_crc32 = self::crc32_x64($kw->road);
-                if (!count($extra_params) && preg_match('/[시군구읍면동].+$/U', $kw->road))
-                {
-                    $kwreplace = self::call_db_procedure('postcodify_get_synonym', array($kw_crc32), array());
-                    if (count($kwreplace)) $kw_crc32 = current($kwreplace)->result;
-                }
-                
                 // 일단 도로명으로 검색해 본다.
                 
+                $road_crc32 = is_numeric($kw->road) ? $kw->road : self::crc32_x64($kw->road);
                 $rows = self::call_db_procedure('postcodify_search_juso',
-                    array($kw_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
+                    array($road_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
                 
                 // 도로번호를 건물번호로 잘못 해석했을 수도 있으므로 조합을 바꾸어 다시 시도해 본다.
                 
-                if (count($rows) < 100 && $kw->numbers[1] === null)
+                if (count($rows) < 100 && $kw->numbers[1] === null && $kw->road !== $road_crc32)
                 {
                     $possible_road_name = self::crc32_x64($kw->road . $kw->numbers[0]);
                     $rows = array_merge($rows, self::call_db_procedure('postcodify_search_juso',
@@ -124,19 +116,10 @@ class Postcodify
             
             elseif ($kw->dongri !== null && $kw->building === null)
             {
-                // 지역명이 동리명과 붙어 있는 경우 분리한다.
-                
-                $kw_crc32 = self::crc32_x64($kw->dongri);
-                if (!count($extra_params) && preg_match('/[시군구읍면동].+$/U', $kw->dongri))
-                {
-                    $kwreplace = self::call_db_procedure('postcodify_get_synonym', array($kw_crc32), array());
-                    if (count($kwreplace)) $kw_crc32 = current($kwreplace)->result;
-                }
-                
                 // 일단 동리로 검색해 본다.
                 
                 $rows = self::call_db_procedure('postcodify_search_jibeon',
-                    array($kw_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
+                    array(self::crc32_x64($kw->dongri), $kw->numbers[0], $kw->numbers[1]), $extra_params);
                 
                 // 검색 결과가 없다면 건물명을 동리로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
                 
@@ -395,10 +378,28 @@ class Postcodify
         
         $kw = new Postcodify_Keywords;
         
+        // 검색어에서 불필요한 문자를 제거한다.
+        
+        $str = str_replace(array('.', ',', '(', '|', ')'), ' ', $str);
+        $str = preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', strtolower($str));
+        
+        // 영문 주소인지 확인한다.
+        
+        if (preg_match('/^(?:b|jiha)?(?:\\s*|-)([0-9]+)?(?:-([0-9]+))?\\s*([a-z0-9-\x20]+(?:ro|no|gil))(?:\\s|$)/', $str, $matches))
+        {
+            $road_english = self::crc32_x64(preg_replace('/[^a-z0-9]/', '', $matches[3]));
+            if ($road_synonym = self::call_db_procedure('postcodify_get_synonym', array($road_english), array()))
+            {
+                $kw->road = current($road_synonym)->result;
+                $kw->numbers = array($matches[1] ? $matches[1] : null, $matches[2] ? $matches[2] : null);
+                $kw->extra_numbers = array(null, null);
+                return $kw;
+            }
+        }
+        
         // 검색어를 단어별로 분리한다.
         
-        $str = str_replace(array('.', ',', '(', '|', ')'), ' ', strtolower($str));
-        $str = preg_split('/\\s+/u', preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', $str));
+        $str = preg_split('/\\s+/u', $str);
         
         // 대한민국 행정구역 목록 파일을 로딩한다.
         
