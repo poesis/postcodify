@@ -1045,7 +1045,7 @@ $indexes = array(
     'postcodify_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcodify_keywords_building' => array('address_id'),
     'postcodify_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
-    'postcodify_keywords_synonyms' => array('original_crc32', 'canonical_crc32'),
+    'postcodify_keywords_synonyms' => array('original_crc32'),
 );
 
 while (count($indexes))
