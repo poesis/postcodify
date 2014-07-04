@@ -95,7 +95,8 @@
             
             var summary = $('<div class="postcode_search_status summary"></div>');
             summary.append('<div class="result_count">검색 결과: <span>0</span>건</div>');
-            summary.append('<div class="search_time">검색 소요 시간: <span>0</span>초</div>');
+            summary.append('<div class="search_time">검색 소요시간: <span>0</span>초</div>');
+            summary.append('<div class="network_time">통신 소요시간: <span>0</span>초</div>');
             summary.appendTo(results).hide();
             
             // 단시간내 중복 검색을 방지하기 위해 직전 검색어를 기억하는 변수.
@@ -166,10 +167,12 @@
                 
                 // AJAX 요청 관련 함수들을 선언한다.
                 
+                var ajaxStartTime;
                 var ajaxSuccess;
                 var ajaxErrorInitial;
                 var ajaxErrorFinal;
                 var ajaxCall = function(url, timeout, errorCallback) {
+                    ajaxStartTime = new Date().getTime();
                     settings.currentRequestUrl = url;
                     $.ajax({
                         url : url,
@@ -190,6 +193,10 @@
                 // AJAX 요청 성공시 실행할 함수를 정의한다.
                 
                 ajaxSuccess = function(data, textStatus, jqXHR) {
+                    
+                    // 네트워크 왕복 시간을 포함한 총 소요시간을 계산한다.
+                    
+                    var searchTotalTime = (new Date().getTime() - ajaxStartTime) / 1000;
                     
                     // 백업 API로 검색에 성공했다면 이후에도 백업 API만 사용하도록 설정한다.
                     
@@ -292,9 +299,11 @@
                         
                         // 검색 결과 요약을 작성한다.
                         
+                        var networkTime = (searchTotalTime - parseFloat(data.time)).toFixed(3);
                         results.find("div.postcode_search_status.summary").detach().appendTo(results).show();
                         results.find("div.postcode_search_status.summary div.result_count span").text(data.count);
                         results.find("div.postcode_search_status.summary div.search_time span").text(data.time);
+                        results.find("div.postcode_search_status.summary div.network_time span").text(networkTime);
                         
                         if (data.count >= 100) {
                             results.find("div.postcode_search_status.too_many").show();
