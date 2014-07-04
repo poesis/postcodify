@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS postcodify_keywords_juso;
 DROP TABLE IF EXISTS postcodify_keywords_jibeon;
 DROP TABLE IF EXISTS postcodify_keywords_building;
 DROP TABLE IF EXISTS postcodify_keywords_pobox;
+DROP TABLE IF EXISTS postcodify_keywords_synonyms;
 DROP TABLE IF EXISTS postcodify_metadata;
 
 DROP PROCEDURE IF EXISTS postcodify_get_synonym;

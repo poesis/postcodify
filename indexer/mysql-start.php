@@ -101,7 +101,7 @@ if (!file_exists(TXT_DIRECTORY . '/newaddr_pobox_DB.zip'))
 // DB에 연결하고 테이블 및 검색 프로시저를 생성한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 1/8] 테이블과 프로시저를 생성하는 중 ... ' . "\n\n";
+echo '[Step 1/9] 테이블과 프로시저를 생성하는 중 ... ' . "\n\n";
 
 get_db()->exec(file_get_contents(__DIR__ . '/resources/schema-mysql.sql'));
 
@@ -129,7 +129,7 @@ if (!$gotdate)
 {
     $lastmonth = strtotime('-1 month');
     $stdin = fopen('php://stdin', 'r');
-
+    
     while (!$gotdate)
     {
         echo '데이터 기준일을 입력해 주십시오. 예: ' . date('Y년 n월 25일', $lastmonth) . ' = ' . date('Ym25', $lastmonth) . ' : ';
@@ -155,7 +155,7 @@ echo "\n";
 // 전체 도로명 코드 및 소속 행정구역 데이터를 메모리로 불러온다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 2/8] 도로 목록 및 영문 명칭을 메모리에 읽어들이는 중 ... ' . "\n\n";
+echo '[Step 2/9] 도로 목록 및 영문 명칭을 메모리에 읽어들이는 중 ... ' . "\n\n";
 
 $english_synonyms = array();
 $english_cache = array();
@@ -168,8 +168,13 @@ $filename = TXT_DIRECTORY . '/도로명코드_전체분.zip';
 echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
 
 $db = get_db();
-$db->beginTransaction();
 $ps_synonym = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
+
+// 트랜잭션을 시작한다.
+
+$db->beginTransaction();
+
+// 압축 파일을 연다.
 
 $zip = new ZipArchive;
 $zip->open($filename);
@@ -255,6 +260,8 @@ echo "\033[10D" . str_pad(number_format($roads_count, 0), 10, ' ', STR_PAD_LEFT)
 $zip->close();
 unset($zip);
 
+// 트랜잭션을 마친다.
+
 $db->commit();
 unset($ps_synonym);
 
@@ -262,7 +269,7 @@ unset($ps_synonym);
 // 상세건물명 데이터를 메모리로 불러온다. 나중에 부가정보와 함께 DB에 입력된다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 3/8] 상세건물명 데이터를 메모리에 읽어들이는 중 ... ' . "\n\n";
+echo '[Step 3/9] 상세건물명 데이터를 메모리에 읽어들이는 중 ... ' . "\n\n";
 
 $buildings = array();
 $buildings_count = 0;
@@ -327,7 +334,7 @@ unset($zip);
 // 시도별 주소 파일에서 도로명주소 데이터를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 4/8] 쓰레드를 사용하여 "주소" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 4/9] 쓰레드를 사용하여 "주소" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/주소_*.zip');
 $children = array();
@@ -469,7 +476,7 @@ unset($roads);
 // 시도별 지번 파일에서 지번주소와 도로명주소간의 맵핑 데이터를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 5/8] 쓰레드를 사용하여 "지번" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 5/9] 쓰레드를 사용하여 "지번" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/지번_*.zip');
 $children = array();
@@ -596,7 +603,7 @@ echo "\n";
 // 시도별 부가정보 파일에서 행정동명, 건물명, 6자리 우편번호를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 6/8] 쓰레드를 사용하여 "부가정보" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 6/9] 쓰레드를 사용하여 "부가정보" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/부가정보_*.zip');
 $children = array();
@@ -874,7 +881,7 @@ echo "\n";
 // 사서함 파일을 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 7/8] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
+echo '[Step 7/9] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
 
 // 준비.
 
@@ -1007,6 +1014,54 @@ $db->commit();
 $zip->close();
 unset($zip);
 
+// -------------------------------------------------------------------------------------------------
+// 영문 주소 파일을 입력한다.
+// -------------------------------------------------------------------------------------------------
+
+echo '[Step 8/9] 영문 주소 데이터를 로딩하는 중 ... ' . "\n\n";
+
+// 준비.
+
+$db = get_db();
+$ps_synonym = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
+
+// 트랜잭션을 시작한다.
+
+$db->beginTransaction();
+        
+// 파일을 연다.
+
+$filename = TXT_DIRECTORY . '/englishnames.zip';
+echo '  -->  ' . basename($filename) . ' ... ' . "\n\n";
+
+$zip = new ZipArchive;
+$zip->open($filename);
+for ($fi = 0; $fi < $zip->numFiles; $fi++)
+{
+    $fp = $zip->getStream($zip->getNameIndex($fi));
+    while ($line = trim(fgets($fp)))
+    {
+        // 한 줄을 읽어 쉼표를 기준으로 데이터를 쪼갠다.
+        
+        $line = explode(',', $line);
+        if (count($line) < 2 || !ctype_digit($line[0])) continue;
+        
+        // postcodify_keywords_synonyms 테이블에 삽입한다.
+        
+        $ps_synonym->execute($line);
+        
+        // 가비지 컬렉션.
+        
+        unset($line);
+    }
+}
+
+// 트랜잭션을 마친다.
+
+$db->commit();
+$zip->close();
+unset($zip);
+
 // 경과시간을 측정한다.
 
 $elapsed = time() - $start_time;
@@ -1024,7 +1079,7 @@ echo $elapsed_seconds . '초' . "\n\n";
 // 인덱스를 생성한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 8/8] 인덱스를 생성하는 중. 긴 시간이 걸릴 수 있습니다 ... ' . "\n\n";
+echo '[Step 9/9] 인덱스를 생성하는 중. 긴 시간이 걸릴 수 있습니다 ... ' . "\n\n";
 
 $indexes = array(
     'postcodify_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'updated'),
@@ -1054,6 +1109,7 @@ while (count($indexes))
     else
     {
         $db = get_db();
+        $db->exec('SET interactive_timeout = 3600');
         $db->exec('SET net_read_timeout = 3600');
         $db->exec('SET net_write_timeout = 3600');
         $db->exec('SET wait_timeout = 3600');
