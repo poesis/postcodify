@@ -26,7 +26,7 @@
     
     // 버전을 선언한다.
     
-    var version = "1.8";
+    var info = { version : "1.8" };
     
     // 플러그인 함수를 선언한다.
     
@@ -38,13 +38,8 @@
             
             // 기본 설정을 정의한다.
             
-            var freeapi = {
-                defaultUrl : "//api.poesis.kr/post/search.php",
-                backupUrl : "//backup.api.poesis.kr/post/search.php",
-            };
-            
             var settings = $.extend({
-                api : freeapi.defaultUrl,
+                api : info.freeAPI.defaultUrl,
                 apiBackup : null,
                 callBackupFirst : false,
                 controls : this,
@@ -77,8 +72,8 @@
                 useFullJibeon : false
             }, options);
             
-            if (settings.api === freeapi.defaultUrl && settings.apiBackup === null) {
-                settings.apiBackup = freeapi.backupUrl;
+            if (settings.api === info.freeAPI.defaultUrl && settings.apiBackup === null) {
+                settings.apiBackup = info.freeAPI.backupUrl;
             }
             
             // 검색 컨트롤을 생성한다.
@@ -166,7 +161,7 @@
                 if (navigator.userAgent && navigator.userAgent.match(/MSIE [5-8]\./)) {
                     searchButton.text('...');
                 } else {
-                    searchButton.html('<img class="searching" alt="검색" src="' + $.fn.postcodify.gif + '" />');
+                    searchButton.html('<img class="searching" alt="검색" src="' + info.searchProgress + '" />');
                 }
                 
                 // AJAX 요청 관련 함수들을 선언한다.
@@ -178,7 +173,7 @@
                     settings.currentRequestUrl = url;
                     $.ajax({
                         url : url,
-                        data : { "v": version, "q": keywords, "ref": window.location.hostname },
+                        data : { "v": info.version, "q": keywords, "ref": window.location.hostname },
                         dataType : "jsonp",
                         processData : true,
                         cache : false,
@@ -248,8 +243,8 @@
                             option.data("code6", result.code6);
                             option.data("code5", result.code5);
                             option.data("address", result.address);
-                            option.data("english_address", result.english_address !== undefined ? result.english_address : "");  // v1.4.2+
-                            option.data("jibeon_address", result.jibeon_address);  // v1.2+
+                            option.data("english_address", result.english_address);
+                            option.data("jibeon_address", result.jibeon_address);
                             option.data("extra_info_long", result.extra_info_long);
                             option.data("extra_info_short", result.extra_info_short);
                             
@@ -279,9 +274,15 @@
                             
                             // 지도 링크를 추가한다.
                             
-                            if (settings.mapLinkProvider && typeof $.fn.postcodify.mapurl[settings.mapLinkProvider] !== "undefined") {
-                                var mapurl = $.fn.postcodify.mapurl[settings.mapLinkProvider];
-                                mapurl = mapurl.replace(/%s$/, encodeURIComponent(result.address).replace(/%20/g, '+'));
+                            if (settings.mapLinkProvider) {
+                                var mapurl;
+                                if (typeof info.mapProviders[settings.mapLinkProvider] !== "undefined") {
+                                    mapurl = info.mapProviders[settings.mapLinkProvider];
+                                } else {
+                                    mapurl = settings.mapLinkProvider;
+                                }
+                                mapurl = mapurl.replace("$JUSO", encodeURIComponent(result.address).replace(/%20/g, '+'));
+                                mapurl = mapurl.replace("$JIBEON", encodeURIComponent(result.jibeon_address).replace(/%20/g, '+'));
                                 var maplink = $('<a target="_blank"></a>').attr("href", mapurl).html(settings.mapLinkContent);
                                 $('<div class="map_link"></div>').append(maplink).appendTo(option);
                             }
@@ -420,18 +421,25 @@
         });
     };
     
+    // 무료 API 경로 설정.
+    
+    info.freeAPI = {
+        defaultUrl : "//api.poesis.kr/post/search.php",
+        backupUrl : "//backup.api.poesis.kr/post/search.php"
+    };
+
     // 지도 링크 설정.
     
-    $.fn.postcodify.mapurl = {
-        daum : "http://map.daum.net/?map_type=TYPE_MAP&urlLevel=3&q=%s",
-        naver : "http://map.naver.com/?mapMode=0&dlevel=12&query=%s",
-        google : "http://www.google.com/maps/place/대한민국+%s"
+    info.mapProviders = {
+        daum : "http://map.daum.net/?map_type=TYPE_MAP&urlLevel=3&q=$JUSO",
+        naver : "http://map.naver.com/?mapMode=0&dlevel=12&query=$JUSO",
+        google : "http://www.google.com/maps/place/대한민국+$JUSO"
     };
     
     // 로딩중임을 표시하는 GIF 애니메이션 파일.
     // 불필요한 요청을 줄이기 위해 base64 인코딩하여 여기에 직접 저장한다.
     
-    $.fn.postcodify.gif = "data:image/gif;base64,R0lGODlhEAALAPQAAP///yIiIt7" +
+    info.searchProgress = "data:image/gif;base64,R0lGODlhEAALAPQAAP///yIiIt7" +
         "e3tbW1uzs7CcnJyIiIklJSZKSknV1dcPDwz8/P2JiYpmZmXh4eMbGxkJCQiUlJWVlZe" +
         "np6d3d3fX19VJSUuDg4PPz87+/v6ysrNDQ0PDw8AAAAAAAAAAAACH/C05FVFNDQVBFM" +
         "i4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCwAAACwAAAAA" +
