@@ -161,8 +161,8 @@ function do_updates()
     $ps_address_insert = $db->prepare('INSERT INTO postcodify_addresses ' .
         '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
         'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, ' .
-        'dongri, jibeon, building_name, english_address, other_addresses, updated) ' .
-        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        'dongri, jibeon_major, jibeon_minor, is_mountain, building_name, english_address, other_addresses, updated) ' .
+        'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     $ps_keyword_juso_delete = $db->prepare('DELETE FROM postcodify_keywords_juso ' .
         'WHERE (address_id = ? OR address_id = ?) ' .
         'AND keyword_crc32 = ? AND num_major = ? AND num_minor = ?');
@@ -337,15 +337,15 @@ function do_updates()
                     if (!$dongri) $sido = $dels[$address_id]['dongri'];
                     if (!$jibeon_major && !$jibeon_minor)
                     {
-                        $jibeons = explode('-', $dels[$address_id]['jibeon']);
-                        $jibeon_major = isset($jibeons[0]) ? $jibeons[0] : null;
-                        $jibeon_minor = isset($jibeons[1]) ? $jibeons[1] : null;
+                        $jibeon_major = $dels[$address_id]['jibeon_major'];
+                        $jibeon_minor = $dels[$address_id]['jibeon_minor'];
                     }
                     if (!$num_major && !$num_minor)
                     {
                         $num_major = $dels[$address_id]['num_major'];
                         $num_minor = $dels[$address_id]['num_minor'];
                     }
+                    if (!$is_mountain) $is_mountain = $dels[$address_id]['is_mountain'];
                     unset($dels[$address_id]);
                 }
                 
@@ -411,7 +411,7 @@ function do_updates()
                     $address_id, $postcode5, $postcode6,
                     $road_id, $road_section, $road_name, $num_major, $num_minor, $is_basement,
                     $sido, $sigungu, $ilbangu, $eupmyeon, $dongri,
-                    ($jibeon_major ? ($jibeon_major . ($jibeon_minor ? ('-' . $jibeon_minor) : '')) : null),
+                    $jibeon_major, $jibeon_minor, ($is_mountain ? 1 : 0),
                     $building_name, $english, implode('; ', $buildings),
                     $filename_date
                 ));
@@ -555,7 +555,7 @@ function do_updates()
                     $address_id, ($row ? $row['postcode5'] : $postcode5), $postcode6,
                     $road_id, $road_section, $road_name, $num_major, $num_minor, $is_basement,
                     $sido, $sigungu, $ilbangu, $eupmyeon, $dongri,
-                    ($jibeon_major ? ($jibeon_major . ($jibeon_minor ? ('-' . $jibeon_minor) : '')) : null),
+                    $jibeon_major, $jibeon_minor, ($is_mountain ? 1 : 0),
                     $building_name, $english, ($row ? $row['other_addresses'] : implode('; ', $buildings)),
                     $filename_date
                 ));

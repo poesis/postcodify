@@ -29,13 +29,15 @@ CREATE TABLE postcodify_addresses (
     road_name VARCHAR(80),                              -- 도로명
     num_major SMALLINT(5) UNSIGNED,                     -- 도로명주소 주번호
     num_minor SMALLINT(5) UNSIGNED,                     -- 도로명주소 부번호
-    is_basement TINYINT(1) DEFAULT 0,                   -- 지하여부
+    is_basement TINYINT(1) DEFAULT 0,                   -- 지하 여부
     sido VARCHAR(20),                                   -- 시/도
     sigungu VARCHAR(20),                                -- 시/군/자치구
     ilbangu VARCHAR(20),                                -- 일반구
     eupmyeon VARCHAR(20),                               -- 읍/면
     dongri VARCHAR(20),                                 -- 동/리
-    jibeon VARCHAR(10),                                 -- 지번
+    jibeon_major SMALLINT(5) UNSIGNED,                  -- 지번 주번호
+    jibeon_minor SMALLINT(5) UNSIGNED,                  -- 지번 부번호
+    is_mountain TINYINT(1) DEFAULT 0,                   -- 산 여부
     building_name VARCHAR(40),                          -- 공동주택명
     english_address VARCHAR(300),                       -- 영문 주소
     other_addresses VARCHAR(600),                       -- 관련주소목록

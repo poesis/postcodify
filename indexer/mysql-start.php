@@ -504,7 +504,7 @@ while (count($files))
         
         $db = get_db();
         $ps_address_update1 = $db->prepare('UPDATE postcodify_addresses ' .
-            'SET dongri = ?, jibeon = ? ' .
+            'SET dongri = ?, jibeon_major = ?, jibeon_minor = ?, is_mountain = ? ' .
             'WHERE id = ?');
         $ps_address_update2 = $db->prepare('UPDATE postcodify_addresses ' .
             'SET other_addresses = CONCAT_WS(\'\\n\', other_addresses, ?) ' .
@@ -546,15 +546,15 @@ while (count($files))
                 
                 // postcodify_addresses 테이블의 해당 레코드에 법정동 및 지번 정보를 추가한다.
                 
-                $insert_jibeon = (($is_mountain ? '산' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : ''));
+                $combined_jibeon = (($is_mountain ? '산' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : ''));
                 
                 if ($is_canonical)
                 {
-                    $ps_address_update1->execute(array($dongri, $insert_jibeon, $address_id));
+                    $ps_address_update1->execute(array($dongri, $num_major, $num_minor, ($is_mountain ? 1 : 0), $address_id));
                 }
                 else
                 {
-                    $ps_address_update2->execute(array($dongri . ' ' . $insert_jibeon, $address_id));
+                    $ps_address_update2->execute(array($dongri . ' ' . $combined_jibeon, $address_id));
                 }
                 
                 // 검색 키워드들을 정리하여 postcodify_keywords_jibeon 테이블에 삽입한다.
@@ -630,7 +630,7 @@ while (count($files))
         // 쓰레드를 초기화한다.
         
         $db = get_db();
-        $ps_address_select = $db->prepare('SELECT sigungu, ilbangu, eupmyeon, dongri, jibeon, other_addresses ' .
+        $ps_address_select = $db->prepare('SELECT dongri, jibeon_major, jibeon_minor, is_mountain, other_addresses ' .
             'FROM postcodify_addresses ' .
             'WHERE id = ?');
         $ps_address_update = $db->prepare('UPDATE postcodify_addresses ' .
@@ -684,7 +684,7 @@ while (count($files))
                 // 지번 및 기타주소 정리 : 해당 주소와 연관된 모든 지번을 구한다.
                 
                 $ps_address_select->execute(array($address_id));
-                list($sigungu, $ilbangu, $eupmyeon, $legal_dong, $legal_jibeon, $other_addresses) = $ps_address_select->fetch(PDO::FETCH_NUM);
+                list($legal_dong, $legal_jibeon_major, $legal_jibeon_minor, $legal_is_mountain, $other_addresses) = $ps_address_select->fetch(PDO::FETCH_NUM);
                 $ps_address_select->closeCursor();
                 $other_addresses = strlen($other_addresses) ? explode("\n", $other_addresses) : array();
                 
@@ -692,7 +692,8 @@ while (count($files))
                 
                 $addresses_numeric = array();
                 $addresses_building = array();
-                $keywords_nums = array($legal_jibeon);
+                $combined_jibeon = (($legal_is_mountain ? '산' : '') . $legal_jibeon_major . ($legal_jibeon_minor ? ('-' . $legal_jibeon_minor) : ''));
+                $keywords_nums = array($combined_jibeon);
                 
                 foreach ($other_addresses as $other)
                 {
@@ -834,7 +835,8 @@ while (count($files))
                 if (isset($legal_dong)) unset($legal_dong);
                 if (isset($legal_dong_variations)) unset($legal_dong_variations);
                 if (isset($legal_dong_variation)) unset($legal_dong_variation);
-                if (isset($legal_jibeon)) unset($legal_jibeon);
+                if (isset($legal_jibeon_major)) unset($legal_jibeon_major);
+                if (isset($legal_jibeon_minor)) unset($legal_jibeon_minor);
                 if (isset($addresses_numeric)) unset($addresses_numeric);
                 if (isset($addresses_building)) unset($addresses_building);
                 if (isset($other_addresses)) unset($other_addresses);

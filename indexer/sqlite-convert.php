@@ -54,7 +54,7 @@ $sqlite->exec(file_get_contents(__DIR__ . '/resources/schema-sqlite.sql'));
 // 테이블을 복사한다.
 
 $sqlite_tables = array(
-    'postcodify_addresses' => array(19, 'id'),
+    'postcodify_addresses' => array(21, 'id'),
     'postcodify_keywords_juso' => array(5, 'seq'),
     'postcodify_keywords_jibeon' => array(5, 'seq'),
     'postcodify_keywords_building' => array(3, 'seq'),
