@@ -25,26 +25,21 @@ class Postcodify
     
     const VERSION = '1.8';
     
-    // DB 설정을 저장하는 변수들.
+    // DB 설정을 저장하는 변수.
     
-    protected static $db_host;
-    protected static $db_port;
-    protected static $db_user;
-    protected static $db_pass;
-    protected static $db_dbname;
-    protected static $db_driver;
+    protected static $db_config = array();
     
     // DB 설정을 전달하는 메소드. search() 메소드 호출 전에 반드시 먼저 호출해야 한다.
     // SQLite 사용시에는 $dbname에 파일명을 입력해 주도록 한다.
     
     public static function dbconfig($host, $port, $user, $pass, $dbname, $driver = 'mysql')
     {
-        self::$db_host = $host;
-        self::$db_port = $port;
-        self::$db_user = $user;
-        self::$db_pass = $pass;
-        self::$db_dbname = $dbname;
-        self::$db_driver = $driver;
+        self::$db_config['host'] = $host;
+        self::$db_config['port'] = $port;
+        self::$db_config['user'] = $user;
+        self::$db_config['pass'] = $pass;
+        self::$db_config['dbname'] = $dbname;
+        self::$db_config['driver'] = strtolower($driver);
     }
     
     // 실제 검색을 수행하는 메소드. Postcodify_Result 객체를 반환한다.
@@ -239,31 +234,24 @@ class Postcodify
         
         // DB 드라이버에 따라 적절한 클래스로 쿼리를 전달한다.
         
-        switch (strtolower(self::$db_driver))
+        switch (self::$db_config['driver'])
         {
             // MySQL.
             
             case 'mysql':
-                $db_config = array(
-                    'host' => self::$db_host,
-                    'port' => self::$db_port,
-                    'user' => self::$db_user,
-                    'pass' => self::$db_pass,
-                    'dbname' => self::$db_dbname,
-                );
                 require_once dirname(__FILE__) . '/postcodify.mysql.php';
-                return Postcodify_MySQL::query($db_config, $proc_name, $params);
+                return Postcodify_MySQL::query(self::$db_config, $proc_name, $params);
             
             // SQLite.
             
             case 'sqlite':
                 require_once dirname(__FILE__) . '/postcodify.sqlite.php';
-                return Postcodify_SQLite::query(self::$db_dbname, $proc_name, $params);
+                return Postcodify_SQLite::query(self::$db_config['dbname'], $proc_name, $params);
             
             // 그 밖의 드라이버는 예외를 던진다.
             
             default:
-                throw new Exception('Database driver not supported: ' . self::$db_driver);
+                throw new Exception('Database driver not supported: ' . self::$db_config['driver']);
         }
     }
     
