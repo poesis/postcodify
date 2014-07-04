@@ -28,7 +28,7 @@
     
     var version = "1.8";
     
-    // 플러그인을 선언한다.
+    // 플러그인 함수를 선언한다.
     
     $.fn.postcodify = function(options) {
         
@@ -61,8 +61,8 @@
                 insertExtraInfo : null,
                 insertEnglishAddress : null,
                 insertJibeonAddress : null,
-                timeout : 3000,
-                timeoutBackup : 6000,
+                timeout : 2400,
+                timeoutBackup : 7200,
                 ready : function() { },
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results) { },
@@ -84,8 +84,8 @@
             // 검색 컨트롤을 생성한다.
             
             var controls = $('<div class="postcode_search_controls"></div>');
-            var keyword_input = $('<input type="text" class="keyword" value="" />').appendTo(controls);
-            var search_button = $('<button type="button" class="search_button"></button>').html(settings.searchButtonContent).appendTo(controls);
+            var keywordInput = $('<input type="text" class="keyword" value="" />').appendTo(controls);
+            var searchButton = $('<button type="button" class="search_button"></button>').html(settings.searchButtonContent).appendTo(controls);
             controls.prependTo(settings.controls);
             
             // 검색 결과창을 생성한다.
@@ -103,31 +103,37 @@
             summary.append('<div class="search_time">검색 소요 시간: <span>0</span>초</div>');
             summary.appendTo(results).hide();
             
+            // 단시간내 중복 검색을 방지하기 위해 직전 검색어를 기억하는 변수.
+            
+            var previousSearch = "";
+            
             // 키워드 입력란이 포커스를 잃거나 엔터키를 누르면 즉시 검색을 수행한다.
             // 검색 단추를 누를 때까지 기다리는 것보다 검색 속도가 훨씬 빠르게 느껴진다.
             
-            keyword_input.blur(function(event) {
-                search_button.click();
+            keywordInput.blur(function(event) {
+                searchButton.trigger("click");
             });
             
-            keyword_input.keypress(function(event) {
+            keywordInput.keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
-                    search_button.click();
+                    searchButton.trigger("click");
                 }
             });
             
             // 실제 검색을 수행하는 이벤트를 등록한다.
             
-            search_button.click(function(event) {
+            searchButton.click(function(event) {
+                
+                // 다른 이벤트를 취소한다.
                 
                 event.preventDefault();
                 
                 // 검색어가 직전과 동일한 경우 중복 검색을 방지한다.
                 
-                var keywords = $.trim(keyword_input.val());
-                if (keywords === $.fn.postcodify.previous) return;
-                $.fn.postcodify.previous = keywords;
+                var keywords = $.trim(keywordInput.val());
+                if (keywords === previousSearch) return;
+                previousSearch = keywords;
                 
                 // 검색 결과창의 내용을 비운다.
                 
@@ -149,51 +155,51 @@
                 
                 if (settings.beforeSearch(keywords) === false) return;
                 
+                // 스크롤 위치를 기억한다.
+                
+                var prevScrollTop = $(window).scrollTop();
+                
                 // 이미 검색이 진행 중일 때는 검색 단추를 다시 클릭하지 못하도록 하고,
                 // "검색" 라벨을 간단한 GIF 이미지로 대체한다.
                 
-                search_button.attr("disabled", "disabled");
+                searchButton.attr("disabled", "disabled");
                 if (navigator.userAgent && navigator.userAgent.match(/MSIE [5-8]\./)) {
-                    search_button.text('...');
+                    searchButton.text('...');
                 } else {
-                    search_button.html('<img class="searching" alt="검색" src="' + $.fn.postcodify.gif + '" />');
+                    searchButton.html('<img class="searching" alt="검색" src="' + $.fn.postcodify.gif + '" />');
                 }
                 
-                // 스크롤 위치를 기억한다.
+                // AJAX 요청 관련 함수들을 선언한다.
                 
-                var scroll_top = $(window).scrollTop();
-                
-                // AJAX 요청 후에는 스크롤 위치를 복구하고 검색 단추를 원래대로 되돌리도록 예약한다.
-                
-                var ajax_complete = function() {
-                    $(window).scrollTop(scroll_top);
-                    search_button.removeAttr("disabled").html(settings.searchButtonContent);
-                };
-                
-                // AJAX 요청 최종 실패시 실행할 함수를 정의한다.
-                
-                var ajax_error_final = function(jqXHR, textStatus, errorThrown) {
-                    
-                    // 오류 메시지를 보여준다.
-                    
-                    results.find("div.postcode_search_status.error").show();
-                    $.fn.postcodify.previous = "";
-                    
-                    // 검색 실패 콜백 함수를 실행한다.
-                    
-                    ajax_complete();
-                    settings.onError();
-                    settings.onComplete();
+                var ajaxSuccess;
+                var ajaxErrorInitial;
+                var ajaxErrorFinal;
+                var ajaxCall = function(url, timeout, errorCallback) {
+                    settings.currentRequestUrl = url;
+                    $.ajax({
+                        url : url,
+                        data : { "v": version, "q": keywords, "ref": window.location.hostname },
+                        dataType : "jsonp",
+                        processData : true,
+                        cache : false,
+                        timeout : settings.timeout,
+                        success : ajaxSuccess,
+                        error : errorCallback,
+                        complete : function() {
+                            $(window).scrollTop(prevScrollTop);
+                            searchButton.removeAttr("disabled").html(settings.searchButtonContent);
+                        }
+                    });
                 };
                 
                 // AJAX 요청 성공시 실행할 함수를 정의한다.
                 
-                var ajax_success = function(data, textStatus, jqXHR) {
+                ajaxSuccess = function(data, textStatus, jqXHR) {
                     
                     // 백업 API로 검색에 성공했다면 이후에도 백업 API만 사용하도록 설정한다.
                     
                     if (settings.currentRequestUrl === settings.apiBackup) {
-                        settings.api = settings.apiBackup;
+                        settings.callBackupFirst = true;
                     }
                     
                     // 검색후 콜백 함수를 실행한다.
@@ -204,25 +210,8 @@
                     
                     if (data.error && data.error.toLowerCase().indexOf("database") > -1) {
                         if (settings.currentRequestUrl === settings.api && settings.apiBackup && settings.api !== settings.apiBackup) {
-                            
-                            // 백업 API 시도전 콜백 함수를 실행한다.
-                            
                             settings.onBackup();
-                            
-                            // 타임아웃을 2배로 주고 다시 한 번 AJAX 요청을 전송한다.
-                            
-                            settings.currentRequestUrl = settings.apiBackup;
-                            
-                            $.ajax({
-                                url : settings.currentRequestUrl,
-                                data : { "v": version, "q": keywords, "ref": window.location.hostname },
-                                dataType : "jsonp",
-                                timeout : settings.timeoutBackup,
-                                success : ajax_success,
-                                error : ajax_error_final,
-                                processData : true,
-                                cache : false
-                            });
+                            ajaxCall(settings.apiBackup, settings.timeoutBackup, ajaxErrorFinal);
                         }
                     }
                     
@@ -236,7 +225,7 @@
                     
                     else if (data.error) {
                         results.find("div.postcode_search_status.error").show();
-                        $.fn.postcodify.previous = "";
+                        previousSearch = "";
                     }
                     
                     // 정상 처리되었지만 검색 결과가 없는 경우...
@@ -281,11 +270,11 @@
                             // 예전 주소 및 검색어 목록을 추가한다.
                             
                             if (result.other) {
-                                var old_addresses_show = $('<a href="#" class="show_old_addresses" title="관련지번 보기">▼</a>');
-                                old_addresses_show.appendTo(option.find("div.address"));
-                                var old_addresses_div = $('<div class="old_addresses"></div>').text(result.other);
-                                if (settings.hideOldAddresses) old_addresses_div.css("display", "none");
-                                old_addresses_div.appendTo(option);
+                                var oldAddrLink = $('<a href="#" class="show_old_addresses" title="관련지번 보기">▼</a>');
+                                oldAddrLink.appendTo(option.find("div.address"));
+                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(result.other);
+                                if (settings.hideOldAddresses) oldAddrDiv.css("display", "none");
+                                oldAddrDiv.appendTo(option);
                             }
                             
                             // 지도 링크를 추가한다.
@@ -313,64 +302,46 @@
                     
                     // 검색 성공 콜백 함수를 실행한다.
                     
-                    ajax_complete();
                     settings.onSuccess();
                     settings.onComplete();
                 };
                 
                 // AJAX 요청 1차 실패시 실행할 함수를 정의한다.
                 
-                var ajax_error_initial = function(jqXHR, textStatus, errorThrown) {
+                ajaxErrorInitial = function(jqXHR, textStatus, errorThrown) {
                     
-                    // 백업 API가 있는 경우...
+                    // 백업 API가 있는 경우 다시 시도하고, 그 밖의 경우 최종 실패로 취급한다.
                     
                     if (settings.apiBackup) {
-                    
-                        // 백업 API 시도전 콜백 함수를 실행한다.
-                        
                         settings.onBackup();
-                        
-                        // 타임아웃을 2배로 주고 다시 한 번 AJAX 요청을 전송한다.
-                        
-                        settings.currentRequestUrl = settings.apiBackup;
-                        
-                        $.ajax({
-                            url : settings.currentRequestUrl,
-                            data : { "v": version, "q": keywords, "ref": window.location.hostname },
-                            dataType : "jsonp",
-                            timeout : settings.timeoutBackup,
-                            success : ajax_success,
-                            error : ajax_error_final,
-                            processData : true,
-                            cache : false
-                        });
-                    }
-                    
-                    // 그 밖의 경우...
-                    
-                    else {
-                        ajax_error_final(jqXHR, textStatus, errorThrown);
+                        ajaxCall(settings.apiBackup, settings.timeoutBackup, ajaxErrorFinal);
+                    } else {
+                        ajaxErrorFinal(jqXHR, textStatus, errorThrown);
                     }
                 };
                 
-                // 검색 서버로 AJAX (JSONP) 요청을 전송한다.
+                // AJAX 요청 최종 실패시 실행할 함수를 정의한다.
                 
-                if (settings.callBackupFirst) {
-                    settings.currentRequestUrl = settings.apiBackup;
+                ajaxErrorFinal = function(jqXHR, textStatus, errorThrown) {
+                    
+                    // 오류 메시지를 보여준다.
+                    
+                    results.find("div.postcode_search_status.error").show();
+                    previousSearch = "";
+                    
+                    // 검색 실패 콜백 함수를 실행한다.
+                    
+                    settings.onError();
+                    settings.onComplete();
+                };
+                
+                // 검색 서버로 AJAX 요청을 전송한다.
+                
+                if (settings.apiBackup && settings.callBackupFirst) {
+                    ajaxCall(settings.apiBackup, settings.timeoutBackup, ajaxErrorFinal);
                 } else {
-                    settings.currentRequestUrl = settings.api;
+                    ajaxCall(settings.api, settings.timeout, ajaxErrorInitial);
                 }
-                
-                $.ajax({
-                    url : settings.currentRequestUrl,
-                    data : { "v": version, "q": keywords, "ref": window.location.hostname },
-                    dataType : "jsonp",
-                    timeout : settings.timeout,
-                    success : ajax_success,
-                    error : ajax_error_initial,
-                    processData : true,
-                    cache : false
-                });
             });
             
             // 검색 결과를 클릭할 경우 사용자가 지정한 입력란에 해당 정보가 입력되도록 한다.
@@ -437,7 +408,7 @@
             
             // 키워드 입력란에 포커스를 준다.
             
-            if (settings.focusKeyword) keyword_input.focus();
+            if (settings.focusKeyword) keywordInput.focus();
             
             // 셋팅 완료 콜백을 호출한다.
             
@@ -448,10 +419,6 @@
             return this;
         });
     };
-    
-    // 단시간내 중복 검색을 방지하기 위해 직전 검색어를 기억하는 변수.
-    
-    $.fn.postcodify.previous = "";
     
     // 지도 링크 설정.
     
