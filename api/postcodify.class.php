@@ -118,6 +118,10 @@ class Postcodify
                 {
                     $rows = self::call_db_procedure('postcodify_search_building', array($kw->dongri), $extra_params);
                 }
+                else
+                {
+                    $sort_by_jibeon = true;
+                }
             }
             
             // 건물명만으로 검색하는 경우...
@@ -167,24 +171,15 @@ class Postcodify
             
             $address_base = trim($row->sido . ' ' . ($row->sigungu ? ($row->sigungu . ' ') : '') .
                 ($row->ilbangu ? ($row->ilbangu . ' ') : '') . ($row->eupmyeon ? ($row->eupmyeon . ' ') : ''));
-                
-            $address_road = $address_base . ' ' . $row->road_name . ' ' . ($row->is_basement ? '지하 ' : '') . ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : '');
-            $address_old = $address_base . ' ' . $row->dongri . ($row->jibeon ? (' ' . $row->jibeon) : '');
+            $address_new = trim($row->road_name . ' ' . ($row->is_basement ? '지하 ' : '') .
+                ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : ''));
+            $address_old = trim($row->dongri . ' ' . ($row->is_mountain ? '산' : '') .
+                ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : ''));
             
             // 추가정보를 정리한다.
             
-            $address_extra_long = '';
-            $address_extra_short = '';
-            if (strval($row->dongri) !== '')
-            {
-                $address_extra_long = $row->dongri . ($row->jibeon ? (' ' . $row->jibeon) : '');
-                $address_extra_short = $row->dongri;
-            }
-            if (strval($row->building_name) !== '')
-            {
-                $address_extra_long .= ', ' . $row->building_name;
-                $address_extra_short .= ', ' . $row->building_name;
-            }
+            $extra_info_long = trim($address_old . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+            $extra_info_short = trim($row->dongri . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
             
             // 결과 오브젝트에 추가한다.
             
@@ -192,12 +187,13 @@ class Postcodify
             $record->dbid = substr($row->id, 0, 10) === '9999999999' ? '' : $row->id;
             $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
             $record->code5 = strval($row->postcode5);
-            $record->address = strval($address_road);
-            $record->canonical = strval($row->dongri . ($row->jibeon ? (' ' . $row->jibeon) : ''));
-            $record->extra_info_long = strval($address_extra_long);
-            $record->extra_info_short = strval($address_extra_short);
+            $record->address = trim($address_base . ' ' . $address_new);
+            $record->canonical = strval($address_old);  // Deprecated as of 1.8
+            $record->extra_info_long = strval($extra_info_long);
+            $record->extra_info_short = strval($extra_info_short);
             $record->english_address = isset($row->english_address) ? strval($row->english_address) : '';
-            $record->jibeon_address = strval($address_old);
+            $record->jibeon_address = trim($address_base . ' ' . $address_old);
+            $record->details = array('base' => $address_base, 'new' => $address_new, 'old' => $address_old, 'building' => $row->building_name);
             $record->other = strval($row->other_addresses);
             if ($encoding !== 'UTF-8')
             {
@@ -210,6 +206,14 @@ class Postcodify
             $result->results[] = $record;
             $result->count++;
         }
+        
+        // 검색 언어를 기록한다.
+        
+        $result->lang = $kw->is_english ? 'EN' : 'KO';
+        
+        // 정렬 방식을 기록한다.
+        
+        $result->sort = isset($sort_by_jibeon) ? 'JIBEON' : 'JUSO';
         
         // 검색 소요 시간을 기록한다.
         
@@ -293,6 +297,7 @@ class Postcodify
                 }
                 $kw->numbers = array($matches[1] ? $matches[1] : null, $matches[2] ? $matches[2] : null);
                 $kw->extra_numbers = array(null, null);
+                $kw->is_english = true;
                 return $kw;
             }
         }
@@ -509,6 +514,7 @@ class Postcodify_Keywords
     public $extra_numbers;
     public $extra_keywords;
     public $use_area = false;
+    public $is_english = false;
 }
 
 // Postcodify 검색 결과 (전체) 클래스.
@@ -525,6 +531,8 @@ class Postcodify_Result
     public $error = '';
     public $count = 0;
     public $time = 0;
+    public $lang = 'KO';
+    public $sort = 'JUSO';
     public $results = array();
 }
 
@@ -541,5 +549,6 @@ class Postcodify_Result_Record
     public $extra_info_short;
     public $english_address;
     public $jibeon_address;
+    public $details;
     public $other;
 }
