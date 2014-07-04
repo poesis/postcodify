@@ -25,11 +25,6 @@ class Postcodify
     
     const VERSION = '1.8';
     
-    // DB 커넥션 핸들을 저장하는 변수들.
-    
-    protected static $dbh;
-    protected static $dbh_extension;
-    
     // DB 설정을 저장하는 변수들.
     
     protected static $db_host;
@@ -242,124 +237,33 @@ class Postcodify
             $params = array_merge($params, $extra_params);
         }
         
-        // SQLite인 경우 별도의 클래스로 쿼리를 전달한다.
+        // DB 드라이버에 따라 적절한 클래스로 쿼리를 전달한다.
         
-        if (self::$db_driver === 'sqlite')
+        switch (strtolower(self::$db_driver))
         {
-            require_once dirname(__FILE__) . '/postcodify.sqlite.php';
-            return Postcodify_SQLite::query(self::$db_dbname, $proc_name, $params);
-        }
-        
-        // MySQL인 경우 최초 호출시 DB에 연결한다.
-        
-        if (self::$dbh === null || self::$dbh_extension === null)
-        {
-            // PDO 모듈 사용 (기본값, 권장).
-            
-            if (class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers()))
-            {
-                self::$dbh_extension = 'pdo';
-                self::$dbh = new PDO('mysql:host=' . self::$db_host . ';port=' . self::$db_port . ';dbname=' . self::$db_dbname . ';charset=utf8',
-                    self::$db_user, self::$db_pass, array(
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_EMULATE_PREPARES => false,
-                        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
-                    )
-                );
-            }
-            
-            // MySQLi 모듈 사용 (차선책).
-            
-            elseif (class_exists('mysqli'))
-            {
-                self::$dbh_extension = 'mysqli';
-                self::$dbh = @mysqli_connect(self::$db_host, self::$db_user, self::$db_pass, self::$db_dbname, self::$db_port);
-                if (self::$dbh->connect_error) throw new Exception(self::$dbh->connect_error);
-                $charset = @self::$dbh->set_charset('utf8');
-                if (!$charset) throw new Exception(self::$dbh->error);
-                $driver = new MySQLi_Driver;
-                $driver->report_mode = MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT;
-            }
-            
-            // MySQL 모듈 사용 (최후의 수단).
-            
-            elseif (function_exists('mysql_connect'))
-            {
-                self::$dbh_extension = 'mysql';
-                self::$dbh = @mysql_connect(self::$db_host . ':' . self::$db_port, self::$db_user, self::$db_pass);
-                if (!self::$dbh) throw new Exception(mysql_error(self::$dbh));
-                $seldb = @mysql_select_db(self::$db_dbname, self::$dbh);
-                if (!$seldb) throw new Exception(mysql_error(self::$dbh));
-                $charset = function_exists('mysql_set_charset') ? @mysql_set_charset('utf8', self::$dbh) : @mysql_query('SET NAMES utf8', self::$dbh);
-                if (!$charset) throw new Exception(mysql_error(self::$dbh));
-            }
-            
-            // 아무 것도 사용할 수 없는 경우 빈 결과를 반환한다.
-            
-            else
-            {
-                return array();
-            }
-        }
-        
-        // 프로시저를 실행한다.
-        // 동리 + 지번 검색처럼 곧이어 다른 검색을 할 경우에 대비하여 쿼리 결과를 깨끗하게 닫아 주어야 한다.
-        
-        switch (self::$dbh_extension)
-        {
-            // PDO 모듈 사용 (기본값, 권장).
-            
-            case 'pdo':
-                $placeholders = implode(', ', array_fill(0, count($params), '?'));
-                $ps = self::$dbh->prepare('CALL ' . $proc_name . '(' . $placeholders . ')');
-                $ps->execute($params);
-                $result = $ps->fetchAll(PDO::FETCH_OBJ);
-                $ps->nextRowset();
-                return $result;
-                
-            // MySQLi 모듈 사용 (차선책).
-            
-            case 'mysqli':
-                $escaped_params = array();
-                foreach ($params as $param)
-                {
-                   $escaped_params[] = $param === null ? 'null' : ("'" . self::$dbh->real_escape_string($param) . "'");
-                }
-                $escaped_params = implode(', ', $escaped_params);
-                $query = self::$dbh->query('CALL ' . $proc_name . '(' . $escaped_params . ')');
-                $result = array();
-                while ($row = $query->fetch_object())
-                {
-                    $result[] = $row;
-                }
-                self::$dbh->next_result();
-                return $result;
-                
-            // MySQL 모듈 사용 (최후의 수단).
+            // MySQL.
             
             case 'mysql':
-                $escaped_params = array();
-                foreach ($params as $param)
-                {
-                   $escaped_params[] = $param === null ? 'null' : ("'" . mysql_real_escape_string($param, self::$dbh) . "'");
-                }
-                $escaped_params = implode(', ', $escaped_params);
-                $query = @mysql_query('CALL ' . $proc_name . '(' . $escaped_params . ')', self::$dbh);
-                if (!$query) throw new Exception(mysql_error(self::$dbh));
-                $result = array();
-                while ($row = mysql_fetch_object($query))
-                {
-                    $result[] = $row;
-                }
-                if ($proc_name === 'postcodify_search_jibeon' && !count($result))
-                {
-                    mysql_close(self::$dbh); self::$dbh = null;
-                }
-                return $result;
-                
-            // 아무 것도 사용할 수 없는 경우 빈 결과를 반환한다.
+                $db_config = array(
+                    'host' => self::$db_host,
+                    'port' => self::$db_port,
+                    'user' => self::$db_user,
+                    'pass' => self::$db_pass,
+                    'dbname' => self::$db_dbname,
+                );
+                require_once dirname(__FILE__) . '/postcodify.mysql.php';
+                return Postcodify_MySQL::query($db_config, $proc_name, $params);
             
-            default: return array();
+            // SQLite.
+            
+            case 'sqlite':
+                require_once dirname(__FILE__) . '/postcodify.sqlite.php';
+                return Postcodify_SQLite::query(self::$db_dbname, $proc_name, $params);
+            
+            // 그 밖의 드라이버는 예외를 던진다.
+            
+            default:
+                throw new Exception('Database driver not supported: ' . self::$db_driver);
         }
     }
     
