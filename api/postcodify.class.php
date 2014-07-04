@@ -118,12 +118,13 @@ class Postcodify
             {
                 // 일단 동리로 검색해 본다.
                 
+                $dongri_crc32 = is_numeric($kw->dongri) ? $kw->dongri : self::crc32_x64($kw->dongri);
                 $rows = self::call_db_procedure('postcodify_search_jibeon',
-                    array(self::crc32_x64($kw->dongri), $kw->numbers[0], $kw->numbers[1]), $extra_params);
+                    array($dongri_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
                 
                 // 검색 결과가 없다면 건물명을 동리로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
                 
-                if ($kw->numbers[0] === null && $kw->numbers[1] === null && !count($rows))
+                if ($kw->numbers[0] === null && $kw->numbers[1] === null && !count($rows) && $kw->dongri !== $dongri_crc32)
                 {
                     $rows = self::call_db_procedure('postcodify_search_building', array($kw->dongri), $extra_params);
                 }
@@ -385,12 +386,19 @@ class Postcodify
         
         // 영문 주소인지 확인한다.
         
-        if (preg_match('/^(?:b|jiha)?(?:\\s*|-)([0-9]+)?(?:-([0-9]+))?\\s*([a-z0-9-\x20]+(?:ro|no|gil))(?:\\s|$)/', $str, $matches))
+        if (preg_match('/^(?:b|san|jiha)?(?:\\s*|-)([0-9]+)?(?:-([0-9]+))?\\s*([a-z0-9-\x20]+(ro|gil|dong|ri))(?:\\s|$)/', $str, $matches))
         {
-            $road_english = self::crc32_x64(preg_replace('/[^a-z0-9]/', '', $matches[3]));
-            if ($road_synonym = self::call_db_procedure('postcodify_get_synonym', array($road_english), array()))
+            $addr_english = self::crc32_x64(preg_replace('/[^a-z0-9]/', '', $matches[3]));
+            if ($addr_synonym = self::call_db_procedure('postcodify_get_synonym', array($addr_english), array()))
             {
-                $kw->road = current($road_synonym)->result;
+                if ($matches[4] === 'ro' || $matches[4] === 'gil')
+                {
+                    $kw->road = current($addr_synonym)->result;
+                }
+                else
+                {
+                    $kw->dongri = current($addr_synonym)->result;
+                }
                 $kw->numbers = array($matches[1] ? $matches[1] : null, $matches[2] ? $matches[2] : null);
                 $kw->extra_numbers = array(null, null);
                 return $kw;
