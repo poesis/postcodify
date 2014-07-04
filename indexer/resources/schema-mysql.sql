@@ -163,7 +163,7 @@ BEGIN
         AND (area2 IS NULL OR pa.sigungu = area2)
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
-    ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
+    ORDER BY pa.sido, pa.sigungu, pa.dongri, pa.jibeon_major, pa.jibeon_minor
     LIMIT 100;
 END;
 
