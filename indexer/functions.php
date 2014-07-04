@@ -115,16 +115,22 @@ function get_variations_of_road_name($str)
 
 function get_variations_of_dongri($str, &$dongs)
 {
-    $keywords = array($str);
+    $keywords = preg_match('/[.,-]/', $str) ? array() : array($str);
     
-    if (preg_match('/^(.+)제?([0-9,]+)([동리])$/uU', $str, $matches))
+    if (preg_match('/^(.+)제?([0-9.,-]+)([동리])$/uU', $str, $matches))
     {
         $keywords[] = $str = $matches[1] . $matches[3];
         $matches[2] = preg_split('/[.,-]/', $matches[2]);
         foreach ($matches[2] as $match)
         {
-            if (ctype_digit(trim($match))) $keywords[] = $matches[1] . $match . $matches[3];
+            if (ctype_digit(trim($match)))
+            {
+                $keywords[] = $matches[1] . $match . $matches[3];
+                $keywords[] = $matches[1] . '제' . $match . $matches[3];
+            }
         }
+        $keywords[] = $matches[1] . implode('', $matches[2]) . $matches[3];
+        $keywords[] = $matches[1] . '제' . implode('', $matches[2]) . $matches[3];
     }
     
     if (preg_match('/^(.+)([0-9]+)가동$/uU', $str, $matches))
