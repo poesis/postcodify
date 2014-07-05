@@ -12,6 +12,8 @@ DROP TABLE IF EXISTS postcodify_metadata;
 DROP PROCEDURE IF EXISTS postcodify_get_synonym;
 DROP PROCEDURE IF EXISTS postcodify_get_version;
 DROP PROCEDURE IF EXISTS postcodify_get_last_updated;
+DROP PROCEDURE IF EXISTS postcodify_search_postcode5;
+DROP PROCEDURE IF EXISTS postcodify_search_postcode6;
 DROP PROCEDURE IF EXISTS postcodify_search_juso;
 DROP PROCEDURE IF EXISTS postcodify_search_jibeon;
 DROP PROCEDURE IF EXISTS postcodify_search_building;
@@ -101,7 +103,7 @@ CREATE TABLE postcodify_metadata (
 
 -- 키워드 대체 프로시저.
 
-CREATE PROCEDURE postcodify_get_synonym (IN keyword_crc32 INT UNSIGNED)
+CREATE PROCEDURE postcodify_get_synonym(IN keyword_crc32 INT UNSIGNED)
 BEGIN
     SELECT canonical_crc32 AS result
     FROM postcodify_keywords_synonyms
@@ -111,7 +113,7 @@ END;
 
 -- 버전 검사 프로시저.
 
-CREATE PROCEDURE postcodify_get_version ()
+CREATE PROCEDURE postcodify_get_version()
 BEGIN
     SELECT v AS version
     FROM postcodify_metadata
@@ -120,19 +122,42 @@ END;
 
 -- 최근 업데이트 일자 검사 프로시저.
 
-CREATE PROCEDURE postcodify_get_last_updated ()
+CREATE PROCEDURE postcodify_get_last_updated()
 BEGIN
     SELECT v AS last_updated
     FROM postcodify_metadata
     WHERE k = 'updated';
 END;
 
+-- 우편번호 (5자리) 검색 프로시저.
+
+CREATE PROCEDURE postcodify_search_postcode5(IN postcode CHAR(5),
+    IN search_count INT, IN search_offset INT)
+BEGIN
+    SELECT * FROM postcodify_addresses AS pa
+    WHERE pa.postcode5 = CONVERT(postcode using utf8) COLLATE utf8_general_ci
+    ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
+    LIMIT search_count OFFSET search_offset;
+END;
+
+-- 우편번호 (6자리) 검색 프로시저.
+
+CREATE PROCEDURE postcodify_search_postcode6(IN postcode CHAR(6),
+    IN search_count INT, IN search_offset INT)
+BEGIN
+    SELECT * FROM postcodify_addresses AS pa
+    WHERE pa.postcode6 = CONVERT(postcode using utf8) COLLATE utf8_general_ci
+    ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
+    LIMIT search_count OFFSET search_offset;
+END;
+
 -- 도로명주소 검색 프로시저.
 
-CREATE PROCEDURE postcodify_search_juso (IN keyword_crc32 INT UNSIGNED,
+CREATE PROCEDURE postcodify_search_juso(IN keyword_crc32 INT UNSIGNED,
     IN num1 SMALLINT UNSIGNED, IN num2 SMALLINT UNSIGNED,
     IN area1 VARCHAR(20), IN area2 VARCHAR(20),
-    IN area3 VARCHAR(20), IN area4 VARCHAR(20))
+    IN area3 VARCHAR(20), IN area4 VARCHAR(20),
+    IN search_count INT, IN search_offset INT)
 BEGIN
     SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
     INNER JOIN postcodify_keywords_juso AS pk ON pa.id = pk.address_id
@@ -144,15 +169,16 @@ BEGIN
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-    LIMIT 100;
+    LIMIT search_count OFFSET search_offset;
 END;
 
 -- 지번 검색 프로시저.
 
-CREATE PROCEDURE postcodify_search_jibeon (IN keyword_crc32 INT UNSIGNED,
+CREATE PROCEDURE postcodify_search_jibeon(IN keyword_crc32 INT UNSIGNED,
     IN num1 SMALLINT UNSIGNED, IN num2 SMALLINT UNSIGNED,
     IN area1 VARCHAR(20), IN area2 VARCHAR(20),
-    IN area3 VARCHAR(20), IN area4 VARCHAR(20))
+    IN area3 VARCHAR(20), IN area4 VARCHAR(20),
+    IN search_count INT, IN search_offset INT)
 BEGIN
     SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
     INNER JOIN postcodify_keywords_jibeon AS pk ON pa.id = pk.address_id
@@ -164,14 +190,15 @@ BEGIN
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.dongri, pa.jibeon_major, pa.jibeon_minor
-    LIMIT 100;
+    LIMIT search_count OFFSET search_offset;
 END;
 
 -- 건물명 검색 프로시저.
 
-CREATE PROCEDURE postcodify_search_building (IN keyword VARCHAR(80),
+CREATE PROCEDURE postcodify_search_building(IN keyword VARCHAR(80),
     IN area1 VARCHAR(20), IN area2 VARCHAR(20),
-    IN area3 VARCHAR(20), IN area4 VARCHAR(20))
+    IN area3 VARCHAR(20), IN area4 VARCHAR(20),
+    IN search_count INT, IN search_offset INT)
 BEGIN
     SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
     INNER JOIN postcodify_keywords_building AS pk ON pa.id = pk.address_id
@@ -181,15 +208,16 @@ BEGIN
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-    LIMIT 100;
+    LIMIT search_count OFFSET search_offset;
 END;
 
 -- 건물명 + 동/리 검색 프로시저.
 
-CREATE PROCEDURE postcodify_search_building_with_dongri (IN keyword VARCHAR(80),
+CREATE PROCEDURE postcodify_search_building_with_dongri(IN keyword VARCHAR(80),
     IN dongri_crc32 INT UNSIGNED,
     IN area1 VARCHAR(20), IN area2 VARCHAR(20),
-    IN area3 VARCHAR(20), IN area4 VARCHAR(20))
+    IN area3 VARCHAR(20), IN area4 VARCHAR(20),
+    IN search_count INT, IN search_offset INT)
 BEGIN
     SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
     INNER JOIN postcodify_keywords_building AS pkb ON pa.id = pkb.address_id
@@ -201,15 +229,16 @@ BEGIN
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-    LIMIT 100;
+    LIMIT search_count OFFSET search_offset;
 END;
 
 -- 사서함 검색 프로시저.
 
-CREATE PROCEDURE postcodify_search_pobox (IN keyword VARCHAR(80),
+CREATE PROCEDURE postcodify_search_pobox(IN keyword VARCHAR(80),
     IN num1 SMALLINT UNSIGNED, IN num2 SMALLINT UNSIGNED,
     IN area1 VARCHAR(20), IN area2 VARCHAR(20),
-    IN area3 VARCHAR(20), IN area4 VARCHAR(20))
+    IN area3 VARCHAR(20), IN area4 VARCHAR(20),
+    IN search_count INT, IN search_offset INT)
 BEGIN
     SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
     INNER JOIN postcodify_keywords_pobox AS pk ON pa.id = pk.address_id
@@ -221,5 +250,5 @@ BEGIN
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-    LIMIT 100;
+    LIMIT search_count OFFSET search_offset;
 END;

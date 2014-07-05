@@ -109,6 +109,7 @@ echo $elapsed_seconds . '초' . "\n";
 // 인덱스를 생성한다.
 
 $sqlite_indexes = array(
+    'postcodify_addresses' => array('postcode6', 'postcode5'),
     'postcodify_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcodify_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
     'postcodify_keywords_building' => array('address_id'),

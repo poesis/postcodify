@@ -87,19 +87,35 @@ class Postcodify
             
             $extra_params = $kw->use_area ? array($kw->sido, $kw->sigungu, $kw->ilbangu, $kw->eupmyeon) : array();
             
+            // 우편번호로 검색하는 경우...
+            
+            if ($kw->postcode !== null)
+            {
+                // 자릿수에 따라 별도로 검색한다.
+                
+                if (strlen($kw->postcode) === 6)
+                {
+                    $rows = self::call_db_procedure('postcodify_search_postcode6', array($kw->postcode), array());
+                }
+                else
+                {
+                    $rows = self::call_db_procedure('postcodify_search_postcode5', array($kw->postcode), array());
+                }
+            }
+            
             // 도로명주소로 검색하는 경우...
             
-            if ($kw->road !== null)
+            elseif ($kw->road !== null)
             {
                 // 일단 도로명으로 검색해 본다.
                 
-                $road_crc32 = is_numeric($kw->road) ? $kw->road : self::crc32_x64($kw->road);
+                $road_crc32 = $kw->is_english ? $kw->road : self::crc32_x64($kw->road);
                 $rows = self::call_db_procedure('postcodify_search_juso',
                     array($road_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
                 
                 // 도로번호를 건물번호로 잘못 해석했을 수도 있으므로 조합을 바꾸어 다시 시도해 본다.
                 
-                if (count($rows) < 100 && $kw->numbers[1] === null && $kw->road !== $road_crc32)
+                if (count($rows) < 100 && $kw->numbers[1] === null && !$kw->is_english)
                 {
                     $possible_road_name = self::crc32_x64($kw->road . $kw->numbers[0]);
                     $rows = array_merge($rows, self::call_db_procedure('postcodify_search_juso',
@@ -114,13 +130,13 @@ class Postcodify
             {
                 // 일단 동리로 검색해 본다.
                 
-                $dongri_crc32 = is_numeric($kw->dongri) ? $kw->dongri : self::crc32_x64($kw->dongri);
+                $dongri_crc32 = $kw->is_english ? $kw->dongri : self::crc32_x64($kw->dongri);
                 $rows = self::call_db_procedure('postcodify_search_jibeon',
                     array($dongri_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
                 
                 // 검색 결과가 없다면 건물명을 동리로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
                 
-                if ($kw->numbers[0] === null && $kw->numbers[1] === null && !count($rows) && $kw->dongri !== $dongri_crc32)
+                if ($kw->numbers[0] === null && $kw->numbers[1] === null && !count($rows) && !$kw->is_english)
                 {
                     $rows = self::call_db_procedure('postcodify_search_building', array($kw->dongri), $extra_params);
                 }
@@ -274,8 +290,13 @@ class Postcodify
         
         if (strpos($proc_name, 'search') !== false)
         {
-            $extra_params = count($extra_params) ? $extra_params : array(null, null, null, null);
-            $params = array_merge($params, $extra_params);
+            if (strpos($proc_name, 'postcode') === false)
+            {
+                $extra_params = count($extra_params) ? $extra_params : array(null, null, null, null);
+                $params = array_merge($params, $extra_params);
+            }
+            $params[] = 100;
+            $params[] = 0;
         }
         
         // DB 드라이버에 따라 적절한 클래스로 쿼리를 전달한다.
@@ -321,6 +342,14 @@ class Postcodify
         
         $str = str_replace(array('.', ',', '(', '|', ')'), ' ', $str);
         $str = preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', strtolower($str));
+        
+        // 우편번호인지 확인한다.
+        
+        if (preg_match('/^([0-9]{5,6}|[0-9]{3}-[0-9]{3})$/', $str))
+        {
+            $kw->postcode = str_replace('-', '', $str);
+            return $kw;
+        }
         
         // 영문 주소인지 확인한다.
         
@@ -531,6 +560,7 @@ class Postcodify_Keywords
     public function __toString()
     {
         $result = array();
+        if ($this->postcode !== null) $result[] = $this->postcode;
         if ($this->sido !== null) $result[] = $this->sido;
         if ($this->sigungu !== null) $result[] = $this->sigungu;
         if ($this->ilbangu !== null) $result[] = $this->ilbangu;
@@ -544,6 +574,7 @@ class Postcodify_Keywords
         return implode(' ', $result);
     }
     
+    public $postcode;
     public $sido;
     public $sigungu;
     public $ilbangu;

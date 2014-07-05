@@ -2,11 +2,11 @@
 -- 주소 정보를 저장하는 메인 테이블.
 
 CREATE TABLE postcodify_addresses (
-    id CHAR(25) PRIMARY KEY,
-    postcode5 CHAR(5),
-    postcode6 CHAR(6),
-    road_id CHAR(12),
-    road_section CHAR(2),
+    id CHARACTER(25) PRIMARY KEY,
+    postcode5 CHARACTER(5),
+    postcode6 CHARACTER(6),
+    road_id CHARACTER(12),
+    road_section CHARACTER(2),
     road_name VARCHAR(80),
     num_major INTEGER,
     num_minor INTEGER,
@@ -22,14 +22,14 @@ CREATE TABLE postcodify_addresses (
     building_name VARCHAR(40),
     english_address VARCHAR(300),
     other_addresses VARCHAR(600),
-    updated CHAR(8)
+    updated CHARACTER(8)
 );
 
 -- 도로명주소 검색을 위한 키워드 테이블.
 
 CREATE TABLE postcodify_keywords_juso (
     seq INTEGER PRIMARY KEY,
-    address_id CHAR(25) NOT NULL,
+    address_id CHARACTER(25) NOT NULL,
     keyword_crc32 INTEGER,
     num_major INTEGER,
     num_minor INTEGER
@@ -39,7 +39,7 @@ CREATE TABLE postcodify_keywords_juso (
 
 CREATE TABLE postcodify_keywords_jibeon (
     seq INTEGER PRIMARY KEY,
-    address_id CHAR(25) NOT NULL,
+    address_id CHARACTER(25) NOT NULL,
     keyword_crc32 INTEGER,
     num_major INTEGER,
     num_minor INTEGER
@@ -49,7 +49,7 @@ CREATE TABLE postcodify_keywords_jibeon (
 
 CREATE TABLE postcodify_keywords_building (
     seq INTEGER PRIMARY KEY,
-    address_id CHAR(25) NOT NULL,
+    address_id CHARACTER(25) NOT NULL,
     keyword VARCHAR(40)
 );
 
@@ -57,7 +57,7 @@ CREATE TABLE postcodify_keywords_building (
 
 CREATE TABLE postcodify_keywords_pobox (
     seq INTEGER PRIMARY KEY,
-    address_id CHAR(25) NOT NULL,
+    address_id CHARACTER(25) NOT NULL,
     keyword VARCHAR(40),
     range_start_major INTEGER,
     range_start_minor INTEGER,

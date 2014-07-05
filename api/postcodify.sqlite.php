@@ -46,8 +46,7 @@ class Postcodify_SQLite
         
         $querystring = trim(self::$procs[$proc_name]);
         $statement = self::$dbh[$db_name]->prepare($querystring);
-        $named_params = array();
-        $params[] = null; reset($params);
+        $named_params = array(); reset($params);
         
         if (preg_match_all('/:[a-z0-9_]+/', $querystring, $matches))
         {
@@ -88,6 +87,24 @@ class Postcodify_SQLite
             LIMIT 1;
         ",
         
+        // 우편번호 (5자리) 검색 프로시저.
+
+        "postcodify_search_postcode5" => "
+            SELECT * FROM postcodify_addresses AS pa
+            WHERE pa.postcode5 = :postcode
+            ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
+            LIMIT :search_count OFFSET :search_offset;
+        ",
+        
+        // 우편번호 (6자리) 검색 프로시저.
+
+        "postcodify_search_postcode6" => "
+            SELECT * FROM postcodify_addresses AS pa
+            WHERE pa.postcode6 = :postcode
+            ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
+            LIMIT :search_count OFFSET :search_offset;
+        ",
+        
         // 도로명주소 검색 프로시저.
         
         "postcodify_search_juso" => "
@@ -101,7 +118,7 @@ class Postcodify_SQLite
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
                 AND (:area4 IS NULL OR pa.eupmyeon = :repeat_area4)
             ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
+            LIMIT :search_count OFFSET :search_offset;
         ",
         
         // 지번 검색 프로시저.
@@ -117,7 +134,7 @@ class Postcodify_SQLite
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
                 AND (:area4 IS NULL OR pa.eupmyeon = :repeat_area4)
             ORDER BY pa.sido, pa.sigungu, pa.dongri, pa.jibeon_major, pa.jibeon_minor
-            LIMIT 100;
+            LIMIT :search_count OFFSET :search_offset;
         ",
         
         // 건물명 검색 프로시저.
@@ -131,7 +148,7 @@ class Postcodify_SQLite
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
                 AND (:area4 IS NULL OR pa.eupmyeon = :repeat_area4)
             ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
+            LIMIT :search_count OFFSET :search_offset;
         ",
         
         // 건물명 + 동/리 검색 프로시저.
@@ -147,7 +164,7 @@ class Postcodify_SQLite
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
                 AND (:area4 IS NULL OR pa.eupmyeon = :repeat_area4)
             ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
+            LIMIT :search_count OFFSET :search_offset;
         ",
         
         // 사서함 검색 프로시저.
@@ -164,7 +181,7 @@ class Postcodify_SQLite
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
                 AND (:area4 IS NULL OR pa.eupmyeon = :repeat_area4)
             ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
+            LIMIT :search_count OFFSET :search_offset;
         ",
     );
 }
