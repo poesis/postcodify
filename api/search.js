@@ -333,14 +333,13 @@
                         
                         // 검색 결과 요약을 작성한다.
                         
-                        var networkTime = (searchTotalTime - parseFloat(data.time)).toFixed(3);
                         var summary = $('<div class="postcode_search_status summary"></div>');
                         summary.append('<div class="result_count">' + info.translations[resultLanguage].msgResultCount + ': ' +
-                            '<span>' + data.count + '</span>' + info.translations[resultLanguage].msgResultCountSuffix + '</div>');
+                            '<span>' + data.count + '</span></div>');
                         summary.append('<div class="search_time">' + info.translations[resultLanguage].msgSearchTime + ': ' +
-                            '<span>' + data.time + '</span>' + info.translations[resultLanguage].msgSecond + '</div>');
+                            '<span>' + Math.round(data.time * 1000) + 'ms</span></div>');
                         summary.append('<div class="network_time">' + info.translations[resultLanguage].msgNetworkTime + ': ' +
-                            '<span>' + networkTime + '</span>' + info.translations[resultLanguage].msgSecond + '</div>');
+                            '<span>' + Math.round((searchTotalTime - parseFloat(data.time)) * 1000) + 'ms</span></div>');
                         summary.appendTo(results);
                         
                         // 검색 결과가 너무 많아 일부만 표시한 경우 그 사실을 알린다.
@@ -497,13 +496,11 @@
             errorTooShort : "검색어는 3글자 이상 입력해 주십시오.",
             errorTooMany : "검색 결과가 너무 많아 100건까지만 표시합니다.\n행정구역명, 번지수 등을 사용하여 좀더 자세히 검색해 주시기 바랍니다.",
             msgResultCount : "검색 결과",
-            msgResultCountSuffix : "건",
-            msgSearchTime : "검색 소요시간",
-            msgNetworkTime : "통신 지연시간",
+            msgSearchTime : "소요 시간",
+            msgNetworkTime : "통신 지연",
             msgSeeOthers : "관련지번 보기",
             msgSearch : "검색",
-            msgMap : "지도",
-            msgSecond : "초"
+            msgMap : "지도"
         },
         en : {
             errorError : "An error occurred while communicating to the search server.\nPlease try again later.",
@@ -512,14 +509,12 @@
             errorVersion : "The version of the search server is not compatible with this search function.",
             errorTooShort : "Please enter at least 3 characters.",
             errorTooMany : "Your search returned too many results. Only the first 100 items are shown below.\nPlease narrow down your search by adding the street number(s).",
-            msgResultCount : "Search results",
-            msgResultCountSuffix : "",
-            msgSearchTime : "Search duration",
+            msgResultCount : "Results",
+            msgSearchTime : "Time taken",
             msgNetworkTime : "Network delay",
             msgSeeOthers : "See related addresses",
             msgSearch : "Search",
-            msgMap : "Map",
-            msgSecond : "s"
+            msgMap : "Map"
         }
     };
     
