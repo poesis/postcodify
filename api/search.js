@@ -81,34 +81,14 @@
             if (settings.searchButtonContent === null) {
                 settings.searchButtonContent = info.translations[settings.language].msgSearch;
             }
-            if (settings.mapLinkContent === null) {
-                settings.mapLinkContent = info.translations[settings.language].msgMap;
-            }
             
             // 검색 컨트롤을 생성한다.
             
+            var results = $(settings.results);
             var controls = $('<div class="postcode_search_controls"></div>');
             var keywordInput = $('<input type="text" class="keyword" value="" />').appendTo(controls);
             var searchButton = $('<button type="button" class="search_button"></button>').html(settings.searchButtonContent).appendTo(controls);
             controls.prependTo(settings.controls);
-            
-            // 검색 결과창을 생성한다.
-            
-            var results = $(settings.results);
-            $('<div class="postcode_search_status empty"></div>').html(info.translations[settings.language].errorEmpty.replace("\n", "<br>")).appendTo(results).show();
-            $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorError.replace("\n", "<br>")).appendTo(results).hide();
-            $('<div class="postcode_search_status quota"></div>').html(info.translations[settings.language].errorQuota.replace("\n", "<br>")).appendTo(results).hide();
-            $('<div class="postcode_search_status too_short"></div>').html(info.translations[settings.language].errorTooShort.replace("\n", "<br>")).appendTo(results).hide();
-            $('<div class="postcode_search_status too_many"></div>').html(info.translations[settings.language].errorTooMany.replace("\n", "<br>")).appendTo(results).hide();
-            
-            var summary = $('<div class="postcode_search_status summary"></div>');
-            summary.append('<div class="result_count">' + info.translations[settings.language].msgResultCount + ': ' +
-                '<span>0</span>' + info.translations[settings.language].msgResultCountSuffix + '</div>');
-            summary.append('<div class="search_time">' + info.translations[settings.language].msgSearchTime + ': ' +
-                '<span>0</span>' + info.translations[settings.language].msgSecond + '</div>');
-            summary.append('<div class="network_time">' + info.translations[settings.language].msgNetworkTime + ': ' +
-                '<span>0</span>' + info.translations[settings.language].msgSecond + '</div>');
-            summary.appendTo(results).hide();
             
             // 단시간내 중복 검색을 방지하기 위해 직전 검색어를 기억하는 변수.
             
@@ -144,17 +124,12 @@
                 
                 // 검색 결과창의 내용을 비운다.
                 
-                results.find("div.postcode_search_result").remove();
-                results.find("div.postcode_search_status").hide();
+                results.find("div.postcode_search_result,div.postcode_search_status").remove();
                 
                 // 검색어가 없거나 너무 짧은 경우 네트워크 연결을 하지 않도록 한다.
                 
-                if (keywords === "") {
-                    results.find("div.postcode_search_status.empty").show();
-                    return;
-                }
                 if (keywords.length < 3) {
-                    results.find("div.postcode_search_status.too_short").show();
+                    $('<div class="postcode_search_status too_short"></div>').html(info.translations[settings.language].errorTooShort.replace("\n", "<br>")).appendTo(results);
                     return;
                 }
                 
@@ -166,14 +141,23 @@
                 
                 var prevScrollTop = $(window).scrollTop();
                 
-                // 이미 검색이 진행 중일 때는 검색 단추를 다시 클릭하지 못하도록 하고,
-                // "검색" 라벨을 간단한 GIF 이미지로 대체한다.
+                // 이미 검색이 진행 중일 때는 검색 단추를 다시 클릭하지 못하도록 하고, "검색" 라벨을 간단한 애니메이션으로 대체한다.
                 
                 searchButton.attr("disabled", "disabled");
+                var searchButtonAnimation;
                 if (navigator.userAgent && navigator.userAgent.match(/MSIE [5-8]\./)) {
-                    searchButton.text('...');
+                    searchButton.text(".");
+                    searchButtonAnimation = setInterval(function() {
+                        switch (searchButton.text()) {
+                            case ".": searchButton.text(".."); break;
+                            case "..": searchButton.text("..."); break;
+                            case "...": searchButton.text("...."); break;
+                            case "....": searchButton.text("."); break;
+                        }
+                    }, 160);
                 } else {
                     searchButton.html('<img class="searching" alt="' + info.translations[settings.language].msgSearch + '" src="' + info.searchProgress + '" />');
+                    searchButtonAnimation = false;
                 }
                 
                 // AJAX 요청 관련 함수들을 선언한다.
@@ -189,6 +173,7 @@
                         url : url,
                         data : { "v": info.version, "q": keywords, "ref": window.location.hostname },
                         dataType : "jsonp",
+                        jsonpCallback : "postcodify" + ajaxStartTime,
                         processData : true,
                         cache : false,
                         timeout : settings.timeout,
@@ -196,6 +181,7 @@
                         error : errorCallback,
                         complete : function() {
                             $(window).scrollTop(prevScrollTop);
+                            if (searchButtonAnimation !== false) clearTimeout(searchButtonAnimation);
                             searchButton.removeAttr("disabled").html(settings.searchButtonContent);
                         }
                     });
@@ -228,23 +214,29 @@
                         }
                     }
                     
-                    // 무료 API의 일일 검색 허용 횟수를 초과한 경우...
+                    // 무료 API 서버의 일일 검색 허용 횟수를 초과한 경우...
                     
                     else if (data.error && data.error.toLowerCase().indexOf("quota") > -1) {
-                        results.find("div.postcode_search_status.quota").show();
+                        $('<div class="postcode_search_status quota"></div>').html(info.translations[settings.language].errorQuota.replace("\n", "<br>")).appendTo(results);
                     }
                     
                     // 그 밖의 에러 발생시...
                     
                     else if (data.error) {
-                        results.find("div.postcode_search_status.error").show();
+                        $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorError.replace("\n", "<br>")).appendTo(results);
                         previousSearch = "";
                     }
                     
                     // 정상 처리되었지만 검색 결과가 없는 경우...
                     
                     else if (data.count === 0) {
-                        results.find("div.postcode_search_status.empty").show();
+                        $('<div class="postcode_search_status empty"></div>').html(info.translations[settings.language].errorEmpty.replace("\n", "<br>")).appendTo(results);
+                    }
+                    
+                    // 정상 처리되었지만 검색 서버의 버전이 맞지 않는 경우...
+                    
+                    else if (typeof data.results[0].english === "undefined" || typeof data.results[0].other === "undefined") {
+                        $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorVersion.replace("\n", "<br>")).appendTo(results);
                     }
                     
                     // 검색 결과가 있는 경우...
@@ -267,33 +259,36 @@
                             option.data("extra_info_long", result.other.long);
                             option.data("extra_info_short", result.other.short);
                             
-                            // 클릭할 링크를 생성한다.
+                            // 반환된 데이터의 언어, 정렬 방법에 따라 클릭할 링크를 생성한다.
                             
-                            var main_text;
-                            var extra_text;
+                            var mainText;
+                            var extraText;
+                            var resultLanguage;
                             
                             if (typeof data.lang !== "undefined" && data.lang === "EN") {
+                                resultLanguage = "en";
                                 if (typeof data.sort !== "undefined" && data.sort === "JUSO") {
-                                    main_text = result.english.new + ", " + result.english.base;
-                                    extra_text = result.english.old;
+                                    mainText = result.english.new + ", " + result.english.base;
+                                    extraText = result.english.old;
                                 } else {
-                                    main_text = result.english.old + ", " + result.english.base;
-                                    extra_text = result.english.new;
+                                    mainText = result.english.old + ", " + result.english.base;
+                                    extraText = result.english.new;
                                 }
                             } else {
+                                resultLanguage = "ko";
                                 if (typeof data.sort !== "undefined" && data.sort === "JUSO") {
-                                    main_text = result.address.base + " " + result.address.new;
-                                    extra_text = result.other.long;
+                                    mainText = result.address.base + " " + result.address.new;
+                                    extraText = result.other.long;
                                 } else {
-                                    main_text = result.address.base + " " + result.address.old;
-                                    extra_text = result.address.new;
+                                    mainText = result.address.base + " " + result.address.old;
+                                    extraText = result.address.new;
                                 }
                             }
                             
                             var selector = $('<a class="selector" href="#"></a>');
-                            selector.append($('<span class="address_info"></span>').text(main_text));
-                            if (extra_text !== null && extra_text !== "") {
-                                selector.append($('<span class="extra_info"></span>').append("(" + extra_text + ")"));
+                            selector.append($('<span class="address_info"></span>').text(mainText));
+                            if (extraText !== null && extraText !== "") {
+                                selector.append($('<span class="extra_info"></span>').append("(" + extraText + ")"));
                             }
                             
                             // 우편번호, 기초구역번호, 주소 등을 항목에 추가한다.
@@ -305,12 +300,12 @@
                             // 예전 주소 및 검색어 목록을 추가한다.
                             
                             if (typeof data.lang !== "undefined" && data.lang === "EN") {
-                                result.other.others = result.other.others.replace(/산([0-9]+)/g, "San $1");
+                                result.other.others = result.other.others.replace(/\uc0b0([0-9]+)/g, "San $1");
                                 result.other.others = result.other.others.replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " ").trim();
                             }
                             
                             if (result.other.others !== "") {
-                                var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>').attr("title", info.translations[settings.language].msgShowOthers);
+                                var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>').attr("title", info.translations[resultLanguage].msgShowOthers);
                                 oldAddrLink.appendTo(option.find("div.address"));
                                 var oldAddrDiv = $('<div class="old_addresses"></div>').text(result.other.others);
                                 if (settings.hideOldAddresses) oldAddrDiv.css("display", "none");
@@ -328,7 +323,8 @@
                                 }
                                 mapurl = mapurl.replace("$JUSO", encodeURIComponent(result.address.base + " " + result.address.new).replace(/%20/g, '+'));
                                 mapurl = mapurl.replace("$JIBEON", encodeURIComponent(result.address.base + " " + result.address.old).replace(/%20/g, '+'));
-                                var maplink = $('<a target="_blank"></a>').attr("href", mapurl).html(settings.mapLinkContent);
+                                var mapLinkContent = (settings.mapLinkContent !== null) ? settings.mapLinkContent : info.translations[resultLanguage].msgMap;
+                                var maplink = $('<a target="_blank"></a>').attr("href", mapurl).html(mapLinkContent);
                                 $('<div class="map_link"></div>').append(maplink).appendTo(option);
                             }
                             
@@ -338,13 +334,19 @@
                         // 검색 결과 요약을 작성한다.
                         
                         var networkTime = (searchTotalTime - parseFloat(data.time)).toFixed(3);
-                        results.find("div.postcode_search_status.summary").detach().appendTo(results).show();
-                        results.find("div.postcode_search_status.summary div.result_count span").text(data.count);
-                        results.find("div.postcode_search_status.summary div.search_time span").text(data.time);
-                        results.find("div.postcode_search_status.summary div.network_time span").text(networkTime);
+                        var summary = $('<div class="postcode_search_status summary"></div>');
+                        summary.append('<div class="result_count">' + info.translations[resultLanguage].msgResultCount + ': ' +
+                            '<span>' + data.count + '</span>' + info.translations[resultLanguage].msgResultCountSuffix + '</div>');
+                        summary.append('<div class="search_time">' + info.translations[resultLanguage].msgSearchTime + ': ' +
+                            '<span>' + data.time + '</span>' + info.translations[resultLanguage].msgSecond + '</div>');
+                        summary.append('<div class="network_time">' + info.translations[resultLanguage].msgNetworkTime + ': ' +
+                            '<span>' + networkTime + '</span>' + info.translations[resultLanguage].msgSecond + '</div>');
+                        summary.appendTo(results);
+                        
+                        // 검색 결과가 너무 많아 일부만 표시한 경우 그 사실을 알린다.
                         
                         if (data.count >= 100) {
-                            results.find("div.postcode_search_status.too_many").show();
+                            $('<div class="postcode_search_status too_many"></div>').html(info.translations[resultLanguage].errorTooMany.replace("\n", "<br>")).prependTo(results);
                         }
                     }
                     
@@ -491,7 +493,8 @@
             errorError : "검색 서버와 통신 중 오류가 발생하였습니다.\n잠시 후 다시 시도해 주시기 바랍니다.",
             errorEmpty : "검색 결과가 없습니다. 주소가 정확한지 다시 확인해 주십시오.\n띄어쓰기에 유의하시기 바랍니다.",
             errorQuota : "일일 허용 쿼리수를 초과하였습니다.\n관리자에게 문의해 주시기 바랍니다.",
-            errorTooShort : "검색어는 3글자 이상 입력해 주시기 바랍니다.",
+            errorVersion : "검색 서버의 버전이 낮아 이 검색창과 호환되지 않습니다.",
+            errorTooShort : "검색어는 3글자 이상 입력해 주십시오.",
             errorTooMany : "검색 결과가 너무 많아 100건까지만 표시합니다.\n행정구역명, 번지수 등을 사용하여 좀더 자세히 검색해 주시기 바랍니다.",
             msgResultCount : "검색 결과",
             msgResultCountSuffix : "건",
@@ -506,8 +509,9 @@
             errorError : "An error occurred while communicating to the search server.\nPlease try again later.",
             errorEmpty : "No addresses matched your search.\nPlease check if your search terms are accurately spelled.",
             errorQuota : "This website and/or your IP address has exceeded its daily search quota.\nPlease contact the administrator.",
+            errorVersion : "The version of the search server is not compatible with this search function.",
             errorTooShort : "Please enter at least 3 characters.",
-            errorTooMany : "Your search returned too many results. Only the first 100 items are shown below.\nPlease be more specific.",
+            errorTooMany : "Your search returned too many results. Only the first 100 items are shown below.\nPlease narrow down your search by adding the street number(s).",
             msgResultCount : "Search results",
             msgResultCountSuffix : "",
             msgSearchTime : "Search duration",
