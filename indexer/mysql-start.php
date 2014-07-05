@@ -103,6 +103,14 @@ if (!file_exists(TXT_DIRECTORY . '/newaddr_pobox_DB.zip'))
     exit(1);
 }
 
+// STMT_CLOSE 에러 핸들러를 등록한다.
+
+$STDERR = fopen('php://stderr', 'a+');
+set_error_handler(function($errno, $errstr, $errfile, $errline, $context) {
+    if ($errno === E_WARNING && strpos($errstr, 'STMT_CLOSE') !== false) return;
+    fwrite($GLOBALS['STDERR'], "Error: $errstr in $errfile line $errline\n");
+}, ~0);
+
 // -------------------------------------------------------------------------------------------------
 // DB에 연결하고 테이블 및 검색 프로시저를 생성한다.
 // -------------------------------------------------------------------------------------------------
@@ -267,6 +275,8 @@ unset($zip);
 // 트랜잭션을 마친다.
 
 $db->commit();
+$db = null;
+unset($db);
 unset($english_synonyms);
 unset($ps_synonym);
 
@@ -283,7 +293,7 @@ $eng_count = 0;
 $db = get_db();
 $ps_synonym = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
 $db->beginTransaction();
-        
+
 // 압축 파일을 연다.
 
 $filename = TXT_DIRECTORY . '/english_aliases_DB.zip';
@@ -309,7 +319,7 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
         
         $line[0] = get_canonical($line[0]);
         $line[1] = preg_replace('/[^a-z0-9]/', '', strtolower($line[1]));
-        $ps_synonym->execute(array($line[1], $line[0]));
+        $ps_synonym->execute(array(crc32_x64($line[1]), crc32_x64($line[0])));
         
         // 상태를 표시한다.
         
@@ -335,7 +345,8 @@ unset($zip);
 // 트랜잭션을 마친다.
 
 $db->commit();
-unset($eng_count);
+$db = null;
+unset($db);
 
 // -------------------------------------------------------------------------------------------------
 // 상세건물명 데이터를 메모리로 불러온다. 나중에 부가정보와 함께 DB에 입력된다.
