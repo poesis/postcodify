@@ -35,22 +35,19 @@
         callBackupFirst : false,  // 백업 API를 먼저 호출할지 여부
         controls : "#키워드_입력란을_표시할_div의_id",
         searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
-        hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
         mapLinkProvider : "google",  // 지도 링크를 표시할지 여부 (daum, naver, google, 또는 false)
         mapLinkContent : "지도",  // 지도 링크에 표시할 내용 (HTML 사용 가능)
         insertDbid : "#안행부_관리번호를_입력할_input의_id",
         insertPostcode5 : "#기초구역번호를_입력할_input의_id",
         insertPostcode6 : "#우편번호를_입력할_input의_id",
         insertAddress : "#도로명주소를_입력할_input의_id",
+        insertJibeonAddress : "#지번주소를_입력할_input의_id",
+        insertEnglishAddress : "#영문_도로명주소를_입력할_input의_id",
+        insertEnglishJibeonAddress : "#영문_지번주소를_입력할_input의_id",
         insertDetails : "#상세주소를_입력할_input의_id",
         insertExtraInfo : "#참고항목을_입력할_input의_id",
-        insertEnglishAddress : "#영문주소를_입력할_input의_id",
-        insertJibeonAddress : "#지번주소를_입력할_input의_id",
         timeout : 3000,  // 검색 타임아웃 (1/1000초 단위)
         timeoutBackup : 6000,  // 백업 API 검색 타임아웃 (1/1000초 단위)
-        ready : function() {
-            // Postcodify 셋팅 완료시 호출할 콜백 
-        },
         beforeSearch : function(keywords) {
             // 검색 직전에 호출할 콜백
         },
@@ -62,6 +59,9 @@
         },
         afterSelect : function(selectedEntry) {
             // 선택한 주소를 input에 입력한 직후에 호출할 콜백
+        },
+        onReady : function() {
+            // Postcodify 셋팅 완료시 호출할 콜백 
         },
         onSuccess : function() {
             // 검색 성공시 호출할 콜백
@@ -77,6 +77,7 @@
         },
         focusKeyword : true,  // 페이지 로딩 직후 키워드 입력란으로 포커스 이동 여부
         focusDetails : true,  // 주소 선택 후 상세주소 입력란으로 포커스 이동 여부
+        hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
         useFullJibeon : true  // false인 경우 참고항목에 법정동과 공동주택명만 표시
                               // true인 경우 대표지번도 표시 (택배 등의 편의를 위해)
             // 익스플로러 호환성을 위해 마지막 항목 뒤에는 쉼표(,) 입력 금지

@@ -44,36 +44,45 @@
                 callBackupFirst : false,
                 controls : this,
                 results : this,
-                searchButtonContent : "검색",
-                hideOldAddresses : true,
+                language : "ko",
+                searchButtonContent : null,
                 mapLinkProvider : false,
-                mapLinkContent : "지도",
+                mapLinkContent : null,
                 insertDbid : null,
                 insertPostcode5 : null,
                 insertPostcode6 : null,
                 insertAddress : null,
+                insertJibeonAddress : null,
+                insertEnglishAddress : null,
+                insertEnglishJibeonAddress : null,
                 insertDetails : null,
                 insertExtraInfo : null,
-                insertEnglishAddress : null,
-                insertJibeonAddress : null,
                 timeout : 2400,
                 timeoutBackup : 7200,
-                ready : function() { },
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results) { },
                 beforeSelect : function(selectedEntry) { },
                 afterSelect : function(selectedEntry) { },
+                onReady : function() { },
                 onSuccess : function() { },
                 onBackup : function() { },
                 onError : function() { },
                 onComplete : function() { },
                 focusKeyword : true,
                 focusDetails : true,
+                hideOldAddresses : true,
                 useFullJibeon : false
             }, options);
             
+            settings.language = settings.language.toLowerCase();
             if (settings.api === info.freeAPI.defaultUrl && settings.apiBackup === null) {
                 settings.apiBackup = info.freeAPI.backupUrl;
+            }
+            if (settings.searchButtonContent === null) {
+                settings.searchButtonContent = info.translations[settings.language].msgSearch;
+            }
+            if (settings.mapLinkContent === null) {
+                settings.mapLinkContent = info.translations[settings.language].msgMap;
             }
             
             // 검색 컨트롤을 생성한다.
@@ -86,17 +95,19 @@
             // 검색 결과창을 생성한다.
             
             var results = $(settings.results);
-            $('<div class="postcode_search_status empty">검색 결과가 없습니다. 주소가 정확한지 다시 확인해 주십시오.<br />띄어쓰기에 유의하시기 바랍니다.</div>').appendTo(results).show();
-            $('<div class="postcode_search_status error">검색 서버와 통신 중 오류가 발생하였습니다.<br />잠시 후 다시 시도해 주시기 바랍니다.</div>').appendTo(results).hide();
-            $('<div class="postcode_search_status quota">일일 허용 쿼리수를 초과하였습니다.<br />관리자에게 문의해 주시기 바랍니다.</div>').appendTo(results).hide();
-            $('<div class="postcode_search_status too_short">검색어는 3글자 이상 입력해 주시기 바랍니다.</div>').appendTo(results).hide();
-            $('<div class="postcode_search_status too_many">검색 결과가 너무 많아 100건까지만 표시합니다.<br />' +
-                '행정구역명, 번지수 등을 사용하여 좀더 자세히 검색해 주시기 바랍니다.</div>').appendTo(results).hide();
+            $('<div class="postcode_search_status empty"></div>').html(info.translations[settings.language].errorEmpty.replace("\n", "<br>")).appendTo(results).show();
+            $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorError.replace("\n", "<br>")).appendTo(results).hide();
+            $('<div class="postcode_search_status quota"></div>').html(info.translations[settings.language].errorQuota.replace("\n", "<br>")).appendTo(results).hide();
+            $('<div class="postcode_search_status too_short"></div>').html(info.translations[settings.language].errorTooShort.replace("\n", "<br>")).appendTo(results).hide();
+            $('<div class="postcode_search_status too_many"></div>').html(info.translations[settings.language].errorTooMany.replace("\n", "<br>")).appendTo(results).hide();
             
             var summary = $('<div class="postcode_search_status summary"></div>');
-            summary.append('<div class="result_count">검색 결과: <span>0</span>건</div>');
-            summary.append('<div class="search_time">검색 소요시간: <span>0</span>초</div>');
-            summary.append('<div class="network_time">통신 소요시간: <span>0</span>초</div>');
+            summary.append('<div class="result_count">' + info.translations[settings.language].msgResultCount + ': ' +
+                '<span>0</span>' + info.translations[settings.language].msgResultCountSuffix + '</div>');
+            summary.append('<div class="search_time">' + info.translations[settings.language].msgSearchTime + ': ' +
+                '<span>0</span>' + info.translations[settings.language].msgSecond + '</div>');
+            summary.append('<div class="network_time">' + info.translations[settings.language].msgNetworkTime + ': ' +
+                '<span>0</span>' + info.translations[settings.language].msgSecond + '</div>');
             summary.appendTo(results).hide();
             
             // 단시간내 중복 검색을 방지하기 위해 직전 검색어를 기억하는 변수.
@@ -162,7 +173,7 @@
                 if (navigator.userAgent && navigator.userAgent.match(/MSIE [5-8]\./)) {
                     searchButton.text('...');
                 } else {
-                    searchButton.html('<img class="searching" alt="검색" src="' + info.searchProgress + '" />');
+                    searchButton.html('<img class="searching" alt="' + info.translations[settings.language].msgSearch + '" src="' + info.searchProgress + '" />');
                 }
                 
                 // AJAX 요청 관련 함수들을 선언한다.
@@ -249,18 +260,40 @@
                             option.data("dbid", result.dbid);
                             option.data("code6", result.code6);
                             option.data("code5", result.code5);
-                            option.data("address", result.address);
-                            option.data("english_address", result.english_address);
-                            option.data("jibeon_address", result.jibeon_address);
-                            option.data("extra_info_long", result.extra_info_long);
-                            option.data("extra_info_short", result.extra_info_short);
+                            option.data("address", result.address.base + " " + result.address.new);
+                            option.data("jibeon_address", result.address.base + " " + result.address.old);
+                            option.data("english_address", result.english.new + ", " + result.english.base);
+                            option.data("english_jibeon_address", result.english.old + ", " + result.english.base);
+                            option.data("extra_info_long", result.other.long);
+                            option.data("extra_info_short", result.other.short);
                             
                             // 클릭할 링크를 생성한다.
                             
+                            var main_text;
+                            var extra_text;
+                            
+                            if (typeof data.lang !== "undefined" && data.lang === "EN") {
+                                if (typeof data.sort !== "undefined" && data.sort === "JUSO") {
+                                    main_text = result.english.new + ", " + result.english.base;
+                                    extra_text = result.english.old;
+                                } else {
+                                    main_text = result.english.old + ", " + result.english.base;
+                                    extra_text = result.english.new;
+                                }
+                            } else {
+                                if (typeof data.sort !== "undefined" && data.sort === "JUSO") {
+                                    main_text = result.address.base + " " + result.address.new;
+                                    extra_text = result.other.long;
+                                } else {
+                                    main_text = result.address.base + " " + result.address.old;
+                                    extra_text = result.address.new;
+                                }
+                            }
+                            
                             var selector = $('<a class="selector" href="#"></a>');
-                            selector.append($('<span class="address_info"></span>').text(result.address));
-                            if (result.extra_info_long) {
-                                selector.append($('<span class="extra_info"></span>').append("(" + result.extra_info_long + ")"));
+                            selector.append($('<span class="address_info"></span>').text(main_text));
+                            if (extra_text !== null && extra_text !== "") {
+                                selector.append($('<span class="extra_info"></span>').append("(" + extra_text + ")"));
                             }
                             
                             // 우편번호, 기초구역번호, 주소 등을 항목에 추가한다.
@@ -271,10 +304,15 @@
                             
                             // 예전 주소 및 검색어 목록을 추가한다.
                             
-                            if (result.other) {
-                                var oldAddrLink = $('<a href="#" class="show_old_addresses" title="관련지번 보기">▼</a>');
+                            if (typeof data.lang !== "undefined" && data.lang === "EN") {
+                                result.other.others = result.other.others.replace(/산([0-9]+)/g, "San $1");
+                                result.other.others = result.other.others.replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " ").trim();
+                            }
+                            
+                            if (result.other.others !== "") {
+                                var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>').attr("title", info.translations[settings.language].msgShowOthers);
                                 oldAddrLink.appendTo(option.find("div.address"));
-                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(result.other);
+                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(result.other.others);
                                 if (settings.hideOldAddresses) oldAddrDiv.css("display", "none");
                                 oldAddrDiv.appendTo(option);
                             }
@@ -288,8 +326,8 @@
                                 } else {
                                     mapurl = settings.mapLinkProvider;
                                 }
-                                mapurl = mapurl.replace("$JUSO", encodeURIComponent(result.address).replace(/%20/g, '+'));
-                                mapurl = mapurl.replace("$JIBEON", encodeURIComponent(result.jibeon_address).replace(/%20/g, '+'));
+                                mapurl = mapurl.replace("$JUSO", encodeURIComponent(result.address.base + " " + result.address.new).replace(/%20/g, '+'));
+                                mapurl = mapurl.replace("$JIBEON", encodeURIComponent(result.address.base + " " + result.address.old).replace(/%20/g, '+'));
                                 var maplink = $('<a target="_blank"></a>').attr("href", mapurl).html(settings.mapLinkContent);
                                 $('<div class="map_link"></div>').append(maplink).appendTo(option);
                             }
@@ -379,8 +417,9 @@
                 if (settings.insertPostcode6) $(settings.insertPostcode6).val(entry.data("code6"));
                 if (settings.insertPostcode5) $(settings.insertPostcode5).val(entry.data("code5"));
                 if (settings.insertAddress) $(settings.insertAddress).val(entry.data("address"));
-                if (settings.insertEnglishAddress) $(settings.insertEnglishAddress).val(entry.data("english_address"));  // v1.4.2+
-                if (settings.insertJibeonAddress) $(settings.insertJibeonAddress).val(entry.data("jibeon_address"));  // v1.2+
+                if (settings.insertJibeonAddress) $(settings.insertJibeonAddress).val(entry.data("jibeon_address"));
+                if (settings.insertEnglishAddress) $(settings.insertEnglishAddress).val(entry.data("english_address"));
+                if (settings.insertEnglishJibeonAddress) $(settings.insertEnglishJibeonAddress).val(entry.data("english_jibeon_address"));
                 if (settings.insertExtraInfo) {
                     var extra_info = settings.useFullJibeon ? entry.data("extra_info_long") : entry.data("extra_info_short");
                     if (extra_info.length) extra_info = "(" + extra_info + ")";
@@ -406,13 +445,13 @@
             
             results.on("click", "a.show_old_addresses", function(event) {
                 event.preventDefault();
-                var old_addresses = $(this).parent().siblings(".old_addresses");
-                if (old_addresses.is(":visible")) {
+                var oldAddrDiv = $(this).parent().siblings(".old_addresses");
+                if (oldAddrDiv.is(":visible")) {
                     $(this).html("&#9660;");
-                    old_addresses.hide();
+                    oldAddrDiv.hide();
                 } else {
                     $(this).html("&#9650;");
-                    old_addresses.show();
+                    oldAddrDiv.show();
                 }
             });
             
@@ -422,7 +461,7 @@
             
             // 셋팅 완료 콜백을 호출한다.
             
-            settings.ready();
+            settings.onReady();
             
             // jQuery 관례에 따라 this를 반환한다.
             
@@ -443,6 +482,41 @@
         daum : "http://map.daum.net/?map_type=TYPE_MAP&urlLevel=3&q=$JUSO",
         naver : "http://map.naver.com/?mapMode=0&dlevel=12&query=$JUSO",
         google : "http://www.google.com/maps/place/대한민국+$JUSO"
+    };
+    
+    // 언어 설정.
+    
+    info.translations = {
+        ko : {
+            errorError : "검색 서버와 통신 중 오류가 발생하였습니다.\n잠시 후 다시 시도해 주시기 바랍니다.",
+            errorEmpty : "검색 결과가 없습니다. 주소가 정확한지 다시 확인해 주십시오.\n띄어쓰기에 유의하시기 바랍니다.",
+            errorQuota : "일일 허용 쿼리수를 초과하였습니다.\n관리자에게 문의해 주시기 바랍니다.",
+            errorTooShort : "검색어는 3글자 이상 입력해 주시기 바랍니다.",
+            errorTooMany : "검색 결과가 너무 많아 100건까지만 표시합니다.\n행정구역명, 번지수 등을 사용하여 좀더 자세히 검색해 주시기 바랍니다.",
+            msgResultCount : "검색 결과",
+            msgResultCountSuffix : "건",
+            msgSearchTime : "검색 소요시간",
+            msgNetworkTime : "통신 지연시간",
+            msgSeeOthers : "관련지번 보기",
+            msgSearch : "검색",
+            msgMap : "지도",
+            msgSecond : "초"
+        },
+        en : {
+            errorError : "An error occurred while communicating to the search server.\nPlease try again later.",
+            errorEmpty : "No addresses matched your search.\nPlease check if your search terms are accurately spelled.",
+            errorQuota : "This website and/or your IP address has exceeded its daily search quota.\nPlease contact the administrator.",
+            errorTooShort : "Please enter at least 3 characters.",
+            errorTooMany : "Your search returned too many results. Only the first 100 items are shown below.\nPlease be more specific.",
+            msgResultCount : "Search results",
+            msgResultCountSuffix : "",
+            msgSearchTime : "Search duration",
+            msgNetworkTime : "Network delay",
+            msgSeeOthers : "See related addresses",
+            msgSearch : "Search",
+            msgMap : "Map",
+            msgSecond : "s"
+        }
     };
     
     // 로딩중임을 표시하는 GIF 애니메이션 파일.
