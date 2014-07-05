@@ -91,6 +91,12 @@ if (count(glob(TXT_DIRECTORY . '/부가정보_*.zip')) < 14)
     exit(1);
 }
 
+if (!file_exists(TXT_DIRECTORY . '/english_aliases_DB.zip'))
+{
+    echo '[ERROR] 영문 번역 (english_aliases_DB.zip) 파일을 찾을 수 없습니다.' . "\n\n";
+    exit(1);
+}
+
 if (!file_exists(TXT_DIRECTORY . '/newaddr_pobox_DB.zip'))
 {
     echo '[ERROR] 사서함 (newaddr_pobox_DB.zip) 파일을 찾을 수 없습니다.' . "\n\n";
@@ -155,23 +161,20 @@ echo "\n";
 // 전체 도로명 코드 및 소속 행정구역 데이터를 메모리로 불러온다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 2/9] 도로 목록 및 영문 명칭을 메모리에 읽어들이는 중 ... ' . "\n\n";
+echo '[Step 2/9] 도로 목록 및 행정구역 데이터를 읽어들이는 중 ... ' . "\n\n";
 
 $english_synonyms = array();
 $english_cache = array();
 $roads = array();
 $roads_count = 0;
 
-// 파일을 연다.
-
 $filename = TXT_DIRECTORY . '/도로명코드_전체분.zip';
 echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
 
-$db = get_db();
-$ps_synonym = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
-
 // 트랜잭션을 시작한다.
 
+$db = get_db();
+$ps_synonym = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
 $db->beginTransaction();
 
 // 압축 파일을 연다.
@@ -216,7 +219,7 @@ while ($line = trim(fgets($fp)))
         $ilbangu = '';
     }
     
-    // 영문 주소를 읽어들인다.
+    // 영문 주소를 캐싱한다.
     
     $english = array();
     $english[] = $english_road_name = trim($line[2]);
@@ -231,7 +234,8 @@ while ($line = trim(fgets($fp)))
     {
         $english_synonyms[$road_name] = true;
         $english_road_name = preg_replace('/[^a-z0-9]/', '', strtolower($english_road_name));
-        $ps_synonym->execute(array(crc32_x64($english_road_name), crc32_x64($road_name)));
+        $korean_road_name = get_canonical($road_name);
+        $ps_synonym->execute(array(crc32_x64($english_road_name), crc32_x64(get_canonical($korean_road_name))));
     }
     
     // 도로 정보를 메모리에 저장한다.
@@ -263,13 +267,81 @@ unset($zip);
 // 트랜잭션을 마친다.
 
 $db->commit();
+unset($english_synonyms);
 unset($ps_synonym);
+
+// -------------------------------------------------------------------------------------------------
+// 영문 번역 데이터를 메모리로 불러온다.
+// -------------------------------------------------------------------------------------------------
+
+echo '[Step 3/9] 영문 번역 데이터를 읽어들이는 중 ... ' . "\n\n";
+
+$eng_count = 0;
+
+// 트랜잭션을 시작한다.
+
+$db = get_db();
+$ps_synonym = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
+$db->beginTransaction();
+        
+// 압축 파일을 연다.
+
+$filename = TXT_DIRECTORY . '/english_aliases_DB.zip';
+echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
+
+$zip = new ZipArchive;
+$zip->open($filename);
+for ($fi = 0; $fi < $zip->numFiles; $fi++)
+{
+    $fp = $zip->getStream($zip->getNameIndex($fi));
+    while ($line = trim(fgets($fp)))
+    {
+        // 한 줄을 읽어 쉼표를 기준으로 데이터를 쪼갠다.
+        
+        $line = explode('|', trim($line));
+        if (count($line) < 2) continue;
+        
+        // 영문 주소를 캐싱한다.
+        
+        $english_cache[$line[0]] = $line[1];
+        
+        // postcodify_keywords_synonyms 테이블에 삽입한다.
+        
+        $line[0] = get_canonical($line[0]);
+        $line[1] = preg_replace('/[^a-z0-9]/', '', strtolower($line[1]));
+        $ps_synonym->execute(array($line[1], $line[0]));
+        
+        // 상태를 표시한다.
+        
+        if ($eng_count % 256 == 0)
+        {
+            echo "\033[10D" . str_pad(number_format($eng_count, 0), 10, ' ', STR_PAD_LEFT);
+        }
+        
+        $eng_count++;
+        
+        // 가비지 컬렉션.
+        
+        unset($line);
+    }
+}
+
+// 마무리...
+
+echo "\033[10D" . str_pad(number_format($eng_count, 0), 10, ' ', STR_PAD_LEFT) . "\n\n";
+$zip->close();
+unset($zip);
+
+// 트랜잭션을 마친다.
+
+$db->commit();
+unset($eng_count);
 
 // -------------------------------------------------------------------------------------------------
 // 상세건물명 데이터를 메모리로 불러온다. 나중에 부가정보와 함께 DB에 입력된다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 3/9] 상세건물명 데이터를 메모리에 읽어들이는 중 ... ' . "\n\n";
+echo '[Step 4/9] 상세건물명 데이터를 읽어들이는 중 ... ' . "\n\n";
 
 $buildings = array();
 $buildings_count = 0;
@@ -334,7 +406,7 @@ unset($zip);
 // 시도별 주소 파일에서 도로명주소 데이터를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 4/9] 쓰레드를 사용하여 "주소" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 5/9] 쓰레드를 사용하여 "주소" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/주소_*.zip');
 $children = array();
@@ -418,8 +490,10 @@ while (count($files))
                 
                 // 영문 주소를 작성한다.
                 
-                $english = $num_major . ($num_minor ? ('-' . $num_minor) : '') . ', '. $road_info[5];
+                $english_road_name = explode(', ', $road_info[5], 2);
+                $english = $num_major . ($num_minor ? ('-' . $num_minor) : '') . ', ' . $english_road_name[0];
                 if ($is_basement) $english = 'Jiha ' . $english;
+                $english = $english_road_name[1] . "\n" . $english;
                 
                 // postcodify_addresses 테이블에 삽입한다.
                 
@@ -476,7 +550,7 @@ unset($roads);
 // 시도별 지번 파일에서 지번주소와 도로명주소간의 맵핑 데이터를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 5/9] 쓰레드를 사용하여 "지번" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 6/9] 쓰레드를 사용하여 "지번" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/지번_*.zip');
 $children = array();
@@ -504,7 +578,8 @@ while (count($files))
         
         $db = get_db();
         $ps_address_update1 = $db->prepare('UPDATE postcodify_addresses ' .
-            'SET dongri = ?, jibeon_major = ?, jibeon_minor = ?, is_mountain = ? ' .
+            'SET dongri = ?, jibeon_major = ?, jibeon_minor = ?, is_mountain = ?, ' .
+            'english_address = CONCAT_WS(\'\\n\', english_address, ?) ' .
             'WHERE id = ?');
         $ps_address_update2 = $db->prepare('UPDATE postcodify_addresses ' .
             'SET other_addresses = CONCAT_WS(\'\\n\', other_addresses, ?) ' .
@@ -538,22 +613,33 @@ while (count($files))
                 $address_id = trim($line[0]);
                 $dongri = trim($line[6]);
                 if ($dongri === '') $dongri = trim($line[5]);
+                $dongri = preg_replace('/\\(.+\\)/', '', $dongri);
                 
                 $num_major = (int)trim($line[8]); if (!$num_major) $num_major = null;
                 $num_minor = (int)trim($line[9]); if (!$num_minor) $num_minor = null;
                 $is_mountain = (int)trim($line[7]);
                 $is_canonical = (int)trim($line[10]);
                 
-                // postcodify_addresses 테이블의 해당 레코드에 법정동 및 지번 정보를 추가한다.
+                // 영문 지번주소를 작성한다.
                 
-                $combined_jibeon = (($is_mountain ? '산' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : ''));
-                
-                if ($is_canonical)
+                if (isset($english_cache[$dongri]))
                 {
-                    $ps_address_update1->execute(array($dongri, $num_major, $num_minor, ($is_mountain ? 1 : 0), $address_id));
+                    $english = (($is_mountain ? 'San ' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : '')) . ', ' . $english_cache[$dongri];
                 }
                 else
                 {
+                    $english = '';
+                }
+                
+                // postcodify_addresses 테이블의 해당 레코드에 법정동 및 지번 정보를 추가한다.
+                
+                if ($is_canonical)
+                {
+                    $ps_address_update1->execute(array($dongri, $num_major, $num_minor, ($is_mountain ? 1 : 0), $english, $address_id));
+                }
+                else
+                {
+                    $combined_jibeon = (($is_mountain ? '산' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : ''));
                     $ps_address_update2->execute(array($dongri . ' ' . $combined_jibeon, $address_id));
                 }
                 
@@ -603,7 +689,7 @@ echo "\n";
 // 시도별 부가정보 파일에서 행정동명, 건물명, 6자리 우편번호를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 6/9] 쓰레드를 사용하여 "부가정보" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 7/9] 쓰레드를 사용하여 "부가정보" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/부가정보_*.zip');
 $children = array();
@@ -883,7 +969,7 @@ echo "\n";
 // 사서함 파일을 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 7/9] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
+echo '[Step 8/9] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
 
 // 준비.
 
@@ -1006,54 +1092,6 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
         // 가비지 컬렉션.
         
         if (isset($num_array)) unset($num_array);
-        unset($line);
-    }
-}
-
-// 트랜잭션을 마친다.
-
-$db->commit();
-$zip->close();
-unset($zip);
-
-// -------------------------------------------------------------------------------------------------
-// 영문 주소 파일을 입력한다.
-// -------------------------------------------------------------------------------------------------
-
-echo '[Step 8/9] 영문 주소 데이터를 로딩하는 중 ... ' . "\n\n";
-
-// 준비.
-
-$db = get_db();
-$ps_synonym = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
-
-// 트랜잭션을 시작한다.
-
-$db->beginTransaction();
-        
-// 파일을 연다.
-
-$filename = TXT_DIRECTORY . '/englishnames.zip';
-echo '  -->  ' . basename($filename) . ' ... ' . "\n\n";
-
-$zip = new ZipArchive;
-$zip->open($filename);
-for ($fi = 0; $fi < $zip->numFiles; $fi++)
-{
-    $fp = $zip->getStream($zip->getNameIndex($fi));
-    while ($line = trim(fgets($fp)))
-    {
-        // 한 줄을 읽어 쉼표를 기준으로 데이터를 쪼갠다.
-        
-        $line = explode(',', $line);
-        if (count($line) < 2 || !ctype_digit($line[0])) continue;
-        
-        // postcodify_keywords_synonyms 테이블에 삽입한다.
-        
-        $ps_synonym->execute($line);
-        
-        // 가비지 컬렉션.
-        
         unset($line);
     }
 }

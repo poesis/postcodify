@@ -21,7 +21,7 @@ define('CURL_USER_AGENT', 'Mozilla/5.0 (Compatible; Postcodify Downloader)');
 define('RELATIVE_DOMAIN', 'http://www.juso.go.kr');
 define('LIST_URL', 'http://www.juso.go.kr/notice/OpenArchivesList.do?currentPage=1&countPerPage=20&noticeKd=26&type=matching');
 define('POBOX_URL', 'http://www.epost.go.kr/search/zipcode/newaddr_pobox_DB.zip');
-define('ENGLISH_URL', 'http://storage.poesis.kr/downloads/englishnames/englishnames.zip');
+define('ENGLISH_URL', 'http://storage.poesis.kr/downloads/english/english_aliases_DB.zip');
 define('FIND_ENTRIES_REGEXP', '#<td class="subject">(.+)</td>#isU');
 define('FIND_LINKS_IN_ENTRY_REGEXP', '#<a href="([^"]+)">#iU');
 define('FIND_DATA_DATE_REGEXP', '#\\((20[0-9][0-9])년 ([0-9]+)월 ([0-9]+)일 기준\\)#uU');
