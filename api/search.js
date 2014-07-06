@@ -252,12 +252,12 @@
                             option.data("dbid", result.dbid);
                             option.data("code6", result.code6);
                             option.data("code5", result.code5);
-                            option.data("address", result.address.base + " " + result.address.new);
-                            option.data("jibeon_address", result.address.base + " " + result.address.old);
-                            option.data("english_address", result.english.new + ", " + result.english.base);
-                            option.data("english_jibeon_address", result.english.old + ", " + result.english.base);
-                            option.data("extra_info_long", result.other.long);
-                            option.data("extra_info_short", result.other.short);
+                            option.data("address", result.address.base + " " + result.address["new"]);
+                            option.data("jibeon_address", result.address["base"] + " " + result.address["old"]);
+                            option.data("english_address", result.english["new"] + ", " + result.english["base"]);
+                            option.data("english_jibeon_address", result.english["old"] + ", " + result.english["base"]);
+                            option.data("extra_info_long", result.other["long"]);
+                            option.data("extra_info_short", result.other["short"]);
                             
                             // 반환된 데이터의 언어, 정렬 방법에 따라 클릭할 링크를 생성한다.
                             
@@ -268,20 +268,20 @@
                             if (typeof data.lang !== "undefined" && data.lang === "EN") {
                                 resultLanguage = "en";
                                 if (typeof data.sort !== "undefined" && data.sort === "JUSO") {
-                                    mainText = result.english.new + ", " + result.english.base;
-                                    extraText = result.english.old;
+                                    mainText = result.english["new"] + ", " + result.english["base"];
+                                    extraText = result.english["old"];
                                 } else {
-                                    mainText = result.english.old + ", " + result.english.base;
-                                    extraText = result.english.new;
+                                    mainText = result.english["old"] + ", " + result.english["base"];
+                                    extraText = result.english["new"];
                                 }
                             } else {
                                 resultLanguage = "ko";
                                 if (typeof data.sort !== "undefined" && data.sort === "JUSO") {
-                                    mainText = result.address.base + " " + result.address.new;
-                                    extraText = result.other.long;
+                                    mainText = result.address["base"] + " " + result.address["new"];
+                                    extraText = result.other["long"];
                                 } else {
-                                    mainText = result.address.base + " " + result.address.old;
-                                    extraText = result.address.new;
+                                    mainText = result.address["base"] + " " + result.address["old"];
+                                    extraText = result.address["new"];
                                 }
                             }
                             
@@ -300,14 +300,14 @@
                             // 예전 주소 및 검색어 목록을 추가한다.
                             
                             if (typeof data.lang !== "undefined" && data.lang === "EN") {
-                                result.other.others = result.other.others.replace(/\uc0b0([0-9]+)/g, "San $1");
-                                result.other.others = result.other.others.replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " ").trim();
+                                result.other["others"] = result.other["others"].replace(/\uc0b0([0-9]+)/g, "San $1");
+                                result.other["others"] = $.trim(result.other["others"].replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " "));
                             }
                             
-                            if (result.other.others !== "") {
+                            if (result.other["others"] !== "") {
                                 var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>').attr("title", info.translations[resultLanguage].msgShowOthers);
                                 oldAddrLink.appendTo(option.find("div.address"));
-                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(result.other.others);
+                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(result.other["others"]);
                                 if (settings.hideOldAddresses) oldAddrDiv.css("display", "none");
                                 oldAddrDiv.appendTo(option);
                             }
@@ -321,8 +321,8 @@
                                 } else {
                                     mapurl = settings.mapLinkProvider;
                                 }
-                                mapurl = mapurl.replace("$JUSO", encodeURIComponent(result.address.base + " " + result.address.new).replace(/%20/g, '+'));
-                                mapurl = mapurl.replace("$JIBEON", encodeURIComponent(result.address.base + " " + result.address.old).replace(/%20/g, '+'));
+                                mapurl = mapurl.replace("$JUSO", encodeURIComponent(result.address["base"] + " " + result.address["new"]).replace(/%20/g, '+'));
+                                mapurl = mapurl.replace("$JIBEON", encodeURIComponent(result.address["base"] + " " + result.address["old"]).replace(/%20/g, '+'));
                                 var mapLinkContent = (settings.mapLinkContent !== null) ? settings.mapLinkContent : info.translations[resultLanguage].msgMap;
                                 var maplink = $('<a target="_blank"></a>').attr("href", mapurl).html(mapLinkContent);
                                 $('<div class="map_link"></div>').append(maplink).appendTo(option);
