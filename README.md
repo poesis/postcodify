@@ -19,22 +19,23 @@
 이미 jQuery를 사용하고 있는 경우에는 `search.min.js` 파일만 로딩하십시오.
 
     <div id="postcodify"></div>
-    <script src="//cdn.jsdelivr.net/jquery/1.11.1/jquery.min.js"></script>
-    <script src="//cdn.jsdelivr.net/jquery.postcodify/latest/search.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <script src="//d1p7wdleee1q2z.cloudfront.net/post/search.min.js"></script>
     <script type="text/javascript">
         $("#postcodify").postcodify();
     </script>
 
-위의 예제는 jQuery와 Postcodify를 [jsDelivr](http://www.jsdelivr.com/) CDN에서 불러옵니다.
-jsDelivr는 MaxCDN, CloudFlare 등 여러 CDN 네트워크와 제휴하여 한국을 비롯한 세계 40여 곳에 서버를 두고 있으며,
-Postcodify가 업데이트될 경우에도 자동으로 최신 버전으로 업데이트됩니다.
-페이지 로딩 속도와 안정성을 위해 가능하면 위의 경로를 사용하시기 바랍니다.
+위의 예제는 구글 CDN에서 jQuery를 불러오고, CloudFront CDN에서 Postcodify를 불러옵니다.
+그 밖에도 [jsDelivr](http://www.jsdelivr.com/), [CDNJS](http://www.cdnjs.com/) 등의 CDN에서
+jQuery와 Postcodify를 불러올 수 있으니 필요에 따라 사용하시기 바랍니다.
+단, 다른 CDN을 사용할 경우 최신 버전이 적용되는 데 다소 시간이 걸릴 수 있습니다.
 
-다른 CDN을 사용하시거나, jsDelivr CDN이 다운된 경우 자동으로 다른 CDN을 호출하도록 하려면 `example` 폴더의 예제를 참조하십시오.
+**무료 API를 사용하실 경우 반드시 위와 같이 CDN을 통해 `search.min.js`를 불러오시기 바랍니다.**
+자체 서버에 복사해 두고 사용하실 경우 업데이트가 원활하게 이루어지지 않아
+1~2년 후 무료 API 서버와 호환되지 않는 문제가 발생할 수 있습니다.
 
-무료 API를 사용하실 경우 반드시 CDN을 통해 `search.min.js`를 로딩하시기 바랍니다.
-자체 서버에 복사해 두고 로딩하실 경우, 추후 Postcodify가 업데이트되면 검색 서버의 버전과 맞지 않아 오류가 발생할 수 있습니다.
-단, 검색 서버를 직접 구축하신 경우에는 같은 버전을 유지하기 위해 자체 서버에 복사하여 사용하시기 바랍니다.
+검색 서버를 직접 구축하신 경우에는 서버와 클라이언트의 호환성을 유지하기 위해
+자체 서버에 `search.min.js`를 복사하여 사용하시기 바랍니다.
 
 위의 예제는 기본 사용법입니다. `postcodify()`를 호출하면 즉시 검색 기능을 사용할 수 있으나,
 검색 결과를 폼에 입력하려면 아래와 같이 설정을 변경하여
