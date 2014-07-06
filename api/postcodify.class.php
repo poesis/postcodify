@@ -23,41 +23,35 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.7.1';
+    const VERSION = '1.8';
     
-    // DB 커넥션 핸들을 저장하는 변수들.
+    // DB 설정을 저장하는 변수.
     
-    protected static $dbh;
-    protected static $dbh_extension;
-    
-    // DB 설정을 저장하는 변수들.
-    
-    protected static $db_host;
-    protected static $db_port;
-    protected static $db_user;
-    protected static $db_pass;
-    protected static $db_dbname;
-    protected static $db_driver;
+    protected static $db_config = array();
     
     // DB 설정을 전달하는 메소드. search() 메소드 호출 전에 반드시 먼저 호출해야 한다.
     // SQLite 사용시에는 $dbname에 파일명을 입력해 주도록 한다.
     
     public static function dbconfig($host, $port, $user, $pass, $dbname, $driver = 'mysql')
     {
-        self::$db_host = $host;
-        self::$db_port = $port;
-        self::$db_user = $user;
-        self::$db_pass = $pass;
-        self::$db_dbname = $dbname;
-        self::$db_driver = $driver;
+        self::$db_config['host'] = $host;
+        self::$db_config['port'] = $port;
+        self::$db_config['user'] = $user;
+        self::$db_config['pass'] = $pass;
+        self::$db_config['dbname'] = $dbname;
+        self::$db_config['driver'] = strtolower($driver);
     }
     
     // 실제 검색을 수행하는 메소드. Postcodify_Result 객체를 반환한다.
     // 인코딩의 경우 EUC-KR을 사용하려면 CP949라고 입력해 주어야 한다.
     // 새주소 중 EUC-KR에서 지원되지 않는 문자가 포함된 것도 있기 때문이다.
     
-    public static function search($kw, $encoding = 'UTF-8')
+    public static function search($kw, $encoding = 'UTF-8', $version = null)
     {
+        // 버전을 확인한다.
+        
+        if ($version === null) $version = self::VERSION;
+        
         // 검색 시작 시각을 기록한다.
         
         $start_time = microtime(true);
@@ -81,6 +75,8 @@ class Postcodify
             return new Postcodify_Result('Keyword is Too Long or Too Short');
         }
         
+        // 검색 키워드를 분석한다.
+        
         $kw = self::parse_keywords($kw);
         
         // DB에 연결하여 검색 쿼리를 실행한다.
@@ -91,20 +87,40 @@ class Postcodify
             
             $extra_params = $kw->use_area ? array($kw->sido, $kw->sigungu, $kw->ilbangu, $kw->eupmyeon) : array();
             
+            // 우편번호로 검색하는 경우...
+            
+            if ($kw->postcode !== null)
+            {
+                // 자릿수에 따라 별도로 검색한다.
+                
+                if (strlen($kw->postcode) === 6)
+                {
+                    $rows = self::call_db_procedure('postcodify_search_postcode6', array($kw->postcode), array());
+                }
+                else
+                {
+                    $rows = self::call_db_procedure('postcodify_search_postcode5', array($kw->postcode), array());
+                }
+            }
+            
             // 도로명주소로 검색하는 경우...
             
-            if ($kw->road !== null)
+            elseif ($kw->road !== null)
             {
-                $rows = self::call_db_procedure('postcode_search_juso',
-                    array(self::crc32_x64($kw->road), $kw->numbers[0], $kw->numbers[1]), $extra_params);
+                // 일단 도로명으로 검색해 본다.
                 
-                // 검색 결과가 없다면 도로번호를 건물번호로 잘못 해석했을 수도 있으므로 조합을 바꾸어 다시 시도해 본다.
+                $road_crc32 = $kw->is_english ? $kw->road : self::crc32_x64($kw->road);
+                $rows = self::call_db_procedure('postcodify_search_juso',
+                    array($road_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
                 
-                if (!count($rows) && $kw->numbers[1] === null)
+                // 도로번호를 건물번호로 잘못 해석했을 수도 있으므로 조합을 바꾸어 다시 시도해 본다.
+                
+                if (count($rows) < 100 && $kw->numbers[1] === null && !$kw->is_english)
                 {
-                    $possible_road_name = self::crc32_x64($kw->road . $kw->numbers[0] . '번길');
-                    $rows = self::call_db_procedure('postcode_search_juso',
-                        array($possible_road_name, $kw->extra_numbers[0], $kw->extra_numbers[1]), $extra_params);
+                    $possible_road_name = self::crc32_x64($kw->road . $kw->numbers[0]);
+                    $rows = array_merge($rows, self::call_db_procedure('postcodify_search_juso',
+                        array($possible_road_name, $kw->extra_numbers[0], $kw->extra_numbers[1]), $extra_params));
+                    $rows = array_slice($rows, 0, 100);
                 }
             }
             
@@ -112,14 +128,21 @@ class Postcodify
             
             elseif ($kw->dongri !== null && $kw->building === null)
             {
-                $rows = self::call_db_procedure('postcode_search_jibeon',
-                    array(self::crc32_x64($kw->dongri), $kw->numbers[0], $kw->numbers[1]), $extra_params);
+                // 일단 동리로 검색해 본다.
+                
+                $dongri_crc32 = $kw->is_english ? $kw->dongri : self::crc32_x64($kw->dongri);
+                $rows = self::call_db_procedure('postcodify_search_jibeon',
+                    array($dongri_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
                 
                 // 검색 결과가 없다면 건물명을 동리로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
                 
-                if ($kw->numbers[0] === null && $kw->numbers[1] === null && !count($rows))
+                if ($kw->numbers[0] === null && $kw->numbers[1] === null && !count($rows) && !$kw->is_english)
                 {
-                    $rows = self::call_db_procedure('postcode_search_building', array($kw->dongri), $extra_params);
+                    $rows = self::call_db_procedure('postcodify_search_building', array($kw->dongri), $extra_params);
+                }
+                else
+                {
+                    $sort_by_jibeon = true;
                 }
             }
             
@@ -127,7 +150,7 @@ class Postcodify
             
             elseif ($kw->building !== null && $kw->dongri === null)
             {
-                $rows = self::call_db_procedure('postcode_search_building',
+                $rows = self::call_db_procedure('postcodify_search_building',
                     array($kw->building), $extra_params);
             }
             
@@ -135,7 +158,7 @@ class Postcodify
             
             elseif ($kw->building !== null && $kw->dongri !== null)
             {
-                $rows = self::call_db_procedure('postcode_search_building_with_dongri',
+                $rows = self::call_db_procedure('postcodify_search_building_with_dongri',
                     array($kw->building, self::crc32_x64($kw->dongri)), $extra_params);
             }
             
@@ -143,7 +166,7 @@ class Postcodify
             
             elseif ($kw->pobox !== null)
             {
-                $rows = self::call_db_procedure('postcode_search_pobox',
+                $rows = self::call_db_procedure('postcodify_search_pobox',
                     array($kw->pobox, $kw->numbers[0], $kw->numbers[1]), $extra_params);
             }
             
@@ -164,44 +187,77 @@ class Postcodify
         
         $result = new Postcodify_Result;
         
+        // 검색 언어를 기록한다.
+        
+        $result->lang = $kw->is_english ? 'EN' : 'KO';
+        
+        // 정렬 방식을 기록한다.
+        
+        $result->sort = isset($sort_by_jibeon) ? 'JIBEON' : 'JUSO';
+        
+        // 각 레코드를 추가한다.
+        
         foreach ($rows as $row)
         {
-            // 도로명 및 지번주소를 정리한다.
+            // 한글 도로명 및 지번주소를 정리한다.
             
             $address_base = trim($row->sido . ' ' . ($row->sigungu ? ($row->sigungu . ' ') : '') .
                 ($row->ilbangu ? ($row->ilbangu . ' ') : '') . ($row->eupmyeon ? ($row->eupmyeon . ' ') : ''));
-                
-            $address_road = $address_base . ' ' . $row->road_name . ' ' . ($row->is_basement ? '지하 ' : '') . ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : '');
-            $address_old = $address_base . ' ' . $row->dongri . ($row->jibeon ? (' ' . $row->jibeon) : '');
+            $address_new = trim($row->road_name . ' ' . ($row->is_basement ? '지하 ' : '') .
+                ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : ''));
+            $address_old = trim($row->dongri . ' ' . ($row->is_mountain ? '산' : '') .
+                ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : ''));
+            
+            // 영문 도로명 및 지번주소를 정리한다.
+            
+            $english_address = explode("\n", $row->english_address, 3);
+            if (count($english_address) === 3)
+            {
+                $english_base = $english_address[0];
+                $english_new = $english_address[1];
+                $english_old = $english_address[2];
+            }
+            else
+            {
+                $english_base = $english_address[0];
+                $english_new = '';
+                $english_old = '';
+            }
             
             // 추가정보를 정리한다.
             
-            $address_extra_long = '';
-            $address_extra_short = '';
-            if (strval($row->dongri) !== '')
+            $extra_info_long = trim($address_old . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+            $extra_info_short = trim($row->dongri . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+            
+            // 요청받은 버전에 따라 다른 형태로 작성한다.
+            
+            if (version_compare($version, '1.8', '>='))
             {
-                $address_extra_long = $row->dongri . ($row->jibeon ? (' ' . $row->jibeon) : '');
-                $address_extra_short = $row->dongri;
+                $record = new Postcodify_Result_Record_v18;
+                $record->dbid = substr($row->id, 0, 10) === '9999999999' ? '' : $row->id;
+                $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
+                $record->code5 = strval($row->postcode5);
+                $record->address = array('base' => $address_base, 'new' => $address_new, 'old' => $address_old, 'building' => $row->building_name);
+                $record->english = array('base' => $english_base, 'new' => $english_new, 'old' => $english_old, 'building' => '');
+                $record->other = array('long' => strval($extra_info_long), 'short' => strval($extra_info_short), 'others' => strval($row->other_addresses));
             }
-            if (strval($row->building_name) !== '')
+            else
             {
-                $address_extra_long .= ', ' . $row->building_name;
-                $address_extra_short .= ', ' . $row->building_name;
+                $record = new Postcodify_Result_Record_v17;
+                $record->dbid = substr($row->id, 0, 10) === '9999999999' ? '' : $row->id;
+                $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
+                $record->code5 = strval($row->postcode5);
+                $record->address = trim($address_base . ' ' . $address_new);
+                $record->canonical = $address_old;
+                $record->extra_info_long = strval($extra_info_long);
+                $record->extra_info_short = strval($extra_info_short);
+                $record->english_address = trim($english_base . ' ' . $english_new);
+                $record->jibeon_address = trim($address_base . ' ' . $address_old);
+                $record->other = strval($row->other_addresses);
             }
             
-            // 결과 오브젝트에 추가한다.
+            // 반환할 인코딩이 UTF-8이 아닌 경우 여기서 변환한다.
             
-            $record = new Postcodify_Result_Record;
-            $record->dbid = substr($row->id, 0, 10) === '9999999999' ? '' : $row->id;
-            $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
-            $record->code5 = strval($row->postcode5);
-            $record->address = strval($address_road);
-            $record->canonical = strval($row->dongri . ($row->jibeon ? (' ' . $row->jibeon) : ''));
-            $record->extra_info_long = strval($address_extra_long);
-            $record->extra_info_short = strval($address_extra_short);
-            $record->english_address = isset($row->english_address) ? strval($row->english_address) : '';
-            $record->jibeon_address = strval($address_old);
-            $record->other = strval($row->other_addresses);
             if ($encoding !== 'UTF-8')
             {
                 $properties = get_object_vars($record);
@@ -210,6 +266,9 @@ class Postcodify
                     $record->$key = mb_convert_encoding($value, $encoding, 'UTF-8');
                 }
             }
+            
+            // 레코드를 추가하고 레코드 카운터를 조정한다.
+            
             $result->results[] = $record;
             $result->count++;
         }
@@ -229,133 +288,37 @@ class Postcodify
     {
         // 파라미터 목록을 정리한다.
         
-        if (count($extra_params))
+        if (strpos($proc_name, 'search') !== false)
         {
-            $proc_name .= '_in_area';
-            foreach ($extra_params as $param)
+            if (strpos($proc_name, 'postcode') === false)
             {
-                $params[] = $param;
+                $extra_params = count($extra_params) ? $extra_params : array(null, null, null, null);
+                $params = array_merge($params, $extra_params);
             }
+            $params[] = 100;
+            $params[] = 0;
         }
         
-        // SQLite인 경우 별도의 클래스로 쿼리를 전달한다.
+        // DB 드라이버에 따라 적절한 클래스로 쿼리를 전달한다.
         
-        if (self::$db_driver === 'sqlite')
+        switch (self::$db_config['driver'])
         {
-            require_once dirname(__FILE__) . '/postcodify.sqlite.php';
-            return Postcodify_SQLite::query(self::$db_dbname, $proc_name, $params);
-        }
-        
-        // MySQL인 경우 최초 호출시 DB에 연결한다.
-        
-        if (self::$dbh === null || self::$dbh_extension === null)
-        {
-            // PDO 모듈 사용 (기본값, 권장).
-            
-            if (class_exists('PDO') && in_array('mysql', PDO::getAvailableDrivers()))
-            {
-                self::$dbh_extension = 'pdo';
-                self::$dbh = new PDO('mysql:host=' . self::$db_host . ';port=' . self::$db_port . ';dbname=' . self::$db_dbname . ';charset=utf8',
-                    self::$db_user, self::$db_pass, array(
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_EMULATE_PREPARES => false,
-                        PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
-                    )
-                );
-            }
-            
-            // MySQLi 모듈 사용 (차선책).
-            
-            elseif (class_exists('mysqli'))
-            {
-                self::$dbh_extension = 'mysqli';
-                self::$dbh = @mysqli_connect(self::$db_host, self::$db_user, self::$db_pass, self::$db_dbname, self::$db_port);
-                if (self::$dbh->connect_error) throw new Exception(self::$dbh->connect_error);
-                $charset = @self::$dbh->set_charset('utf8');
-                if (!$charset) throw new Exception(self::$dbh->error);
-                $driver = new MySQLi_Driver;
-                $driver->report_mode = MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT;
-            }
-            
-            // MySQL 모듈 사용 (최후의 수단).
-            
-            elseif (function_exists('mysql_connect'))
-            {
-                self::$dbh_extension = 'mysql';
-                self::$dbh = @mysql_connect(self::$db_host . ':' . self::$db_port, self::$db_user, self::$db_pass);
-                if (!self::$dbh) throw new Exception(mysql_error(self::$dbh));
-                $seldb = @mysql_select_db(self::$db_dbname, self::$dbh);
-                if (!$seldb) throw new Exception(mysql_error(self::$dbh));
-                $charset = function_exists('mysql_set_charset') ? @mysql_set_charset('utf8', self::$dbh) : @mysql_query('SET NAMES utf8', self::$dbh);
-                if (!$charset) throw new Exception(mysql_error(self::$dbh));
-            }
-            
-            // 아무 것도 사용할 수 없는 경우 빈 결과를 반환한다.
-            
-            else
-            {
-                return array();
-            }
-        }
-        
-        // 프로시저를 실행한다.
-        // 동리 + 지번 검색처럼 곧이어 다른 검색을 할 경우에 대비하여 쿼리 결과를 깨끗하게 닫아 주어야 한다.
-        
-        switch (self::$dbh_extension)
-        {
-            // PDO 모듈 사용 (기본값, 권장).
-            
-            case 'pdo':
-                $placeholders = implode(', ', array_fill(0, count($params), '?'));
-                $ps = self::$dbh->prepare('CALL ' . $proc_name . '(' . $placeholders . ')');
-                $ps->execute($params);
-                $result = $ps->fetchAll(PDO::FETCH_OBJ);
-                $ps->nextRowset();
-                return $result;
-                
-            // MySQLi 모듈 사용 (차선책).
-            
-            case 'mysqli':
-                $escaped_params = array();
-                foreach ($params as $param)
-                {
-                   $escaped_params[] = $param === null ? 'null' : ("'" . self::$dbh->real_escape_string($param) . "'");
-                }
-                $escaped_params = implode(', ', $escaped_params);
-                $query = self::$dbh->query('CALL ' . $proc_name . '(' . $escaped_params . ')');
-                $result = array();
-                while ($row = $query->fetch_object())
-                {
-                    $result[] = $row;
-                }
-                self::$dbh->next_result();
-                return $result;
-                
-            // MySQL 모듈 사용 (최후의 수단).
+            // MySQL.
             
             case 'mysql':
-                $escaped_params = array();
-                foreach ($params as $param)
-                {
-                   $escaped_params[] = $param === null ? 'null' : ("'" . mysql_real_escape_string($param, self::$dbh) . "'");
-                }
-                $escaped_params = implode(', ', $escaped_params);
-                $query = @mysql_query('CALL ' . $proc_name . '(' . $escaped_params . ')', self::$dbh);
-                if (!$query) throw new Exception(mysql_error(self::$dbh));
-                $result = array();
-                while ($row = mysql_fetch_object($query))
-                {
-                    $result[] = $row;
-                }
-                if ($proc_name === 'postcode_search_jibeon' && !count($result))
-                {
-                    mysql_close(self::$dbh); self::$dbh = null;
-                }
-                return $result;
-                
-            // 아무 것도 사용할 수 없는 경우 빈 결과를 반환한다.
+                require_once dirname(__FILE__) . '/postcodify.mysql.php';
+                return Postcodify_MySQL::query(self::$db_config, $proc_name, $params);
             
-            default: return array();
+            // SQLite.
+            
+            case 'sqlite':
+                require_once dirname(__FILE__) . '/postcodify.sqlite.php';
+                return Postcodify_SQLite::query(self::$db_config['dbname'], $proc_name, $params);
+            
+            // 그 밖의 드라이버는 예외를 던진다.
+            
+            default:
+                throw new Exception('Database driver not supported: ' . self::$db_config['driver']);
         }
     }
     
@@ -375,10 +338,44 @@ class Postcodify
         
         $kw = new Postcodify_Keywords;
         
+        // 검색어에서 불필요한 문자를 제거한다.
+        
+        $str = str_replace(array('.', ',', '(', '|', ')'), ' ', $str);
+        $str = preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', strtolower($str));
+        
+        // 우편번호인지 확인한다.
+        
+        if (preg_match('/^([0-9]{5,6}|[0-9]{3}-[0-9]{3})$/', $str))
+        {
+            $kw->postcode = str_replace('-', '', $str);
+            return $kw;
+        }
+        
+        // 영문 주소인지 확인한다.
+        
+        if (preg_match('/^(?:b|san|jiha)?(?:\\s*|-)([0-9]+)?(?:-([0-9]+))?\\s*([a-z0-9-\x20]+(ro|gil|dong|ri))(?:\\s|$)/', $str, $matches))
+        {
+            $addr_english = self::crc32_x64(preg_replace('/[^a-z0-9]/', '', $matches[3]));
+            if ($addr_synonym = self::call_db_procedure('postcodify_get_synonym', array($addr_english), array()))
+            {
+                if ($matches[4] === 'ro' || $matches[4] === 'gil')
+                {
+                    $kw->road = current($addr_synonym)->result;
+                }
+                else
+                {
+                    $kw->dongri = current($addr_synonym)->result;
+                }
+                $kw->numbers = array($matches[1] ? $matches[1] : null, $matches[2] ? $matches[2] : null);
+                $kw->extra_numbers = array(null, null);
+                $kw->is_english = true;
+                return $kw;
+            }
+        }
+        
         // 검색어를 단어별로 분리한다.
         
-        $str = str_replace(array(',', '(', ')'), ' ', strtolower($str));
-        $str = preg_split('/\\s+/u', preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', $str));
+        $str = preg_split('/\\s+/u', $str);
         
         // 대한민국 행정구역 목록 파일을 로딩한다.
         
@@ -465,7 +462,7 @@ class Postcodify
                 if (isset($matches[3]) && $matches[3])
                 {
                     $kw->numbers = $matches[3];
-                    $kw->extra_numbers = true;
+                    if (strpos($kw->numbers, '-') === false) $kw->extra_numbers = true;
                     break;
                 }
                 continue;
@@ -563,6 +560,7 @@ class Postcodify_Keywords
     public function __toString()
     {
         $result = array();
+        if ($this->postcode !== null) $result[] = $this->postcode;
         if ($this->sido !== null) $result[] = $this->sido;
         if ($this->sigungu !== null) $result[] = $this->sigungu;
         if ($this->ilbangu !== null) $result[] = $this->ilbangu;
@@ -576,6 +574,7 @@ class Postcodify_Keywords
         return implode(' ', $result);
     }
     
+    public $postcode;
     public $sido;
     public $sigungu;
     public $ilbangu;
@@ -588,6 +587,7 @@ class Postcodify_Keywords
     public $extra_numbers;
     public $extra_keywords;
     public $use_area = false;
+    public $is_english = false;
 }
 
 // Postcodify 검색 결과 (전체) 클래스.
@@ -604,12 +604,16 @@ class Postcodify_Result
     public $error = '';
     public $count = 0;
     public $time = 0;
+    public $lang = 'KO';
+    public $sort = 'JUSO';
     public $results = array();
 }
 
 // Postcodify 검색 결과 (각 레코드) 클래스.
 
-class Postcodify_Result_Record
+class Postcodify_Result_Record { }
+
+class Postcodify_Result_Record_v17 extends Postcodify_Result_Record
 {
     public $dbid;
     public $code6;
@@ -620,5 +624,15 @@ class Postcodify_Result_Record
     public $extra_info_short;
     public $english_address;
     public $jibeon_address;
+    public $other;
+}
+
+class Postcodify_Result_Record_v18 extends Postcodify_Result_Record
+{
+    public $dbid;
+    public $code6;
+    public $code5;
+    public $address;
+    public $english;
     public $other;
 }

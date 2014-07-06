@@ -15,8 +15,8 @@
 클라이언트 API는 [jQuery](http://www.jquery.com/) 플러그인으로 제공됩니다.
 
 우편번호 검색 기능이 필요한 웹페이지에 아래와 같이 `<div>`를 생성한 후,
-최근 버전의 jQuery와 `search.js` 파일을 로딩하면 됩니다.
-이미 jQuery를 사용하고 있는 경우에는 `search.js` 파일만 로딩하십시오.
+최근 버전의 jQuery와 `search.min.js` 파일을 로딩하면 됩니다.
+이미 jQuery를 사용하고 있는 경우에는 `search.min.js` 파일만 로딩하십시오.
 
     <div id="postcodify"></div>
     <script src="//cdn.jsdelivr.net/jquery/1.11.1/jquery.min.js"></script>
@@ -25,32 +25,42 @@
         $("#postcodify").postcodify();
     </script>
 
+위의 예제는 jQuery와 Postcodify를 [jsDelivr](http://www.jsdelivr.com/) CDN에서 불러옵니다.
+jsDelivr는 MaxCDN, CloudFlare 등 여러 CDN 네트워크와 제휴하여 한국을 비롯한 세계 40여 곳에 서버를 두고 있으며,
+Postcodify가 업데이트될 경우에도 자동으로 최신 버전으로 업데이트됩니다.
+페이지 로딩 속도와 안정성을 위해 가능하면 위의 경로를 사용하시기 바랍니다.
+
+다른 CDN을 사용하시거나, jsDelivr CDN이 다운된 경우 자동으로 다른 CDN을 호출하도록 하려면 `example` 폴더의 예제를 참조하십시오.
+
+무료 API를 사용하실 경우 반드시 CDN을 통해 `search.min.js`를 로딩하시기 바랍니다.
+자체 서버에 복사해 두고 로딩하실 경우, 추후 Postcodify가 업데이트되면 검색 서버의 버전과 맞지 않아 오류가 발생할 수 있습니다.
+단, 검색 서버를 직접 구축하신 경우에는 같은 버전을 유지하기 위해 자체 서버에 복사하여 사용하시기 바랍니다.
+
 위의 예제는 기본 사용법입니다. `postcodify()`를 호출하면 즉시 검색 기능을 사용할 수 있으나,
 검색 결과를 폼에 입력하려면 아래와 같이 설정을 변경하여
 어떤 `<input>`에 어떻게 입력할지 지정해 주셔야 합니다.
 
-    $("#검색란을_표시할_div의_id").postcodify({
+    $("#검색창을_표시할_div의_id").postcodify({
         api : "search.php",  // 서버측 검색 API를 직접 설치하신 경우에만 설정
         apiBackup : "백업 API의 주소",  // 서버 접속 실패시 재시도할 다른 서버의 주소
         callBackupFirst : false,  // 백업 API를 먼저 호출할지 여부
-        controls : "#키워드_입력란을_표시할_div의_id",
+        controls : "#키워드_입력란을_표시할_div의_id",  // 지정하지 않을 경우 검색창 id를 사용
+        results : "#검색_결과를_표시할_div의_id",  // 지정하지 않을 경우 검색창 id를 사용
+        language : "ko",  // 프로그램 언어: ko (한글), en (영문)
         searchButtonContent : "검색",  // 검색 단추에 표시할 내용 (HTML 사용 가능)
-        hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
-        mapLinkProvider : "google",  // 지도 링크를 표시할지 여부 (daum, naver, google, 또는 false)
+        mapLinkProvider : "google",  // 지도 링크 표시 여부 (false, daum, naver, google 또는 URL 직접 입력)
         mapLinkContent : "지도",  // 지도 링크에 표시할 내용 (HTML 사용 가능)
         insertDbid : "#안행부_관리번호를_입력할_input의_id",
         insertPostcode5 : "#기초구역번호를_입력할_input의_id",
         insertPostcode6 : "#우편번호를_입력할_input의_id",
         insertAddress : "#도로명주소를_입력할_input의_id",
+        insertJibeonAddress : "#지번주소를_입력할_input의_id",
+        insertEnglishAddress : "#영문_도로명주소를_입력할_input의_id",
+        insertEnglishJibeonAddress : "#영문_지번주소를_입력할_input의_id",
         insertDetails : "#상세주소를_입력할_input의_id",
         insertExtraInfo : "#참고항목을_입력할_input의_id",
-        insertEnglishAddress : "#영문주소를_입력할_input의_id",
-        insertJibeonAddress : "#지번주소를_입력할_input의_id",
-        timeout : 3000,  // 검색 타임아웃 (1/1000초 단위)
-        timeoutBackup : 6000,  // 백업 API 검색 타임아웃 (1/1000초 단위)
-        ready : function() {
-            // Postcodify 셋팅 완료시 호출할 콜백 
-        },
+        timeout : 2400,  // 검색 타임아웃 (1/1000초 단위)
+        timeoutBackup : 7200,  // 백업 API 검색 타임아웃 (1/1000초 단위)
         beforeSearch : function(keywords) {
             // 검색 직전에 호출할 콜백
         },
@@ -62,6 +72,9 @@
         },
         afterSelect : function(selectedEntry) {
             // 선택한 주소를 input에 입력한 직후에 호출할 콜백
+        },
+        onReady : function() {
+            // Postcodify 셋팅 완료시 호출할 콜백 
         },
         onSuccess : function() {
             // 검색 성공시 호출할 콜백
@@ -77,6 +90,7 @@
         },
         focusKeyword : true,  // 페이지 로딩 직후 키워드 입력란으로 포커스 이동 여부
         focusDetails : true,  // 주소 선택 후 상세주소 입력란으로 포커스 이동 여부
+        hideOldAddresses : true,  // 기존 주소 목록을 숨길지 여부 (숨길 경우 화살표 클릭하면 표시)
         useFullJibeon : true  // false인 경우 참고항목에 법정동과 공동주택명만 표시
                               // true인 경우 대표지번도 표시 (택배 등의 편의를 위해)
             // 익스플로러 호환성을 위해 마지막 항목 뒤에는 쉼표(,) 입력 금지
@@ -117,8 +131,7 @@ F12 키를 눌러 웹브라우저의 개발자도구를 사용하시면
 도로명주소의 특성상, 기존 방식처럼 읍/면/동 또는 도로명까지만 입력할 경우
 검색 결과가 너무 많이 나와서 사용자 입장에서도 불편하고 검색 속도도 느려지게 됩니다.
 
-버전 1.7.1부터는 검색서버와 별도의 CDN에서 jQuery 플러그인을 로딩할 수 있고,
-무료 API 서버가 다운되거나 점검중일 경우 자동으로 백업 API 서버를 호출하므로
+1.7 버전부터는 무료 API 서버가 다운되거나 점검중일 경우 자동으로 백업 API 서버를 호출하므로
 서버 문제 때문에 검색이 안 되는 일은 극히 드물게 되었습니다.
 
 #### 검색서버 직접 구축시 유의사항 ####
@@ -245,16 +258,17 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
   - 안전행정부 : **주소_서울특별시.zip**, **주소_부산광역시.zip** 등 (총 14개)
   - 안전행정부 : **지번_서울특별시.zip**, **지번_부산광역시.zip** 등 (총 14개)
   - 안전행정부 : **부가정보_서울특별시.zip**, **부가정보_부산광역시.zip** 등 (총 14개)
-  - 우체국 : **newaddr_pobox_DB.zip** (사서함 정보)
+  - 우체국 : **[newaddr_pobox_DB.zip](http://www.epost.go.kr/search/zipcode/newaddr_pobox_DB.zip)** (사서함 DB)
+  - 자체 서버 : **[english_aliases_DB.zip](http://storage.poesis.kr/downloads/english/english_aliases_DB.zip)** (영문 읍면동 명칭 DB)
 
-위와 같이 총 45개의 파일이 필요합니다. **"매칭테이블"이라고 되어 있는 파일은 사용하시면 안됩니다.**
+위와 같이 총 46개의 파일이 필요합니다. **"매칭테이블"이라고 되어 있는 파일은 사용하시면 안됩니다.**
 
 ※ 간단하게 테스트하기를 원하시는 경우에는 일부 시도의 파일만 넣고 사용하셔도 됩니다.
 세종시, 울산광역시, 대전광역시 등 용량이 얼마 되지 않는 시도의 파일로 테스트하시면 편리합니다.
 단, 원하시는 시도의 주소/지번/부가정보 파일 3개는 꼭 넣으셔야 합니다.
 
 ※ 인덱서에 포함된 `download-start.php` 스크립트를 사용하면
-안정행정부와 우체국에서 최신 DB 파일을 한꺼번에 다운로드할 수 있습니다.
+안정행정부와 우체국, 자체 서버 등에서 최신 DB 파일을 한꺼번에 다운로드할 수 있습니다.
 수십 개의 파일을 일일이 다운로드하기가 불편하시다면 이 스크립트를 사용하셔도 됩니다.
 단, 해당 기관에서 웹사이트를 개편하여 링크 주소가 달라질 경우 다운로드 스크립트가 작동하지 않을 수도 있습니다.
 
@@ -276,19 +290,23 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
 
     $ php mysql-start.php
     
-    [Step 1/8] 테이블과 프로시저를 생성하는 중 ... 
+    [Step 1/9] 테이블과 프로시저를 생성하는 중 ... 
     
     데이터 기준일을 입력해 주십시오. 예: 2014년 4월 25일 = 20140425 : 20140425
     
-    [Step 2/8] 도로 목록 및 영문 명칭을 메모리에 읽어들이는 중 ... 
+    [Step 2/9] 도로 목록 및 행정구역 데이터를 읽어들이는 중 ...
     
       -->  도로명코드_전체분.zip ...    350,092
     
-    [Step 3/8] 상세건물명 데이터를 메모리에 읽어들이는 중 ... 
+    [Step 3/9] 영문 번역 데이터를 읽어들이는 중 ... 
+    
+      -->  english_aliases_DB.zip ...     14,132
+    
+    [Step 4/9] 상세건물명 데이터를 읽어들이는 중 ... 
     
       -->  상세건물명.zip ...     71,798
     
-    [Step 4/8] 쓰레드를 사용하여 "주소" 파일을 로딩하는 중 ... 
+    [Step 5/9] 쓰레드를 사용하여 "주소" 파일을 로딩하는 중 ... 
     
       -->  주소_강원도.zip 쓰레드 시작 ... 
       -->  주소_경기도.zip 쓰레드 시작 ... 
@@ -320,7 +338,7 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
       <--  주소_전라남북도.zip 쓰레드 종료. 1 쓰레드 남음.
       <--  주소_경상남북도.zip 쓰레드 종료. 0 쓰레드 남음.
     
-    [Step 5/8] 쓰레드를 사용하여 "지번" 파일을 로딩하는 중 ... 
+    [Step 6/9] 쓰레드를 사용하여 "지번" 파일을 로딩하는 중 ... 
     
       -->  지번_강원도.zip 쓰레드 시작 ... 
       -->  지번_경기도.zip 쓰레드 시작 ... 
@@ -352,7 +370,7 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
       <--  지번_전라남북도.zip 쓰레드 종료. 1 쓰레드 남음.
       <--  지번_경상남북도.zip 쓰레드 종료. 0 쓰레드 남음.
     
-    [Step 6/8] 쓰레드를 사용하여 "부가정보" 파일을 로딩하는 중 ... 
+    [Step 7/9] 쓰레드를 사용하여 "부가정보" 파일을 로딩하는 중 ... 
     
       -->  부가정보_강원도.zip 쓰레드 시작 ... 
       -->  부가정보_경기도.zip 쓰레드 시작 ... 
@@ -384,46 +402,55 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
       <--  부가정보_전라남북도.zip 쓰레드 종료. 1 쓰레드 남음.
       <--  부가정보_경상남북도.zip 쓰레드 종료. 0 쓰레드 남음.
     
-    [Step 7/8] 사서함 데이터를 로딩하는 중 ... 
+    [Step 8/9] 사서함 데이터를 로딩하는 중 ... 
     
       -->  newaddr_pobox_DB.zip ... 
     
     데이터 입력을 마쳤습니다. 경과 시간 : 37분 44초
     
-    [Step 8/8] 인덱스를 생성하는 중. 긴 시간이 걸릴 수 있습니다 ... 
+    [Step 9/9] 인덱스를 생성하는 중. 긴 시간이 걸릴 수 있습니다 ... 
     
-      -->  postcode_addresses 쓰레드 시작 ... 
-      -->  postcode_keywords_juso 쓰레드 시작 ... 
-      -->  postcode_keywords_jibeon 쓰레드 시작 ... 
-      -->  postcode_keywords_building 쓰레드 시작 ... 
-      -->  postcode_keywords_pobox 쓰레드 시작 ... 
+      -->  postcodify_addresses 쓰레드 시작 ... 
+      -->  postcodify_keywords_juso 쓰레드 시작 ... 
+      -->  postcodify_keywords_jibeon 쓰레드 시작 ... 
+      -->  postcodify_keywords_building 쓰레드 시작 ... 
+      -->  postcodify_keywords_pobox 쓰레드 시작 ... 
+      -->  postcodify_keywords_synonyms 쓰레드 시작 ...
 
-      <--  postcode_keywords_pobox 쓰레드 종료. 4 쓰레드 남음.
-      <--  postcode_keywords_building 쓰레드 종료. 3 쓰레드 남음.
-      <--  postcode_keywords_juso 쓰레드 종료. 2 쓰레드 남음.
-      <--  postcode_addresses 쓰레드 종료. 1 쓰레드 남음.
-      <--  postcode_keywords_jibeon 쓰레드 종료. 0 쓰레드 남음.
+      <--  postcodify_keywords_pobox 쓰레드 종료. 5 쓰레드 남음.
+      <--  postcodify_keywords_synonyms 쓰레드 종료. 4 쓰레드 남음.
+      <--  postcodify_keywords_building 쓰레드 종료. 3 쓰레드 남음.
+      <--  postcodify_keywords_juso 쓰레드 종료. 2 쓰레드 남음.
+      <--  postcodify_addresses 쓰레드 종료. 1 쓰레드 남음.
+      <--  postcodify_keywords_jibeon 쓰레드 종료. 0 쓰레드 남음.
     
     작업을 모두 마쳤습니다. 경과 시간 : 40분 39초
 
-작업이 끝나면 아래와 같이 6개의 테이블이 생성되고,
+작업이 끝나면 아래와 같이 7개의 테이블이 생성되고,
 
->   <img src="indexer/resources/tables.png" alt="Screenshot" title="" />
+    postcodify_addresses
+    postcodify_keywords_juso
+    postcodify_keywords_jibeon
+    postcodify_keywords_building
+    postcodify_keywords_pobox
+    postcodify_keywords_synonyms
+    postcodify_metadata
 
-검색을 위한 10개의 프로시저가 생성됩니다.
+아래와 같이 10개의 저장 프로시저가 생성됩니다.
 
-    postcode_search_building 
-    postcode_search_building_in_area 
-    postcode_search_building_with_dongri 
-    postcode_search_building_with_dongri_in_area 
-    postcode_search_jibeon 
-    postcode_search_jibeon_in_area 
-    postcode_search_juso 
-    postcode_search_juso_in_area 
-    postcode_search_pobox 
-    postcode_search_pobox_in_area 
+    postcodify_get_synonym
+    postcodify_get_version
+    postcodify_get_last_updated
+    postcodify_search_postcode5
+    postcodify_search_postcode6
+    postcodify_search_juso
+    postcodify_search_jibeon
+    postcodify_search_building
+    postcodify_search_building_with_dongri
+    postcodify_search_pobox
 
-만약 생성된 DB의 구조나 용량이 위의 스크린샷과 크게 다르다면 문제가 있을 가능성이 높습니다.
+만약 생성된 DB의 구조가 위와 다르거나 용량이 5GB 미만일 경우 데이터가 누락되었을 가능성이 높습니다.
+DB가 올바르게 생성되었는지 확인하려면 `mysql-verify.php`를 실행해 보시기 바랍니다.
 
 #### 5단계 : 업데이트 적용 ####
 
@@ -435,13 +462,13 @@ DB 접속은 `mysql_connect()` 함수가 아닌 PDO를 통해 이루어지므로
 
 **반드시 TI_SPRD_STRET와 MatchingTable 파일을 모두 사용하셔야 합니다.**
 
+1단계에서 다운로드한 도로명코드/주소/지번/부가정보 파일의 기준일 이전 업데이트는 필요하지 않습니다.
+예를 들어 나머지 파일들의 기준일이 3월 25일이라면 3월 26일분 업데이트부터 적용하시면 됩니다.
+
 ※ 인덱서에 포함된 `download-update.php` 스크립트를 사용하면
 필요한 업데이트 파일을 한꺼번에 다운로드할 수 있습니다.
 
 다운로드받은 업데이트를 적용하려면 터미널에서 `php mysql-update.php`를 실행하면 됩니다.
-
-1단계에서 다운로드한 도로명코드/주소/지번/부가정보 파일의 기준일 이전 업데이트는 필요하지 않습니다.
-예를 들어 나머지 파일들의 기준일이 3월 25일이라면 3월 26일분 업데이트부터 적용하시면 됩니다.
 
 안전행정부 제공 업데이트 파일에는 기초구역번호, 대표지번 외의 지번 목록 등 일부 정보가 누락되어 있으므로
 한 달에 한 번 정도는 최신 "유통자료개선" 데이터를 다운로드받아 DB를 다시 생성하는 것이 좋습니다.
@@ -469,10 +496,10 @@ MySQL DB를 SQLite로 변환하여 사용할 수 있습니다.
 #### DB 백업 및 복구시 주의사항 ####
 
 일반적인 `mysqldump` 명령에 별다른 옵션을 주지 않고 DB를 백업하면
-검색에 반드시 필요한 stored procedure가 포함되지 않아서 나중에 복구할 경우 문제가 생깁니다.
+검색에 반드시 필요한 저장 프로시저가 포함되지 않아서 나중에 복구할 경우 문제가 생깁니다.
 필요한 모든 정보가 백업에 포함되도록 반드시 `--opt --routines` 옵션을 사용하시기 바랍니다.
 
-Stored procedure의 경우 덤프를 생성한 사용자와 복구하는 사용자가 다르면
+저장 프로시저의 경우 덤프를 생성한 사용자와 복구하는 사용자가 다르면
 `DEFINER` 부분이 오류를 일으킬 수 있습니다.
 만약 이런 문제가 발생한다면 덤프 파일에서 `DEFINER` 부분을 제거하거나
 원래와 동일한 사용자 계정을 사용해야 합니다.

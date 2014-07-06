@@ -46,8 +46,7 @@ class Postcodify_SQLite
         
         $querystring = trim(self::$procs[$proc_name]);
         $statement = self::$dbh[$db_name]->prepare($querystring);
-        $named_params = array();
-        $params[] = null; reset($params);
+        $named_params = array(); reset($params);
         
         if (preg_match_all('/:[a-z0-9_]+/', $querystring, $matches))
         {
@@ -79,23 +78,38 @@ class Postcodify_SQLite
     
     protected static $procs = array(
     
-        // 도로명주소 검색 (단순) 프로시저.
+        // 키워드 대체 프로시저.
         
-        "postcode_search_juso" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_juso AS pk ON pa.id = pk.address_id
-            WHERE pk.keyword_crc32 = :keyword_crc32
-                AND (:num1 IS NULL OR pk.num_major = :repeat_num1)
-                AND (:num2 IS NULL OR pk.num_minor = :repeat_num2)
-            ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
+        "postcodify_get_synonym" => "
+            SELECT canonical_crc32 AS result
+            FROM postcodify_keywords_synonyms
+            WHERE original_crc32 = :keyword_crc32
+            LIMIT 1;
         ",
         
-        // 도로명주소 검색 (지역 제한) 프로시저.
+        // 우편번호 (5자리) 검색 프로시저.
+
+        "postcodify_search_postcode5" => "
+            SELECT * FROM postcodify_addresses AS pa
+            WHERE pa.postcode5 = :postcode
+            ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
+            LIMIT :search_count OFFSET :search_offset;
+        ",
         
-        "postcode_search_juso_in_area" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_juso AS pk ON pa.id = pk.address_id
+        // 우편번호 (6자리) 검색 프로시저.
+
+        "postcodify_search_postcode6" => "
+            SELECT * FROM postcodify_addresses AS pa
+            WHERE pa.postcode6 = :postcode
+            ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
+            LIMIT :search_count OFFSET :search_offset;
+        ",
+        
+        // 도로명주소 검색 프로시저.
+        
+        "postcodify_search_juso" => "
+            SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
+            INNER JOIN postcodify_keywords_juso AS pk ON pa.id = pk.address_id
             WHERE pk.keyword_crc32 = :keyword_crc32
                 AND (:num1 IS NULL OR pk.num_major = :repeat_num1)
                 AND (:num2 IS NULL OR pk.num_minor = :repeat_num2)
@@ -104,26 +118,14 @@ class Postcodify_SQLite
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
                 AND (:area4 IS NULL OR pa.eupmyeon = :repeat_area4)
             ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
+            LIMIT :search_count OFFSET :search_offset;
         ",
         
-        // 지번 검색 (단순) 프로시저.
+        // 지번 검색 프로시저.
         
-        "postcode_search_jibeon" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_jibeon AS pk ON pa.id = pk.address_id
-            WHERE pk.keyword_crc32 = :keyword_crc32
-                AND (:num1 IS NULL OR pk.num_major = :repeat_num1)
-                AND (:num2 IS NULL OR pk.num_minor = :repeat_num2)
-            ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
-        ",
-        
-        // 지번 검색 (지역 제한) 프로시저.
-        
-        "postcode_search_jibeon_in_area" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_jibeon AS pk ON pa.id = pk.address_id
+        "postcodify_search_jibeon" => "
+            SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
+            INNER JOIN postcodify_keywords_jibeon AS pk ON pa.id = pk.address_id
             WHERE pk.keyword_crc32 = :keyword_crc32
                 AND (:num1 IS NULL OR pk.num_major = :repeat_num1)
                 AND (:num2 IS NULL OR pk.num_minor = :repeat_num2)
@@ -131,52 +133,30 @@ class Postcodify_SQLite
                 AND (:area2 IS NULL OR pa.sigungu = :repeat_area2)
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
                 AND (:area4 IS NULL OR pa.eupmyeon = :repeat_area4)
-            ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
+            ORDER BY pa.sido, pa.sigungu, pa.dongri, pa.jibeon_major, pa.jibeon_minor
+            LIMIT :search_count OFFSET :search_offset;
         ",
         
-        // 건물명 검색 (단순) 프로시저.
+        // 건물명 검색 프로시저.
         
-        "postcode_search_building" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
-            WHERE pk.keyword LIKE ('%' || :keyword || '%')
-            ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
-        ",
-
-        // 건물명 검색 (지역 제한) 프로시저.
-
-        "postcode_search_building_in_area" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_building AS pk ON pa.id = pk.address_id
+        "postcodify_search_building" => "
+            SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
+            INNER JOIN postcodify_keywords_building AS pk ON pa.id = pk.address_id
             WHERE pk.keyword LIKE ('%' || :keyword || '%')
                 AND (:area1 IS NULL OR pa.sido = :repeat_area1)
                 AND (:area2 IS NULL OR pa.sigungu = :repeat_area2)
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
                 AND (:area4 IS NULL OR pa.eupmyeon = :repeat_area4)
             ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
+            LIMIT :search_count OFFSET :search_offset;
         ",
         
-        // 건물명 + 동/리 검색 (단순) 프로시저.
+        // 건물명 + 동/리 검색 프로시저.
         
-        "postcode_search_building_with_dongri" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_building AS pkb ON pa.id = pkb.address_id
-            INNER JOIN postcode_keywords_jibeon AS pkj ON pa.id = pkj.address_id
-            WHERE pkb.keyword LIKE ('%' || :keyword || '%')
-                AND pkj.keyword_crc32 = :dongri_crc32
-            ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
-        ",
-        
-        // 건물명 + 동/리 검색 (지역 제한) 프로시저.
-        
-        "postcode_search_building_with_dongri_in_area" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_building AS pkb ON pa.id = pkb.address_id
-            INNER JOIN postcode_keywords_jibeon AS pkj ON pa.id = pkj.address_id
+        "postcodify_search_building_with_dongri" => "
+            SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
+            INNER JOIN postcodify_keywords_building AS pkb ON pa.id = pkb.address_id
+            INNER JOIN postcodify_keywords_jibeon AS pkj ON pa.id = pkj.address_id
             WHERE pkb.keyword LIKE ('%' || :keyword || '%')
                 AND pkj.keyword_crc32 = :dongri_crc32
                 AND (:area1 IS NULL OR pa.sido = :repeat_area1)
@@ -184,35 +164,24 @@ class Postcodify_SQLite
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
                 AND (:area4 IS NULL OR pa.eupmyeon = :repeat_area4)
             ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
+            LIMIT :search_count OFFSET :search_offset;
         ",
         
-        // 사서함 검색 (단순) 프로시저.
+        // 사서함 검색 프로시저.
         
-        "postcode_search_pobox" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_pobox AS pk ON pa.id = pk.address_id
+        "postcodify_search_pobox" => "
+            SELECT DISTINCT pa.* FROM postcodify_addresses AS pa
+            INNER JOIN postcodify_keywords_pobox AS pk ON pa.id = pk.address_id
             WHERE pk.keyword LIKE ('%' || :keyword || '%')
                 AND (:num1 IS NULL OR :repeat_num1 BETWEEN pk.range_start_major AND pk.range_end_major)
-                AND (:num2 IS NULL OR :repeat_num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
-            ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
-        ",
-        
-        // 사서함 검색 (지역 제한) 프로시저.
-        
-        "postcode_search_pobox_in_area" => "
-            SELECT DISTINCT pa.* FROM postcode_addresses AS pa
-            INNER JOIN postcode_keywords_pobox AS pk ON pa.id = pk.address_id
-            WHERE pk.keyword LIKE ('%' || :keyword || '%')
-                AND (:num1 IS NULL OR :repeat_num1 BETWEEN pk.range_start_major AND pk.range_end_major)
-                AND (:num2 IS NULL OR :repeat_num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
+                AND (:num2 IS NULL OR pk.range_start_minor IS NULL
+                    OR :repeat_num2 BETWEEN pk.range_start_minor AND pk.range_end_minor)
                 AND (:area1 IS NULL OR pa.sido = :repeat_area1)
                 AND (:area2 IS NULL OR pa.sigungu = :repeat_area2)
                 AND (:area3 IS NULL OR pa.ilbangu = :repeat_area3)
                 AND (:area4 IS NULL OR pa.eupmyeon = :repeat_area4)
             ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-            LIMIT 100;
+            LIMIT :search_count OFFSET :search_offset;
         ",
     );
 }

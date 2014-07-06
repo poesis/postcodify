@@ -16,7 +16,7 @@ $start_time = time();
 
 // 설정과 함수 파일을 인클루드한다.
 
-define('INDEXER_VERSION', '1.5.1');
+define('INDEXER_VERSION', '1.8');
 require dirname(__FILE__) . '/config.php';
 require dirname(__FILE__) . '/functions.php';
 echo "\n";
@@ -91,17 +91,31 @@ if (count(glob(TXT_DIRECTORY . '/부가정보_*.zip')) < 14)
     exit(1);
 }
 
+if (!file_exists(TXT_DIRECTORY . '/english_aliases_DB.zip'))
+{
+    echo '[ERROR] 영문 번역 (english_aliases_DB.zip) 파일을 찾을 수 없습니다.' . "\n\n";
+    exit(1);
+}
+
 if (!file_exists(TXT_DIRECTORY . '/newaddr_pobox_DB.zip'))
 {
     echo '[ERROR] 사서함 (newaddr_pobox_DB.zip) 파일을 찾을 수 없습니다.' . "\n\n";
     exit(1);
 }
 
+// STMT_CLOSE 에러 핸들러를 등록한다.
+
+$STDERR = fopen('php://stderr', 'a+');
+set_error_handler(function($errno, $errstr, $errfile, $errline, $context) {
+    if ($errno === E_WARNING && strpos($errstr, 'STMT_CLOSE') !== false) return;
+    fwrite($GLOBALS['STDERR'], "Error: $errstr in $errfile line $errline\n");
+}, ~0);
+
 // -------------------------------------------------------------------------------------------------
 // DB에 연결하고 테이블 및 검색 프로시저를 생성한다.
 // -------------------------------------------------------------------------------------------------
-    
-echo '[Step 1/8] 테이블과 프로시저를 생성하는 중 ... ' . "\n\n";
+
+echo '[Step 1/9] 테이블과 프로시저를 생성하는 중 ... ' . "\n\n";
 
 get_db()->exec(file_get_contents(__DIR__ . '/resources/schema-mysql.sql'));
 
@@ -118,8 +132,8 @@ if (file_exists(TXT_DIRECTORY . '/도로명코드_기준일.txt'))
         if ($filedate > $savedate)
         {
             echo '파일에서 데이터 기준일을 읽어 사용합니다. 기준일은 ' . $savedate . '입니다.' . "\n";
-            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
-            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('updated', '" . $savedate . "')");
+            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
+            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('updated', '" . $savedate . "')");
             $gotdate = true;
         }
     }
@@ -129,15 +143,15 @@ if (!$gotdate)
 {
     $lastmonth = strtotime('-1 month');
     $stdin = fopen('php://stdin', 'r');
-
+    
     while (!$gotdate)
     {
         echo '데이터 기준일을 입력해 주십시오. 예: ' . date('Y년 n월 25일', $lastmonth) . ' = ' . date('Ym25', $lastmonth) . ' : ';
         $line = trim(fgets($stdin));
         if (preg_match('/^20[0-9][0-9][0-1][0-9][0-3][0-9]$/', $line))
         {
-            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
-            get_db()->exec("INSERT INTO postcode_metadata (k, v) VALUES ('updated', '" . $line . "')");
+            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
+            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('updated', '" . $line . "')");
             fclose($stdin);
             break;
         }
@@ -155,16 +169,23 @@ echo "\n";
 // 전체 도로명 코드 및 소속 행정구역 데이터를 메모리로 불러온다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 2/8] 도로 목록 및 영문 명칭을 메모리에 읽어들이는 중 ... ' . "\n\n";
+echo '[Step 2/9] 도로 목록 및 행정구역 데이터를 읽어들이는 중 ... ' . "\n\n";
 
+$english_synonyms = array();
 $english_cache = array();
 $roads = array();
 $roads_count = 0;
 
-// 파일을 연다.
-
 $filename = TXT_DIRECTORY . '/도로명코드_전체분.zip';
 echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
+
+// 트랜잭션을 시작한다.
+
+$db = get_db();
+$ps_synonym = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
+$db->beginTransaction();
+
+// 압축 파일을 연다.
 
 $zip = new ZipArchive;
 $zip->open($filename);
@@ -206,14 +227,24 @@ while ($line = trim(fgets($fp)))
         $ilbangu = '';
     }
     
-    // 영문 주소를 읽어들인다.
+    // 영문 주소를 캐싱한다.
     
     $english = array();
-    $english[] = trim($line[2]);
+    $english[] = $english_road_name = trim($line[2]);
     if ($eupmyeon !== '') $english[] = $english_cache[trim($line[8])] = trim($line[9]);
     $english[] = $english_cache[trim($line[6])] = trim($line[7]);
     $english[] = $english_cache[$sido] = str_replace('-si', '', trim($line[5]));
     $english = str_replace(', , ', ', ', implode(', ', $english));
+    
+    // 영문 주소 -> 한글 주소 변환 테이블을 저장한다.
+    
+    if (!isset($english_synonyms[$road_name]))
+    {
+        $english_synonyms[$road_name] = true;
+        $english_road_name = preg_replace('/[^a-z0-9]/', '', strtolower($english_road_name));
+        $korean_road_name = get_canonical($road_name);
+        $ps_synonym->execute(array(crc32_x64($english_road_name), crc32_x64(get_canonical($korean_road_name))));
+    }
     
     // 도로 정보를 메모리에 저장한다.
     
@@ -222,7 +253,7 @@ while ($line = trim(fgets($fp)))
     
     // 상태를 표시한다.
     
-    if ($roads_count % 1024 == 0)
+    if ($roads_count % 256 == 0)
     {
         echo "\033[10D" . str_pad(number_format($roads_count, 0), 10, ' ', STR_PAD_LEFT);
     }
@@ -241,11 +272,87 @@ echo "\033[10D" . str_pad(number_format($roads_count, 0), 10, ' ', STR_PAD_LEFT)
 $zip->close();
 unset($zip);
 
+// 트랜잭션을 마친다.
+
+$db->commit();
+$db = null;
+unset($db);
+unset($english_synonyms);
+unset($ps_synonym);
+
+// -------------------------------------------------------------------------------------------------
+// 영문 번역 데이터를 메모리로 불러온다.
+// -------------------------------------------------------------------------------------------------
+
+echo '[Step 3/9] 영문 번역 데이터를 읽어들이는 중 ... ' . "\n\n";
+
+$eng_count = 0;
+
+// 트랜잭션을 시작한다.
+
+$db = get_db();
+$ps_synonym = $db->prepare('INSERT INTO postcodify_keywords_synonyms (original_crc32, canonical_crc32) VALUES (?, ?)');
+$db->beginTransaction();
+
+// 압축 파일을 연다.
+
+$filename = TXT_DIRECTORY . '/english_aliases_DB.zip';
+echo '  -->  ' . basename($filename) . ' ... ' . str_repeat(' ', 10);
+
+$zip = new ZipArchive;
+$zip->open($filename);
+for ($fi = 0; $fi < $zip->numFiles; $fi++)
+{
+    $fp = $zip->getStream($zip->getNameIndex($fi));
+    while ($line = trim(fgets($fp)))
+    {
+        // 한 줄을 읽어 쉼표를 기준으로 데이터를 쪼갠다.
+        
+        $line = explode('|', trim($line));
+        if (count($line) < 2) continue;
+        
+        // 영문 주소를 캐싱한다.
+        
+        $english_cache[$line[0]] = $line[1];
+        
+        // postcodify_keywords_synonyms 테이블에 삽입한다.
+        
+        $line[0] = get_canonical($line[0]);
+        $line[1] = preg_replace('/[^a-z0-9]/', '', strtolower($line[1]));
+        $ps_synonym->execute(array(crc32_x64($line[1]), crc32_x64($line[0])));
+        
+        // 상태를 표시한다.
+        
+        if ($eng_count % 256 == 0)
+        {
+            echo "\033[10D" . str_pad(number_format($eng_count, 0), 10, ' ', STR_PAD_LEFT);
+        }
+        
+        $eng_count++;
+        
+        // 가비지 컬렉션.
+        
+        unset($line);
+    }
+}
+
+// 마무리...
+
+echo "\033[10D" . str_pad(number_format($eng_count, 0), 10, ' ', STR_PAD_LEFT) . "\n\n";
+$zip->close();
+unset($zip);
+
+// 트랜잭션을 마친다.
+
+$db->commit();
+$db = null;
+unset($db);
+
 // -------------------------------------------------------------------------------------------------
 // 상세건물명 데이터를 메모리로 불러온다. 나중에 부가정보와 함께 DB에 입력된다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 3/8] 상세건물명 데이터를 메모리에 읽어들이는 중 ... ' . "\n\n";
+echo '[Step 4/9] 상세건물명 데이터를 읽어들이는 중 ... ' . "\n\n";
 
 $buildings = array();
 $buildings_count = 0;
@@ -286,7 +393,7 @@ while ($line = trim(fgets($fp)))
     
     // 상태를 표시한다.
     
-    if ($buildings_count % 1024 == 0)
+    if ($buildings_count % 256 == 0)
     {
         echo "\033[10D" . str_pad(number_format($buildings_count, 0), 10, ' ', STR_PAD_LEFT);
     }
@@ -310,7 +417,7 @@ unset($zip);
 // 시도별 주소 파일에서 도로명주소 데이터를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 4/8] 쓰레드를 사용하여 "주소" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 5/9] 쓰레드를 사용하여 "주소" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/주소_*.zip');
 $children = array();
@@ -337,11 +444,11 @@ while (count($files))
         // 쓰레드를 초기화한다.
         
         $db = get_db();
-        $ps_address_insert = $db->prepare('INSERT INTO postcode_addresses ' .
+        $ps_address_insert = $db->prepare('INSERT INTO postcodify_addresses ' .
             '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
             'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, english_address) ' .
             'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $ps_keyword_insert = $db->prepare('INSERT INTO postcode_keywords_juso ' .
+        $ps_keyword_insert = $db->prepare('INSERT INTO postcodify_keywords_juso ' .
             '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
         
@@ -394,15 +501,17 @@ while (count($files))
                 
                 // 영문 주소를 작성한다.
                 
-                $english = $num_major . ($num_minor ? ('-' . $num_minor) : '') . ', '. $road_info[5];
+                $english_road_name = explode(', ', $road_info[5], 2);
+                $english = $num_major . ($num_minor ? ('-' . $num_minor) : '') . ', ' . $english_road_name[0];
                 if ($is_basement) $english = 'Jiha ' . $english;
+                $english = $english_road_name[1] . "\n" . $english;
                 
-                // postcode_addresses 테이블에 삽입한다.
+                // postcodify_addresses 테이블에 삽입한다.
                 
                 $ps_address_insert->execute(array($address_id, $postcode5, null, $road_id, $road_section, $road_name,
                     $num_major, $num_minor, $is_basement, $sido, $sigungu, $ilbangu, $eupmyeon, $english));
                 
-                // 검색 키워드들을 정리하여 postcode_keywords_road 테이블에 삽입한다.
+                // 검색 키워드들을 정리하여 postcodify_keywords_juso 테이블에 삽입한다.
                 
                 $keywords = get_variations_of_road_name(get_canonical($road_name));
                 foreach ($keywords as $keyword)
@@ -452,7 +561,7 @@ unset($roads);
 // 시도별 지번 파일에서 지번주소와 도로명주소간의 맵핑 데이터를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 5/8] 쓰레드를 사용하여 "지번" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 6/9] 쓰레드를 사용하여 "지번" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/지번_*.zip');
 $children = array();
@@ -479,13 +588,14 @@ while (count($files))
         // 쓰레드를 초기화한다.
         
         $db = get_db();
-        $ps_address_update1 = $db->prepare('UPDATE postcode_addresses ' .
-            'SET dongri = ?, jibeon = ? ' .
+        $ps_address_update1 = $db->prepare('UPDATE postcodify_addresses ' .
+            'SET dongri = ?, jibeon_major = ?, jibeon_minor = ?, is_mountain = ?, ' .
+            'english_address = CONCAT_WS(\'\\n\', english_address, ?) ' .
             'WHERE id = ?');
-        $ps_address_update2 = $db->prepare('UPDATE postcode_addresses ' .
+        $ps_address_update2 = $db->prepare('UPDATE postcodify_addresses ' .
             'SET other_addresses = CONCAT_WS(\'\\n\', other_addresses, ?) ' .
             'WHERE id = ?');
-        $ps_keyword_insert = $db->prepare('INSERT INTO postcode_keywords_jibeon ' .
+        $ps_keyword_insert = $db->prepare('INSERT INTO postcodify_keywords_jibeon ' .
             '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
         
@@ -514,26 +624,37 @@ while (count($files))
                 $address_id = trim($line[0]);
                 $dongri = trim($line[6]);
                 if ($dongri === '') $dongri = trim($line[5]);
+                $dongri = preg_replace('/\\(.+\\)/', '', $dongri);
                 
                 $num_major = (int)trim($line[8]); if (!$num_major) $num_major = null;
                 $num_minor = (int)trim($line[9]); if (!$num_minor) $num_minor = null;
                 $is_mountain = (int)trim($line[7]);
                 $is_canonical = (int)trim($line[10]);
                 
-                // postcode_addresses 테이블의 해당 레코드에 법정동 및 지번 정보를 추가한다.
+                // 영문 지번주소를 작성한다.
                 
-                $insert_jibeon = (($is_mountain ? '산' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : ''));
-                
-                if ($is_canonical)
+                if (isset($english_cache[$dongri]))
                 {
-                    $ps_address_update1->execute(array($dongri, $insert_jibeon, $address_id));
+                    $english = (($is_mountain ? 'San ' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : '')) . ', ' . $english_cache[$dongri];
                 }
                 else
                 {
-                    $ps_address_update2->execute(array($dongri . ' ' . $insert_jibeon, $address_id));
+                    $english = '';
                 }
                 
-                // 검색 키워드들을 정리하여 postcode_keywords_jibeon 테이블에 삽입한다.
+                // postcodify_addresses 테이블의 해당 레코드에 법정동 및 지번 정보를 추가한다.
+                
+                if ($is_canonical)
+                {
+                    $ps_address_update1->execute(array($dongri, $num_major, $num_minor, ($is_mountain ? 1 : 0), $english, $address_id));
+                }
+                else
+                {
+                    $combined_jibeon = (($is_mountain ? '산' : '') . $num_major . ($num_minor ? ('-' . $num_minor) : ''));
+                    $ps_address_update2->execute(array($dongri . ' ' . $combined_jibeon, $address_id));
+                }
+                
+                // 검색 키워드들을 정리하여 postcodify_keywords_jibeon 테이블에 삽입한다.
                 
                 $keywords = get_variations_of_dongri($dongri, $dongs[$filename]);
                 foreach ($keywords as $keyword)
@@ -579,7 +700,7 @@ echo "\n";
 // 시도별 부가정보 파일에서 행정동명, 건물명, 6자리 우편번호를 구하여 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 6/8] 쓰레드를 사용하여 "부가정보" 파일을 로딩하는 중 ... ' . "\n\n";
+echo '[Step 7/9] 쓰레드를 사용하여 "부가정보" 파일을 로딩하는 중 ... ' . "\n\n";
 
 $files = glob(TXT_DIRECTORY . '/부가정보_*.zip');
 $children = array();
@@ -606,16 +727,16 @@ while (count($files))
         // 쓰레드를 초기화한다.
         
         $db = get_db();
-        $ps_address_select = $db->prepare('SELECT dongri, jibeon, other_addresses ' .
-            'FROM postcode_addresses ' .
+        $ps_address_select = $db->prepare('SELECT dongri, jibeon_major, jibeon_minor, is_mountain, other_addresses ' .
+            'FROM postcodify_addresses ' .
             'WHERE id = ?');
-        $ps_address_update = $db->prepare('UPDATE postcode_addresses ' .
+        $ps_address_update = $db->prepare('UPDATE postcodify_addresses ' .
             'SET postcode6 = ?, building_name = ?, other_addresses = ? ' .
             'WHERE id = ?');
-        $ps_keyword_jibeon_insert = $db->prepare('INSERT INTO postcode_keywords_jibeon ' .
+        $ps_keyword_jibeon_insert = $db->prepare('INSERT INTO postcodify_keywords_jibeon ' .
             '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
-        $ps_keyword_building_insert = $db->prepare('INSERT INTO postcode_keywords_building ' .
+        $ps_keyword_building_insert = $db->prepare('INSERT INTO postcodify_keywords_building ' .
             '(address_id, keyword) ' .
             'VALUES (?, ?)');
         
@@ -660,7 +781,7 @@ while (count($files))
                 // 지번 및 기타주소 정리 : 해당 주소와 연관된 모든 지번을 구한다.
                 
                 $ps_address_select->execute(array($address_id));
-                list($legal_dong, $legal_jibeon, $other_addresses) = $ps_address_select->fetch(PDO::FETCH_NUM);
+                list($legal_dong, $legal_jibeon_major, $legal_jibeon_minor, $legal_is_mountain, $other_addresses) = $ps_address_select->fetch(PDO::FETCH_NUM);
                 $ps_address_select->closeCursor();
                 $other_addresses = strlen($other_addresses) ? explode("\n", $other_addresses) : array();
                 
@@ -668,7 +789,8 @@ while (count($files))
                 
                 $addresses_numeric = array();
                 $addresses_building = array();
-                $keywords_nums = array($legal_jibeon);
+                $combined_jibeon = (($legal_is_mountain ? '산' : '') . $legal_jibeon_major . ($legal_jibeon_minor ? ('-' . $legal_jibeon_minor) : ''));
+                $keywords_nums = array($combined_jibeon);
                 
                 foreach ($other_addresses as $other)
                 {
@@ -786,7 +908,7 @@ while (count($files))
                 
                 $keywords = array_unique($keywords);
                 
-                // 지번 검색 키워드들을 postcode_keywords_jibeon 테이블에 삽입한다.
+                // 지번 검색 키워드들을 postcodify_keywords_jibeon 테이블에 삽입한다.
                 
                 foreach ($keywords_dongs as $keyword)
                 {
@@ -797,7 +919,7 @@ while (count($files))
                     }
                 }
                 
-                // 건물명 검색 키워드들을 postcode_keywords_building 테이블에 삽입한다.
+                // 건물명 검색 키워드들을 postcodify_keywords_building 테이블에 삽입한다.
                 
                 foreach ($keywords as $keyword)
                 {
@@ -810,7 +932,8 @@ while (count($files))
                 if (isset($legal_dong)) unset($legal_dong);
                 if (isset($legal_dong_variations)) unset($legal_dong_variations);
                 if (isset($legal_dong_variation)) unset($legal_dong_variation);
-                if (isset($legal_jibeon)) unset($legal_jibeon);
+                if (isset($legal_jibeon_major)) unset($legal_jibeon_major);
+                if (isset($legal_jibeon_minor)) unset($legal_jibeon_minor);
                 if (isset($addresses_numeric)) unset($addresses_numeric);
                 if (isset($addresses_building)) unset($addresses_building);
                 if (isset($other_addresses)) unset($other_addresses);
@@ -857,16 +980,16 @@ echo "\n";
 // 사서함 파일을 입력한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 7/8] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
+echo '[Step 8/9] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
 
 // 준비.
 
 $db = get_db();
-$ps_address_insert = $db->prepare('INSERT INTO postcode_addresses ' .
+$ps_address_insert = $db->prepare('INSERT INTO postcodify_addresses ' .
     '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
     'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, english_address) ' .
     'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-$ps_keyword_insert = $db->prepare('INSERT INTO postcode_keywords_pobox ' .
+$ps_keyword_insert = $db->prepare('INSERT INTO postcodify_keywords_pobox ' .
     '(address_id, keyword, range_start_major, range_start_minor, range_end_major, range_end_minor) ' .
     'VALUES (?, ?, ?, ?, ?, ?)');
 $poboxes_count = 0;
@@ -949,12 +1072,12 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
         if (trim($line[3]) !== '' && isset($english_cache[trim($line[3])])) $english .= ', ' . $english_cache[trim($line[3])];
         if (trim($line[2]) !== '' && isset($english_cache[trim($line[2])])) $english .= ', ' . $english_cache[trim($line[2])];
         
-        // postcode_addresses 테이블에 삽입한다.
+        // postcodify_addresses 테이블에 삽입한다.
         
         $ps_address_insert->execute(array($address_id, null, $postcode6, $road_id, '00', trim($insert_name),
             null, null, 0, $sido, $sigungu, $ilbangu, $eupmyeon, $english));
         
-        // 검색 키워드들을 정리하여 postcode_keywords_pobox 테이블에 삽입한다.
+        // 검색 키워드들을 정리하여 postcodify_keywords_pobox 테이블에 삽입한다.
         
         $keywords = array(get_canonical($pobox_name));
         
@@ -1007,14 +1130,15 @@ echo $elapsed_seconds . '초' . "\n\n";
 // 인덱스를 생성한다.
 // -------------------------------------------------------------------------------------------------
 
-echo '[Step 8/8] 인덱스를 생성하는 중. 긴 시간이 걸릴 수 있습니다 ... ' . "\n\n";
+echo '[Step 9/9] 인덱스를 생성하는 중. 긴 시간이 걸릴 수 있습니다 ... ' . "\n\n";
 
 $indexes = array(
-    'postcode_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'updated'),
-    'postcode_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
-    'postcode_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
-    'postcode_keywords_building' => array('address_id'),
-    'postcode_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
+    'postcodify_addresses' => array('postcode6', 'postcode5', 'road_id', 'road_section', 'updated'),
+    'postcodify_keywords_juso' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
+    'postcodify_keywords_jibeon' => array('address_id', 'keyword_crc32', 'num_major', 'num_minor'),
+    'postcodify_keywords_building' => array('address_id'),
+    'postcodify_keywords_pobox' => array('address_id', 'keyword', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
+    'postcodify_keywords_synonyms' => array('original_crc32'),
 );
 
 while (count($indexes))
@@ -1036,6 +1160,7 @@ while (count($indexes))
     else
     {
         $db = get_db();
+        $db->exec('SET interactive_timeout = 3600');
         $db->exec('SET net_read_timeout = 3600');
         $db->exec('SET net_write_timeout = 3600');
         $db->exec('SET wait_timeout = 3600');
