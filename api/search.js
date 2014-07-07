@@ -24,9 +24,15 @@
     
     if (typeof $.fn.postcodify !== "undefined") return;
     
-    // 버전을 선언한다.
+    // 버전과 스크립트 경로를 선언한다.
     
-    var info = { version : "1.8" };
+    var info = { version : "1.8.1", location : "" };
+    
+    $("script").each(function() {
+        if ($(this).attr("src").match(/^(https?:)?\/\/.+\/search\.(min\.)?js(\?|$)/)) {
+            info.location = $(this).attr('src').replace(/^(https?:)?\/\/([^:/]+)[:/].+$/, "$2");
+        }
+    });
     
     // 플러그인 함수를 선언한다.
     
@@ -171,12 +177,17 @@
                     settings.currentRequestUrl = url;
                     $.ajax({
                         url : url,
-                        data : { "v": info.version, "q": keywords, "ref": window.location.hostname },
+                        data : {
+                            v : info.version,
+                            q : keywords,
+                            ref : window.location.hostname,
+                            cdn : info.location
+                        },
                         dataType : "jsonp",
                         jsonpCallback : "postcodify" + ajaxStartTime,
                         processData : true,
                         cache : false,
-                        timeout : settings.timeout,
+                        timeout : timeout,
                         success : ajaxSuccess,
                         error : errorCallback,
                         complete : function() {
@@ -243,6 +254,15 @@
                     
                     else {
                         
+                        // 검색 결과의 언어를 파악한다.
+                        
+                        var resultLanguage;
+                        if (typeof data.lang !== "undefined" && data.lang === "EN") {
+                            resultLanguage = "en";
+                        } else {
+                            resultLanguage = "ko";
+                        }
+                        
                         for (var i = 0; i < data.count; i++) {
                             
                             // 검색 결과 항목을 작성한다.
@@ -263,25 +283,22 @@
                             
                             var mainText;
                             var extraText;
-                            var resultLanguage;
                             
-                            if (typeof data.lang !== "undefined" && data.lang === "EN") {
-                                resultLanguage = "en";
-                                if (typeof data.sort !== "undefined" && data.sort === "JUSO") {
-                                    mainText = result.english["new"] + ", " + result.english["base"];
-                                    extraText = result.english["old"];
-                                } else {
+                            if (resultLanguage === "en") {
+                                if (typeof data.sort !== "undefined" && data.sort === "JIBEON") {
                                     mainText = result.english["old"] + ", " + result.english["base"];
                                     extraText = result.english["new"];
+                                } else {
+                                    mainText = result.english["new"] + ", " + result.english["base"];
+                                    extraText = result.english["old"];
                                 }
                             } else {
-                                resultLanguage = "ko";
-                                if (typeof data.sort !== "undefined" && data.sort === "JUSO") {
-                                    mainText = result.address["base"] + " " + result.address["new"];
-                                    extraText = result.other["long"];
-                                } else {
+                                if (typeof data.sort !== "undefined" && data.sort === "JIBEON") {
                                     mainText = result.address["base"] + " " + result.address["old"];
                                     extraText = result.address["new"];
+                                } else {
+                                    mainText = result.address["base"] + " " + result.address["new"];
+                                    extraText = result.other["long"];
                                 }
                             }
                             
