@@ -24,14 +24,16 @@
     
     if (typeof $.fn.postcodify !== "undefined") return;
     
-    // 버전과 스크립트 경로를 선언한다.
+    // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "1.8.1", location : "" };
+    var info = { version : "1.8.2", location : "" };
+    
+    // API 클라이언트를 로딩한 경로를 파악한다.
     
     $("script").each(function() {
-        if ($(this).attr("src").match(/^(https?:)?\/\/.+\/search\.(min\.)?js(\?|$)/)) {
-            info.location = $(this).attr('src').replace(/^(https?:)?\/\/([^:/]+)[:/].+$/, "$2");
-        }
+        var src = $(this).attr("src"); if (!src) return;
+        var matches = src.match(/^(https?:)?\/\/([^:\/]+)(?=[:\/]).*\/search\.(min\.)?js(?=\?|$)/);
+        if (matches) info.location = matches[2];
     });
     
     // 플러그인 함수를 선언한다.
@@ -246,7 +248,7 @@
                     
                     // 정상 처리되었지만 검색 서버의 버전이 맞지 않는 경우...
                     
-                    else if (typeof data.results[0].english === "undefined" || typeof data.results[0].other === "undefined") {
+                    else if (typeof data.results[0].other === "undefined") {
                         $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorVersion.replace("\n", "<br>")).appendTo(results);
                     }
                     
@@ -274,10 +276,11 @@
                             option.data("code5", result.code5);
                             option.data("address", result.address.base + " " + result.address["new"]);
                             option.data("jibeon_address", result.address["base"] + " " + result.address["old"]);
-                            option.data("english_address", result.english["new"] + ", " + result.english["base"]);
-                            option.data("english_jibeon_address", result.english["old"] + ", " + result.english["base"]);
+                            option.data("english_address", (result.english["new"] === "" ? "" : (result.english["new"] + ", ")) + result.english["base"]);
+                            option.data("english_jibeon_address", (result.english["old"] === "" ? "" : (result.english["old"] + ", ")) + result.english["base"]);
                             option.data("extra_info_long", result.other["long"]);
                             option.data("extra_info_short", result.other["short"]);
+                            option.data("extra_info_nums", data.nums);
                             
                             // 반환된 데이터의 언어, 정렬 방법에 따라 클릭할 링크를 생성한다.
                             
@@ -286,10 +289,10 @@
                             
                             if (resultLanguage === "en") {
                                 if (typeof data.sort !== "undefined" && data.sort === "JIBEON") {
-                                    mainText = result.english["old"] + ", " + result.english["base"];
+                                    mainText = option.data("english_jibeon_address");
                                     extraText = result.english["new"];
                                 } else {
-                                    mainText = result.english["new"] + ", " + result.english["base"];
+                                    mainText = option.data("english_address");
                                     extraText = result.english["old"];
                                 }
                             } else {
@@ -317,7 +320,7 @@
                             // 예전 주소 및 검색어 목록을 추가한다.
                             
                             if (typeof data.lang !== "undefined" && data.lang === "EN") {
-                                result.other["others"] = result.other["others"].replace(/\uc0b0([0-9]+)/g, "San $1");
+                                result.other["others"] = result.other["others"].replace(/산([0-9]+)/g, "San $1");
                                 result.other["others"] = $.trim(result.other["others"].replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " "));
                             }
                             
@@ -429,15 +432,32 @@
                 
                 if (settings.beforeSelect(entry) === false) return;
                 
+                // 사서함 주소인 경우 정확한 번호로 치환한다.
+                
+                var koAddrNew = entry.data("address");
+                var koAddrOld = entry.data("jibeon_address");
+                var enAddrNew = entry.data("english_address");
+                var enAddrOld = entry.data("english_jibeon_address");
+                
+                if (entry.data("extra_info_nums"))
+                {
+                    var poboxNums = entry.data("extra_info_nums");
+                    var poboxRegexp = /[0-9]+(-[0-9]+)? ~ [0-9]+(-[0-9]+)?/;
+                    koAddrNew = koAddrNew.replace(poboxRegexp, poboxNums);
+                    koAddrOld = koAddrOld.replace(poboxRegexp, poboxNums);
+                    enAddrNew = enAddrNew.replace(poboxRegexp, poboxNums);
+                    enAddrOld = enAddrOld.replace(poboxRegexp, poboxNums);
+                }
+                
                 // 사용자가 지정한 입력칸에 데이터를 입력한다.
                 
                 if (settings.insertDbid) $(settings.insertDbid).val(entry.data("dbid"));
                 if (settings.insertPostcode6) $(settings.insertPostcode6).val(entry.data("code6"));
                 if (settings.insertPostcode5) $(settings.insertPostcode5).val(entry.data("code5"));
-                if (settings.insertAddress) $(settings.insertAddress).val(entry.data("address"));
-                if (settings.insertJibeonAddress) $(settings.insertJibeonAddress).val(entry.data("jibeon_address"));
-                if (settings.insertEnglishAddress) $(settings.insertEnglishAddress).val(entry.data("english_address"));
-                if (settings.insertEnglishJibeonAddress) $(settings.insertEnglishJibeonAddress).val(entry.data("english_jibeon_address"));
+                if (settings.insertAddress) $(settings.insertAddress).val(koAddrNew);
+                if (settings.insertJibeonAddress) $(settings.insertJibeonAddress).val(koAddrOld);
+                if (settings.insertEnglishAddress) $(settings.insertEnglishAddress).val(enAddrNew);
+                if (settings.insertEnglishJibeonAddress) $(settings.insertEnglishJibeonAddress).val(enAddrOld);
                 if (settings.insertExtraInfo) {
                     var extra_info = settings.useFullJibeon ? entry.data("extra_info_long") : entry.data("extra_info_short");
                     if (extra_info.length) extra_info = "(" + extra_info + ")";

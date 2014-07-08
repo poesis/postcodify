@@ -23,7 +23,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.8';
+    const VERSION = '1.8.2';
     
     // DB 설정을 저장하는 변수.
     
@@ -187,13 +187,11 @@ class Postcodify
         
         $result = new Postcodify_Result;
         
-        // 검색 언어를 기록한다.
+        // 검색 언어, 정렬 방식 등을 기록한다.
         
         $result->lang = $kw->is_english ? 'EN' : 'KO';
-        
-        // 정렬 방식을 기록한다.
-        
         $result->sort = isset($sort_by_jibeon) ? 'JIBEON' : 'JUSO';
+        $result->nums = $kw->numbers[0] . ($kw->numbers[1] ? ('-' . $kw->numbers[1]) : '');
         
         // 각 레코드를 추가한다.
         
@@ -351,7 +349,7 @@ class Postcodify
             return $kw;
         }
         
-        // 영문 주소인지 확인한다.
+        // 영문 도로명주소 또는 지번주소인지 확인한다.
         
         if (preg_match('/^(?:b|san|jiha)?(?:\\s*|-)([0-9]+)?(?:-([0-9]+))?\\s*([a-z0-9-\x20]+(ro|gil|dong|ri))(?:\\s|$)/', $str, $matches))
         {
@@ -371,6 +369,17 @@ class Postcodify
                 $kw->is_english = true;
                 return $kw;
             }
+        }
+        
+        // 영문 사서함 주소인지 확인한다.
+        
+        if (preg_match('/p\\s*o\\s*box\\s*#?\\s*([0-9]+)?(?:-([0-9]+))?/', $str, $matches))
+        {
+            $kw->pobox = '사서함';
+            $kw->numbers = array($matches[1] ? $matches[1] : null, $matches[2] ? $matches[2] : null);
+            $kw->extra_numbers = array(null, null);
+            $kw->is_english = true;
+            return $kw;
         }
         
         // 검색어를 단어별로 분리한다.
@@ -606,6 +615,7 @@ class Postcodify_Result
     public $time = 0;
     public $lang = 'KO';
     public $sort = 'JUSO';
+    public $nums = '';
     public $results = array();
 }
 

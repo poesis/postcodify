@@ -28,7 +28,7 @@ require 'postcodify.class.php';
 
 $keywords = isset($_GET['q']) ? trim($_GET['q']) : (isset($argv[1]) ? trim($argv[1], ' "\'') : '');
 $callback = isset($_GET['callback']) ? $_GET['callback'] : null;
-$client_version = isset($_GET['v']) ? trim($_GET['v']) : '1.7';  // for Backwards Compatibility
+$client_version = isset($_GET['v']) ? trim($_GET['v']) : '1.8';
 if (function_exists('get_magic_quotes_gpc') && @get_magic_quotes_gpc()) $keywords = stripslashes($keywords);
 if (preg_match('/[^a-zA-Z0-9_.]/', $callback)) $callback = null;
 
