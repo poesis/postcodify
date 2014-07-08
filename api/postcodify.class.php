@@ -190,7 +190,7 @@ class Postcodify
         // 검색 언어, 정렬 방식 등을 기록한다.
         
         $result->lang = $kw->is_english ? 'EN' : 'KO';
-        $result->sort = isset($sort_by_jibeon) ? 'JIBEON' : 'JUSO';
+        $result->sort = isset($sort_by_jibeon) ? 'JIBEON' : ($kw->pobox !== null ? 'POBOX' : 'JUSO');
         $result->nums = $kw->numbers[0] . ($kw->numbers[1] ? ('-' . $kw->numbers[1]) : '');
         
         // 각 레코드를 추가한다.
@@ -205,6 +205,7 @@ class Postcodify
                 ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : ''));
             $address_old = trim($row->dongri . ' ' . ($row->is_mountain ? '산' : '') .
                 ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : ''));
+            if ($kw->pobox !== null) $address_old = $address_new;
             
             // 영문 도로명 및 지번주소를 정리한다.
             
@@ -217,9 +218,10 @@ class Postcodify
             }
             else
             {
-                $english_base = $english_address[0];
-                $english_new = '';
-                $english_old = '';
+                $english_address[0] = explode(', ', $english_address[0], 2);
+                $english_base = $english_address[0][1];
+                $english_new = $english_address[0][0];
+                $english_old = $english_address[0][0];
             }
             
             // 추가정보를 정리한다.
