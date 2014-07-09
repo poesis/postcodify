@@ -375,10 +375,10 @@ class Postcodify
         
         // 영문 사서함 주소인지 확인한다.
         
-        if (preg_match('/p\\s*o\\s*box\\s*#?\\s*([0-9]+)?(?:-([0-9]+))?/', $str, $matches))
+        if (preg_match('/p\\s*o\\s*box\\s*#?\\s*([0-9]+)(?:-([0-9]+))?/', $str, $matches))
         {
             $kw->pobox = '사서함';
-            $kw->numbers = array($matches[1] ? $matches[1] : null, $matches[2] ? $matches[2] : null);
+            $kw->numbers = array($matches[1] ? $matches[1] : null, isset($matches[2]) ? $matches[2] : null);
             $kw->extra_numbers = array(null, null);
             $kw->is_english = true;
             return $kw;
