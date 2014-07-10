@@ -36,7 +36,7 @@ CREATE TABLE postcodify_addresses (
     sigungu VARCHAR(20),                                -- 시/군/자치구
     ilbangu VARCHAR(20),                                -- 일반구
     eupmyeon VARCHAR(20),                               -- 읍/면
-    dongri VARCHAR(20),                                 -- 동/리
+    dongri VARCHAR(40),                                 -- 동/리
     jibeon_major SMALLINT(5) UNSIGNED,                  -- 지번 주번호
     jibeon_minor SMALLINT(5) UNSIGNED,                  -- 지번 부번호
     is_mountain TINYINT(1) DEFAULT 0,                   -- 산 여부

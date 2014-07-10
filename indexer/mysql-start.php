@@ -987,8 +987,8 @@ echo '[Step 8/9] 사서함 데이터를 로딩하는 중 ... ' . "\n\n";
 $db = get_db();
 $ps_address_insert = $db->prepare('INSERT INTO postcodify_addresses ' .
     '(id, postcode5, postcode6, road_id, road_section, road_name, ' .
-    'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, english_address) ' .
-    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    'num_major, num_minor, is_basement, sido, sigungu, ilbangu, eupmyeon, dongri, english_address) ' .
+    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
 $ps_keyword_insert = $db->prepare('INSERT INTO postcodify_keywords_pobox ' .
     '(address_id, keyword, range_start_major, range_start_minor, range_end_major, range_end_minor) ' .
     'VALUES (?, ?, ?, ?, ?, ?)');
@@ -1063,19 +1063,21 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
         $startnum = $range_start_major . ($range_start_minor ? ('-' . $range_start_minor) : '');
         $endnum = $range_end_major . ($range_end_minor ? ('-' . $range_end_minor) : '');
         if ($endnum === '' || $endnum === '-') $endnum = null;
-        $insert_name = $pobox_name . ' ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum));
+        $insert_name = trim($pobox_name . ' ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum)));
         
         // 영문 주소를 생성한다.
         
-        $english = 'P.O.Box ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum));
+        $english_local = 'P.O.Box ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum));
+        $english = '';
         if (trim($line[4]) !== '' && isset($english_cache[trim($line[4])])) $english .= ', ' . $english_cache[trim($line[4])];
         if (trim($line[3]) !== '' && isset($english_cache[trim($line[3])])) $english .= ', ' . $english_cache[trim($line[3])];
         if (trim($line[2]) !== '' && isset($english_cache[trim($line[2])])) $english .= ', ' . $english_cache[trim($line[2])];
+        $english = trim($english, ', ') . "\n" . $english_local . "\n" . $english_local;
         
         // postcodify_addresses 테이블에 삽입한다.
         
-        $ps_address_insert->execute(array($address_id, null, $postcode6, $road_id, '00', trim($insert_name),
-            null, null, 0, $sido, $sigungu, $ilbangu, $eupmyeon, $english));
+        $ps_address_insert->execute(array($address_id, null, $postcode6, $road_id, '00', $insert_name,
+            null, null, 0, $sido, $sigungu, $ilbangu, $eupmyeon, $insert_name, $english));
         
         // 검색 키워드들을 정리하여 postcodify_keywords_pobox 테이블에 삽입한다.
         

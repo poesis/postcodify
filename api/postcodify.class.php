@@ -205,7 +205,7 @@ class Postcodify
                 ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : ''));
             $address_old = trim($row->dongri . ' ' . ($row->is_mountain ? '산' : '') .
                 ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : ''));
-            if ($kw->pobox !== null) $address_old = $address_new;
+            if ($kw->pobox !== null && $address_old === '') $address_old = $address_new;
             
             // 영문 도로명 및 지번주소를 정리한다.
             
