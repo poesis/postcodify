@@ -23,7 +23,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.8.2';
+    const VERSION = '1.8.3';
     
     // DB 설정을 저장하는 변수.
     
@@ -226,8 +226,15 @@ class Postcodify
             
             // 추가정보를 정리한다.
             
-            $extra_info_long = trim($address_old . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
-            $extra_info_short = trim($row->dongri . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+            if ($kw->pobox !== null)
+            {
+                $extra_info_long = $extra_info_short = '';
+            }
+            else
+            {
+                $extra_info_long = trim($address_old . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+                $extra_info_short = trim($row->dongri . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+            }
             
             // 요청받은 버전에 따라 다른 형태로 작성한다.
             
