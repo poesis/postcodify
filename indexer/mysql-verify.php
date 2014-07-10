@@ -29,6 +29,10 @@ $checklist_indexes = array(
 
 $checklist_procs = array(
     'postcodify_get_synonym',
+    'postcodify_get_version',
+    'postcodify_get_last_updated',
+    'postcodify_search_postcode5',
+    'postcodify_search_postcode6',
     'postcodify_search_juso',
     'postcodify_search_jibeon',
     'postcodify_search_building',
