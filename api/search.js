@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "1.8.2", location : "" };
+    var info = { version : "1.8.3", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -68,7 +68,7 @@
                 timeout : 2400,
                 timeoutBackup : 7200,
                 beforeSearch : function(keywords) { },
-                afterSearch : function(keywords, results) { },
+                afterSearch : function(keywords, results, lang, sort) { },
                 beforeSelect : function(selectedEntry) { },
                 afterSelect : function(selectedEntry) { },
                 onReady : function() { },
@@ -216,7 +216,7 @@
                     
                     // 검색후 콜백 함수를 실행한다.
                     
-                    if (settings.afterSearch(keywords, data.results) === false) return;
+                    if (settings.afterSearch(keywords, data.results, data.lang, data.sort) === false) return;
                     
                     // API 서버에서 데이터베이스 오류가 발생한 경우 백업 서버에서 검색을 다시 시도한다.
                     
@@ -365,7 +365,7 @@
                         // 검색 결과가 너무 많아 일부만 표시한 경우 그 사실을 알린다.
                         
                         if (data.count >= 100) {
-                            $('<div class="postcode_search_status too_many"></div>').html(info.translations[resultLanguage].errorTooMany.replace("\n", "<br>")).prependTo(results);
+                            $('<div class="postcode_search_status too_many"></div>').html(info.translations[resultLanguage].errorTooMany.replace("\n", "<br>")).insertBefore(results.find("div.postcode_search_result").first());
                         }
                     }
                     
