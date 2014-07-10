@@ -132,6 +132,17 @@ function get_variations_of_dongri($str, &$dongs)
         $keywords[] = $matches[1] . implode('', $matches[2]) . $matches[3];
         $keywords[] = $matches[1] . '제' . implode('', $matches[2]) . $matches[3];
     }
+    elseif (!count($keywords))
+    {
+        $split_keywords = preg_split('/[.,-](?![0-9])/', $str);
+        $split_keywords_count = count($split_keywords);
+        foreach ($split_keywords as $key => $value)
+        {
+            if ($key < $split_keywords_count - 1) $value .= substr($str, strlen($str) - 3);
+            $keywords = array_merge($keywords, get_variations_of_dongri($value, $dongs));
+        }
+        return $keywords;
+    }
     
     if (preg_match('/^(.+)([0-9]+)가동$/uU', $str, $matches))
     {
