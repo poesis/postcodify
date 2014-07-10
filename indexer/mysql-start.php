@@ -862,7 +862,10 @@ while (count($files))
                     // 행정동명에 다양한 변형을 가해 키워드 목록을 구한다.
                     
                     $keywords_dongs = get_variations_of_dongri($admin_dong, $dongs[$filename]);
-                    $keywords_dongs = array_combine($keywords_dongs, $keywords_dongs);
+                    if (count($keywords_dongs))
+                    {
+                        $keywords_dongs = array_combine($keywords_dongs, $keywords_dongs);
+                    }
                     
                     // 이미 키워드로 등록된 법정동명은 제외한다.
                     
