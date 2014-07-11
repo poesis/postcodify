@@ -113,7 +113,7 @@ function get_variations_of_road_name($str)
 
 // 동명 및 리명의 일반적인 변형들을 구하는 함수.
 
-function get_variations_of_dongri($str, &$dongs)
+function get_variations_of_dongri($str)
 {
     $keywords = preg_match('/[.,-]/', $str) ? array() : array($str);
     
@@ -134,14 +134,15 @@ function get_variations_of_dongri($str, &$dongs)
     }
     elseif (!count($keywords))
     {
-        $split_keywords = preg_split('/[.,-](?![0-9])/', $str);
+        $split_keywords = preg_split('/[.,-]/', $str);
         $split_keywords_count = count($split_keywords);
         foreach ($split_keywords as $key => $value)
         {
             if ($key < $split_keywords_count - 1) $value .= substr($str, strlen($str) - 3);
-            $keywords = array_merge($keywords, get_variations_of_dongri($value, $dongs));
+            $keywords[] = $value;
+            $keywords[] = preg_replace('/[0-9.]+/', '', $value);
         }
-        return $keywords;
+        return array_unique($keywords);
     }
     
     if (preg_match('/^(.+)([0-9]+)가동$/uU', $str, $matches))
@@ -156,21 +157,9 @@ function get_variations_of_dongri($str, &$dongs)
         $keywords[] = $str = $matches[1] . $matches[2] . '가동';
     }
     
-    if (substr($str, strlen($str) - 6) === '본동')
+    if (strlen($str) > 9 && substr($str, strlen($str) - 6) === '본동')
     {
-        $dong_original_suspected = substr($str, 0, strlen($str) - 6) . '동';
-        if (isset($dongs[$dong_original_suspected]))
-        {
-            $keywords[] = $dong_original_suspected;
-        }
-        else
-        {
-            $dongs[$str] = 1;
-        }
-    }
-    else
-    {
-        $dongs[$str] = 1;
+        $keywords[] = substr($str, 0, strlen($str) - 6) . '동';
     }
     
     rsort($keywords);

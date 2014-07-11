@@ -599,8 +599,6 @@ while (count($files))
             '(address_id, keyword_crc32, num_major, num_minor) ' .
             'VALUES (?, ?, ?, ?)');
         
-        $dongs[$filename] = array();
-        
         // 트랜잭션을 시작한다.
         
         $db->beginTransaction();
@@ -656,7 +654,7 @@ while (count($files))
                 
                 // 검색 키워드들을 정리하여 postcodify_keywords_jibeon 테이블에 삽입한다.
                 
-                $keywords = get_variations_of_dongri($dongri, $dongs[$filename]);
+                $keywords = get_variations_of_dongri($dongri);
                 foreach ($keywords as $keyword)
                 {
                     $ps_keyword_insert->execute(array($address_id, crc32_x64($keyword), $num_major, $num_minor));
@@ -671,7 +669,6 @@ while (count($files))
         
         // 트랜잭션을 마친다.
         
-        unset($dongs[$filename]);
         $zip->close();
         $db->commit();
         exit;
@@ -739,8 +736,6 @@ while (count($files))
         $ps_keyword_building_insert = $db->prepare('INSERT INTO postcodify_keywords_building ' .
             '(address_id, keyword) ' .
             'VALUES (?, ?)');
-        
-        $dongs[$filename] = array();
         
         // 트랜잭션을 시작한다.
         
@@ -861,7 +856,7 @@ while (count($files))
                 {
                     // 행정동명에 다양한 변형을 가해 키워드 목록을 구한다.
                     
-                    $keywords_dongs = get_variations_of_dongri($admin_dong, $dongs[$filename]);
+                    $keywords_dongs = get_variations_of_dongri($admin_dong);
                     if (count($keywords_dongs))
                     {
                         $keywords_dongs = array_combine($keywords_dongs, $keywords_dongs);
@@ -871,7 +866,7 @@ while (count($files))
                     
                     if ($legal_dong !== '')
                     {
-                        $legal_dong_variations = get_variations_of_dongri($legal_dong, $dongs[$filename]);
+                        $legal_dong_variations = get_variations_of_dongri($legal_dong);
                         foreach ($legal_dong_variations as $legal_dong_variation)
                         {
                             if (isset($keywords_dongs[$legal_dong_variation]))
@@ -954,7 +949,6 @@ while (count($files))
         
         // 트랜잭션을 마친다.
         
-        unset($dongs[$filename]);
         $zip->close();
         $db->commit();
         exit;
