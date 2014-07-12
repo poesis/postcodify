@@ -4,6 +4,7 @@
 // 우편번호 DB 업데이트 프로그램.
 // -------------------------------------------------------------------------------------------------
 
+ini_set('default_socket_timeout', -1);
 ini_set('display_errors', 'on');
 ini_set('memory_limit', '1024M');
 date_default_timezone_set('UTC');

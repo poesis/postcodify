@@ -4,6 +4,7 @@
 // 우편번호 DB 생성 프로그램.
 // -------------------------------------------------------------------------------------------------
 
+ini_set('default_socket_timeout', -1);
 ini_set('display_errors', 'on');
 ini_set('memory_limit', '1024M');
 date_default_timezone_set('UTC');
@@ -102,14 +103,6 @@ if (!file_exists(TXT_DIRECTORY . '/newaddr_pobox_DB.zip'))
     echo '[ERROR] 사서함 (newaddr_pobox_DB.zip) 파일을 찾을 수 없습니다.' . "\n\n";
     exit(1);
 }
-
-// STMT_CLOSE 에러 핸들러를 등록한다.
-
-$STDERR = fopen('php://stderr', 'a+');
-set_error_handler(function($errno, $errstr, $errfile, $errline, $context) {
-    if ($errno === E_WARNING && strpos($errstr, 'STMT_CLOSE') !== false) return;
-    fwrite($GLOBALS['STDERR'], "Error: $errstr in $errfile line $errline\n");
-}, ~0);
 
 // -------------------------------------------------------------------------------------------------
 // DB에 연결하고 테이블 및 검색 프로시저를 생성한다.
@@ -275,7 +268,6 @@ unset($zip);
 // 트랜잭션을 마친다.
 
 $db->commit();
-$db = null;
 unset($db);
 unset($english_synonyms);
 unset($ps_synonym);
@@ -345,7 +337,6 @@ unset($zip);
 // 트랜잭션을 마친다.
 
 $db->commit();
-$db = null;
 unset($db);
 
 // -------------------------------------------------------------------------------------------------
@@ -531,6 +522,7 @@ while (count($files))
         
         $zip->close();
         $db->commit();
+        unset($db);
         exit;
     }
 }
@@ -671,6 +663,7 @@ while (count($files))
         
         $zip->close();
         $db->commit();
+        unset($db);
         exit;
     }
 }
@@ -951,6 +944,7 @@ while (count($files))
         
         $zip->close();
         $db->commit();
+        unset($db);
         exit;
     }
 }
@@ -1106,11 +1100,15 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
     }
 }
 
+// 마무리...
+
+$zip->close();
+unset($zip);
+
 // 트랜잭션을 마친다.
 
 $db->commit();
-$zip->close();
-unset($zip);
+unset($db);
 
 // 경과시간을 측정한다.
 
@@ -1159,14 +1157,11 @@ while (count($indexes))
     else
     {
         $db = get_db();
-        $db->exec('SET interactive_timeout = 3600');
-        $db->exec('SET net_read_timeout = 3600');
-        $db->exec('SET net_write_timeout = 3600');
-        $db->exec('SET wait_timeout = 3600');
         foreach ($columns as $column)
         {
             $db->exec('ALTER TABLE ' . $table_name . ' ADD INDEX (' . $column . ')');
         }
+        unset($db);
         exit;
     }
 }

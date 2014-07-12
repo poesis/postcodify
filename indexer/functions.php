@@ -13,7 +13,13 @@ function get_db()
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
     );
     
-    return new PDO($dsn, DB_USER, DB_PASS, $pdo_options);
+    $db = new PDO($dsn, DB_USER, DB_PASS, $pdo_options);
+    $db->exec('SET interactive_timeout = 28800');
+    $db->exec('SET net_read_timeout = 28800');
+    $db->exec('SET net_write_timeout = 28800');
+    $db->exec('SET wait_timeout = 28800');
+    
+    return $db;
 }
 
 // 항상 64비트식으로 (음수 없이) CRC32를 계산하는 함수.
