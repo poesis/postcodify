@@ -104,13 +104,67 @@ if (!file_exists(TXT_DIRECTORY . '/newaddr_pobox_DB.zip'))
     exit(1);
 }
 
+// DB의 사양을 점검한다.
+
+if (!($db = get_db()))
+{
+    echo '[ERROR] MySQL DB에 접속할 수 없습니다.' . "\n\n";
+    exit(1);
+}
+
+$version_query = $db->query('SELECT VERSION()');
+$version = $version_query->fetchColumn();
+
+if (!version_compare($version, '5.1', '>='))
+{
+    echo '[ERROR] MySQL DB의 버전은 5.1 이상이어야 합니다. 현재 사용중인 DB의 버전은 ' . $version . '입니다.' . "\n\n";
+    exit(1);
+}
+
+unset($version_query);
+unset($version);
+
+$innodb_found = false;
+$innodb_query = $db->query('SHOW ENGINES');
+while ($row = $innodb_query->fetch(PDO::FETCH_NUM))
+{
+    if (strtolower($row[0]) === 'innodb')
+    {
+        $innodb_found = true;
+        break;
+    }
+    unset($row);
+}
+
+if (!$innodb_found)
+{
+    echo '[ERROR] MySQL DB가 InnoDB 테이블 저장 엔진을 지원하지 않습니다.' . "\n\n";
+    exit(1);
+}
+
+unset($innodb_found);
+unset($innodb_query);
+
+$buffersize_query = $db->query('SHOW VARIABLES LIKE \'innodb_buffer_pool_size\'');
+$buffersize = $buffersize_query->fetchColumn(1);
+
+if ($buffersize < 128 * 1024 * 1024)
+{
+    $buffersize = round($buffersize / 1024 / 1024) . 'M';
+    echo '[ERROR] MySQL DB의 InnoDB 버퍼 크기를 128M 이상으로 설정해 주십시오. 현재 설정은 ' . $buffersize . '입니다.' . "\n\n";
+    exit(1);
+}
+
+unset($buffersize_query);
+unset($buffersize);
+
 // -------------------------------------------------------------------------------------------------
-// DB에 연결하고 테이블 및 검색 프로시저를 생성한다.
+// DB에 테이블 및 검색 프로시저를 생성한다.
 // -------------------------------------------------------------------------------------------------
 
 echo '[Step 1/9] 테이블과 프로시저를 생성하는 중 ... ' . "\n\n";
 
-get_db()->exec(file_get_contents(__DIR__ . '/resources/schema-mysql.sql'));
+$db->exec(file_get_contents(__DIR__ . '/resources/schema-mysql.sql'));
 
 // 기본 설정을 입력한다.
 
@@ -125,8 +179,8 @@ if (file_exists(TXT_DIRECTORY . '/도로명코드_기준일.txt'))
         if ($filedate > $savedate)
         {
             echo '파일에서 데이터 기준일을 읽어 사용합니다. 기준일은 ' . $savedate . '입니다.' . "\n";
-            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
-            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('updated', '" . $savedate . "')");
+            $db->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
+            $db->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('updated', '" . $savedate . "')");
             $gotdate = true;
         }
     }
@@ -143,8 +197,8 @@ if (!$gotdate)
         $line = trim(fgets($stdin));
         if (preg_match('/^20[0-9][0-9][0-1][0-9][0-3][0-9]$/', $line))
         {
-            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
-            get_db()->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('updated', '" . $line . "')");
+            $db->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('version', '" . INDEXER_VERSION . "')");
+            $db->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('updated', '" . $line . "')");
             fclose($stdin);
             break;
         }
@@ -156,6 +210,7 @@ if (!$gotdate)
     }
 }
 
+unset($db);
 echo "\n";
 
 // -------------------------------------------------------------------------------------------------
