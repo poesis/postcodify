@@ -205,28 +205,17 @@ class Postcodify
                 ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : ''));
             $address_old = trim($row->dongri . ' ' . ($row->is_mountain ? '산' : '') .
                 ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : ''));
-            if ($kw->pobox !== null && $address_old === '') $address_old = $address_new;
             
             // 영문 도로명 및 지번주소를 정리한다.
             
             $english_address = explode("\n", $row->english_address, 3);
-            if (count($english_address) === 3)
-            {
-                $english_base = $english_address[0];
-                $english_new = $english_address[1];
-                $english_old = $english_address[2];
-            }
-            else
-            {
-                $english_address[0] = explode(', ', $english_address[0], 2);
-                $english_base = $english_address[0][1];
-                $english_new = $english_address[0][0];
-                $english_old = $english_address[0][0];
-            }
+            $english_base = $english_address[0];
+            $english_new = $english_address[1];
+            $english_old = $english_address[2];
             
             // 추가정보를 정리한다.
             
-            if ($kw->pobox !== null)
+            if ($result->sort === 'POBOX')
             {
                 $extra_info_long = $extra_info_short = '';
             }
