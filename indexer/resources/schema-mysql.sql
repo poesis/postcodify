@@ -137,7 +137,7 @@ BEGIN
     SELECT * FROM postcodify_addresses AS pa
     WHERE pa.postcode5 = CONVERT(postcode using utf8) COLLATE utf8_general_ci
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-    LIMIT search_count OFFSET search_offset;
+    LIMIT 100;
 END;
 
 -- 우편번호 (6자리) 검색 프로시저.
@@ -148,7 +148,7 @@ BEGIN
     SELECT * FROM postcodify_addresses AS pa
     WHERE pa.postcode6 = CONVERT(postcode using utf8) COLLATE utf8_general_ci
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-    LIMIT search_count OFFSET search_offset;
+    LIMIT 100;
 END;
 
 -- 도로명주소 검색 프로시저.
@@ -169,7 +169,7 @@ BEGIN
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-    LIMIT search_count OFFSET search_offset;
+    LIMIT 100;
 END;
 
 -- 지번 검색 프로시저.
@@ -190,7 +190,7 @@ BEGIN
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.dongri, pa.jibeon_major, pa.jibeon_minor
-    LIMIT search_count OFFSET search_offset;
+    LIMIT 100;
 END;
 
 -- 건물명 검색 프로시저.
@@ -208,7 +208,7 @@ BEGIN
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-    LIMIT search_count OFFSET search_offset;
+    LIMIT 100;
 END;
 
 -- 건물명 + 동/리 검색 프로시저.
@@ -229,7 +229,7 @@ BEGIN
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-    LIMIT search_count OFFSET search_offset;
+    LIMIT 100;
 END;
 
 -- 사서함 검색 프로시저.
@@ -250,5 +250,5 @@ BEGIN
         AND (area3 IS NULL OR pa.ilbangu = area3)
         AND (area4 IS NULL OR pa.eupmyeon = area4)
     ORDER BY pa.sido, pa.sigungu, pa.road_name, pa.num_major, pa.num_minor
-    LIMIT search_count OFFSET search_offset;
+    LIMIT 100;
 END;
