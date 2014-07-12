@@ -23,10 +23,10 @@ DROP PROCEDURE IF EXISTS postcodify_search_pobox;
 -- 주소 정보를 저장하는 메인 테이블.
 
 CREATE TABLE postcodify_addresses (
-    id NUMERIC(25) PRIMARY KEY,                         -- 관리번호 (PK)
+    id CHAR(25) PRIMARY KEY,                            -- 관리번호 (PK)
     postcode5 CHAR(5),                                  -- 기초구역번호
     postcode6 CHAR(6),                                  -- 우편번호
-    road_id NUMERIC(12),                                -- 도로번호
+    road_id CHAR(12),                                   -- 도로번호
     road_section CHAR(2),                               -- 도로구간번호
     road_name VARCHAR(80),                              -- 도로명
     num_major SMALLINT(5) UNSIGNED,                     -- 도로명주소 주번호
@@ -50,7 +50,7 @@ CREATE TABLE postcodify_addresses (
 
 CREATE TABLE postcodify_keywords_juso (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,        -- PK
-    address_id NUMERIC(25) NOT NULL,                    -- 관리번호 (FK)
+    address_id CHAR(25) NOT NULL,                       -- 관리번호 (FK)
     keyword_crc32 INT(10) UNSIGNED,                     -- 도로명의 CRC32 값
     num_major SMALLINT(5) UNSIGNED,                     -- 도로명주소 주번호
     num_minor SMALLINT(5) UNSIGNED                      -- 도로명주소 부번호
@@ -60,7 +60,7 @@ CREATE TABLE postcodify_keywords_juso (
 
 CREATE TABLE postcodify_keywords_jibeon (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,        -- PK
-    address_id NUMERIC(25) NOT NULL,                    -- 관리번호 (FK)
+    address_id CHAR(25) NOT NULL,                       -- 관리번호 (FK)
     keyword_crc32 INT(10) UNSIGNED,                     -- 동/리명의 CRC32 값
     num_major SMALLINT(5) UNSIGNED,                     -- 지번 주번호
     num_minor SMALLINT(5) UNSIGNED                      -- 지번 부번호
@@ -70,7 +70,7 @@ CREATE TABLE postcodify_keywords_jibeon (
 
 CREATE TABLE postcodify_keywords_building (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,        -- PK
-    address_id NUMERIC(25) NOT NULL,                    -- 관리번호 (FK)
+    address_id CHAR(25) NOT NULL,                       -- 관리번호 (FK)
     keyword VARCHAR(40)                                 -- 건물명
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
@@ -78,7 +78,7 @@ CREATE TABLE postcodify_keywords_building (
 
 CREATE TABLE postcodify_keywords_pobox (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,        -- PK
-    address_id NUMERIC(25) NOT NULL,                    -- 관리번호 (FK)
+    address_id CHAR(25) NOT NULL,                       -- 관리번호 (FK)
     keyword VARCHAR(40),                                -- 사서함명 검색어
     range_start_major SMALLINT(5) UNSIGNED,             -- 시작 주번호
     range_start_minor SMALLINT(5) UNSIGNED,             -- 시작 부번호

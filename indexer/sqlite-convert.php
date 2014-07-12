@@ -72,7 +72,7 @@ foreach ($sqlite_tables as $table_name => $table_info)
     
     $columns_placeholder = implode(', ', array_fill(0, $table_info[0], '?'));
     $primary_key = $table_info[1];
-    $last_primary_key = 0;
+    $last_primary_key = ($table_name === 'postcodify_addresses') ? str_repeat('0', 25) : 0;
     $increment = 2048;
     
     $ps = $sqlite->prepare('INSERT INTO ' . $table_name . ' VALUES (' . $columns_placeholder . ')');
@@ -80,14 +80,28 @@ foreach ($sqlite_tables as $table_name => $table_info)
     for ($i = 0; $i < $row_count; $i += $increment)
     {
         $sqlite->beginTransaction();
-        $query = $mysql->prepare('SELECT * FROM ' . $table_name . ' WHERE ' . $primary_key . ' > ? ORDER BY ' . $primary_key . ' LIMIT ' . $increment);
-        $query->execute(array($last_primary_key));
+        
+        if ($table_name === 'postcodify_addresses')
+        {
+            $query = $mysql->prepare('SELECT * FROM ' . $table_name . ' WHERE ' . $primary_key . ' > ? ORDER BY ' . $primary_key . ' LIMIT ' . $increment);
+            $query->bindParam(1, $last_primary_key, PDO::PARAM_STR, 25);
+            $query->execute();
+        }
+        else
+        {
+            $query = $mysql->prepare('SELECT * FROM ' . $table_name . ' WHERE ' . $primary_key . ' > ? ORDER BY ' . $primary_key . ' LIMIT ' . $increment);
+            $query->bindParam(1, $last_primary_key, PDO::PARAM_INT);
+            $query->execute();
+        }
+        
         while ($row = $query->fetch(PDO::FETCH_NUM))
         {
             $last_primary_key = $row[0];
             $ps->execute($row);
         }
+        
         $sqlite->commit();
+        
         echo "\033[23D" . str_pad(number_format($i), 10, ' ', STR_PAD_LEFT) . ' / ' . str_pad(number_format($row_count), 10, ' ', STR_PAD_LEFT);
     }
     
