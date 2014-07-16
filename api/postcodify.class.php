@@ -23,7 +23,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.8.3';
+    const VERSION = '1.8.4';
     
     // DB 설정을 저장하는 변수.
     
@@ -133,6 +133,15 @@ class Postcodify
                 $dongri_crc32 = $kw->is_english ? $kw->dongri : self::crc32_x64($kw->dongri);
                 $rows = self::call_db_procedure('postcodify_search_jibeon',
                     array($dongri_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
+                
+                // 검색 결과가 없고 동리에 숫자가 포함되어 있다면 잘못된 행정동일 수 있으므로 숫자를 빼고 다시 시도해 본다.
+                
+                if (!count($rows) && !$kw->is_english && preg_match('/[0-9][동리]$/u', $kw->dongri))
+                {
+                    $possible_crc32 = self::crc32_x64(preg_replace('/[0-9]/u', '', $kw->dongri));
+                    $rows = self::call_db_procedure('postcodify_search_jibeon',
+                        array($possible_crc32, $kw->numbers[0], $kw->numbers[1]), $extra_params);
+                }
                 
                 // 검색 결과가 없다면 건물명을 동리로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
                 
