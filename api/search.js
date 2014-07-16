@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "1.8.3", location : "" };
+    var info = { version : "1.8.4", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -137,7 +137,7 @@
                 // 검색어가 없거나 너무 짧은 경우 네트워크 연결을 하지 않도록 한다.
                 
                 if (keywords.length < 3) {
-                    $('<div class="postcode_search_status too_short"></div>').html(info.translations[settings.language].errorTooShort.replace("\n", "<br>")).appendTo(results);
+                    $('<div class="postcode_search_status too_short"></div>').html(info.translations[settings.language].errorTooShort.replace(/\n/g, "<br>")).appendTo(results);
                     return;
                 }
                 
@@ -230,26 +230,26 @@
                     // 무료 API 서버의 일일 검색 허용 횟수를 초과한 경우...
                     
                     else if (data.error && data.error.toLowerCase().indexOf("quota") > -1) {
-                        $('<div class="postcode_search_status quota"></div>').html(info.translations[settings.language].errorQuota.replace("\n", "<br>")).appendTo(results);
+                        $('<div class="postcode_search_status quota"></div>').html(info.translations[settings.language].errorQuota.replace(/\n/g, "<br>")).appendTo(results);
                     }
                     
                     // 그 밖의 에러 발생시...
                     
                     else if (data.error) {
-                        $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorError.replace("\n", "<br>")).appendTo(results);
+                        $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorError.replace(/\n/g, "<br>")).appendTo(results);
                         previousSearch = "";
                     }
                     
                     // 정상 처리되었지만 검색 결과가 없는 경우...
                     
                     else if (data.count === 0) {
-                        $('<div class="postcode_search_status empty"></div>').html(info.translations[settings.language].errorEmpty.replace("\n", "<br>")).appendTo(results);
+                        $('<div class="postcode_search_status empty"></div>').html(info.translations[settings.language].errorEmpty.replace(/\n/g, "<br>")).appendTo(results);
                     }
                     
                     // 정상 처리되었지만 검색 서버의 버전이 맞지 않는 경우...
                     
                     else if (typeof data.results[0].other === "undefined") {
-                        $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorVersion.replace("\n", "<br>")).appendTo(results);
+                        $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorVersion.replace(/\n/g, "<br>")).appendTo(results);
                     }
                     
                     // 검색 결과가 있는 경우...
@@ -365,7 +365,7 @@
                         // 검색 결과가 너무 많아 일부만 표시한 경우 그 사실을 알린다.
                         
                         if (data.count >= 100) {
-                            $('<div class="postcode_search_status too_many"></div>').html(info.translations[resultLanguage].errorTooMany.replace("\n", "<br>")).insertBefore(results.find("div.postcode_search_result").first());
+                            $('<div class="postcode_search_status too_many"></div>').html(info.translations[resultLanguage].errorTooMany.replace(/\n/g, "<br>")).insertBefore(results.find("div.postcode_search_result").first());
                         }
                     }
                     
@@ -527,11 +527,11 @@
     info.translations = {
         ko : {
             errorError : "검색 서버와 통신 중 오류가 발생하였습니다.\n잠시 후 다시 시도해 주시기 바랍니다.",
-            errorEmpty : "검색 결과가 없습니다. 주소가 정확한지 다시 확인해 주십시오.\n띄어쓰기에 유의하시기 바랍니다.",
+            errorEmpty : "검색 결과가 없습니다.\n정확한 도로명 또는 읍·면·동·리 및 번지수를 넣어 검색해 주시고,\n시·군·구 명칭 추가시 띄어쓰기에 유의하시기 바랍니다.",
             errorQuota : "일일 허용 쿼리수를 초과하였습니다.\n관리자에게 문의해 주시기 바랍니다.",
             errorVersion : "검색 서버의 버전이 낮아 이 검색창과 호환되지 않습니다.",
             errorTooShort : "검색어는 3글자 이상 입력해 주십시오.",
-            errorTooMany : "검색 결과가 너무 많아 100건까지만 표시합니다.\n행정구역명, 번지수 등을 사용하여 좀더 자세히 검색해 주시기 바랍니다.",
+            errorTooMany : "검색 결과가 너무 많아 100건만 표시합니다.\n정확한 도로명 또는 읍·면·동·리 및 번지수로 검색해 주시기 바랍니다.",
             msgResultCount : "검색 결과",
             msgSearchTime : "소요 시간",
             msgNetworkTime : "통신 지연",
@@ -541,11 +541,11 @@
         },
         en : {
             errorError : "An error occurred while communicating to the search server.\nPlease try again later.",
-            errorEmpty : "No addresses matched your search.\nPlease check if your search terms are accurately spelled.",
+            errorEmpty : "No addresses matched your search.\nPlease enter the exact legal name of your street, as well as the number(s).",
             errorQuota : "This website and/or your IP address has exceeded its daily search quota.\nPlease contact the administrator.",
             errorVersion : "The version of the search server is not compatible with this search function.",
             errorTooShort : "Please enter at least 3 characters.",
-            errorTooMany : "Your search returned too many results. Only the first 100 items are shown below.\nPlease narrow down your search by adding the street number(s).",
+            errorTooMany : "Your search returned too many results. Only the first 100 items are shown below.\nPlease narrow down your search by adding the number(s).",
             msgResultCount : "Results",
             msgSearchTime : "Time taken",
             msgNetworkTime : "Network delay",
