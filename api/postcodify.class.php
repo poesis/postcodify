@@ -440,7 +440,7 @@ class Postcodify
                     $kw->use_area = true;
                     continue;
                 }
-                elseif (isset($kw->sigungu) && in_array($keyword, Postcodify_Areas::$ilbangu[$kw->sigungu]))
+                elseif (isset($kw->sigungu) && isset(Postcodify_Areas::$ilbangu[$kw->sigungu]) && in_array($keyword, Postcodify_Areas::$ilbangu[$kw->sigungu]))
                 {
                     $kw->ilbangu = $keyword;
                     $kw->use_area = true;
