@@ -11,13 +11,16 @@ date_default_timezone_set('UTC');
 error_reporting(-1);
 gc_enable();
 
+// 인덱서 버전 선언.
+
+define('INDEXER_VERSION', '1.8.4');
+
 // 시작한 시각을 기억한다.
 
 $start_time = time();
 
 // 설정과 함수 파일을 인클루드한다.
 
-define('INDEXER_VERSION', '1.8.3');
 require dirname(__FILE__) . '/config.php';
 require dirname(__FILE__) . '/functions.php';
 echo "\n";
@@ -1114,11 +1117,11 @@ for ($fi = 0; $fi < $zip->numFiles; $fi++)
         // 영문 주소를 생성한다.
         
         $english_local = 'P.O.Box ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum));
-        $english = '';
-        if (trim($line[4]) !== '' && isset($english_cache[trim($line[4])])) $english .= ', ' . $english_cache[trim($line[4])];
-        if (trim($line[3]) !== '' && isset($english_cache[trim($line[3])])) $english .= ', ' . $english_cache[trim($line[3])];
-        if (trim($line[2]) !== '' && isset($english_cache[trim($line[2])])) $english .= ', ' . $english_cache[trim($line[2])];
-        $english = trim($english, ', ') . "\n" . $english_local . "\n" . $english_local;
+        $english_base = '';
+        if (trim($line[4]) !== '' && isset($english_cache[trim($line[4])])) $english_base .= $english_cache[trim($line[4])];
+        if (trim($line[3]) !== '' && isset($english_cache[trim($line[3])])) $english_base .= ', ' . $english_cache[trim($line[3])];
+        if (trim($line[2]) !== '' && isset($english_cache[trim($line[2])])) $english_base .= ', ' . $english_cache[trim($line[2])];
+        $english = $english_base . "\n" . $english_local . "\n" . $english_local;
         
         // postcodify_addresses 테이블에 삽입한다.
         
