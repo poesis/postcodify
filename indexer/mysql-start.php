@@ -13,7 +13,7 @@ gc_enable();
 
 // 인덱서 버전 선언.
 
-define('INDEXER_VERSION', '1.8.4');
+define('INDEXER_VERSION', '1.9');
 
 // 시작한 시각을 기억한다.
 

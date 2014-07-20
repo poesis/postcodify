@@ -23,7 +23,7 @@ class Postcodify
 {
     // 버전 상수.
     
-    const VERSION = '1.8.4';
+    const VERSION = '1.9';
     
     // DB 설정을 저장하는 변수.
     

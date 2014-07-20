@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "1.8.4", location : "" };
+    var info = { version : "1.9", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -65,8 +65,8 @@
                 insertEnglishJibeonAddress : null,
                 insertDetails : null,
                 insertExtraInfo : null,
-                timeout : 2400,
-                timeoutBackup : 7200,
+                timeout : 3000,
+                timeoutBackup : 8000,
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results, lang, sort) { },
                 beforeSelect : function(selectedEntry) { },
