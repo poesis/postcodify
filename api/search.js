@@ -79,7 +79,8 @@
                 focusKeyword : true,
                 focusDetails : true,
                 hideOldAddresses : true,
-                useFullJibeon : false
+                useFullJibeon : false,
+                useAlert : false
             }, options);
             
             settings.language = settings.language.toLowerCase();
@@ -137,7 +138,11 @@
                 // 검색어가 없거나 너무 짧은 경우 네트워크 연결을 하지 않도록 한다.
                 
                 if (keywords.length < 3) {
-                    $('<div class="postcode_search_status too_short"></div>').html(info.translations[settings.language].errorTooShort.replace(/\n/g, "<br>")).appendTo(results);
+                    if (settings.useAlert) {
+                        alert(info.translations[settings.language].errorTooShort);
+                    } else {
+                        $('<div class="postcode_search_status too_short"></div>').html(info.translations[settings.language].errorTooShort.replace(/\n/g, "<br>")).appendTo(results);
+                    }
                     return;
                 }
                 
@@ -230,26 +235,42 @@
                     // 무료 API 서버의 일일 검색 허용 횟수를 초과한 경우...
                     
                     else if (data.error && data.error.toLowerCase().indexOf("quota") > -1) {
-                        $('<div class="postcode_search_status quota"></div>').html(info.translations[settings.language].errorQuota.replace(/\n/g, "<br>")).appendTo(results);
+                        if (settings.useAlert) {
+                            alert(info.translations[settings.language].errorQuota);
+                        } else {
+                            $('<div class="postcode_search_status quota"></div>').html(info.translations[settings.language].errorQuota.replace(/\n/g, "<br>")).appendTo(results);
+                        }
                     }
                     
                     // 그 밖의 에러 발생시...
                     
                     else if (data.error) {
-                        $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorError.replace(/\n/g, "<br>")).appendTo(results);
+                        if (settings.useAlert) {
+                            alert(info.translations[settings.language].errorError);
+                        } else {
+                            $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorError.replace(/\n/g, "<br>")).appendTo(results);
+                        }
                         previousSearch = "";
                     }
                     
                     // 정상 처리되었지만 검색 결과가 없는 경우...
                     
                     else if (data.count === 0) {
-                        $('<div class="postcode_search_status empty"></div>').html(info.translations[settings.language].errorEmpty.replace(/\n/g, "<br>")).appendTo(results);
+                        if (settings.useAlert) {
+                            alert(info.translations[settings.language].errorEmpty);
+                        } else {
+                            $('<div class="postcode_search_status empty"></div>').html(info.translations[settings.language].errorEmpty.replace(/\n/g, "<br>")).appendTo(results);
+                        }
                     }
                     
                     // 정상 처리되었지만 검색 서버의 버전이 맞지 않는 경우...
                     
                     else if (typeof data.results[0].other === "undefined") {
-                        $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorVersion.replace(/\n/g, "<br>")).appendTo(results);
+                        if (settings.useAlert) {
+                            alert(info.translations[settings.language].errorVersion);
+                        } else {
+                            $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorVersion.replace(/\n/g, "<br>")).appendTo(results);
+                        }
                     }
                     
                     // 검색 결과가 있는 경우...
@@ -365,7 +386,11 @@
                         // 검색 결과가 너무 많아 일부만 표시한 경우 그 사실을 알린다.
                         
                         if (data.count >= 100) {
-                            $('<div class="postcode_search_status too_many"></div>').html(info.translations[resultLanguage].errorTooMany.replace(/\n/g, "<br>")).insertBefore(results.find("div.postcode_search_result").first());
+                            if (settings.useAlert) {
+                                alert(info.translations[resultLanguage].errorTooMany);
+                            } else {
+                                $('<div class="postcode_search_status too_many"></div>').html(info.translations[resultLanguage].errorTooMany.replace(/\n/g, "<br>")).insertBefore(results.find("div.postcode_search_result").first());
+                            }
                         }
                     }
                     

@@ -58,7 +58,7 @@ class Postcodify
         
         // 검색 키워드의 유효성을 확인한다.
         
-        if ($kw === '')
+        if (($kw = trim($kw)) === '')
         {
             return new Postcodify_Result('Keyword Not Supplied');
         }
@@ -85,7 +85,7 @@ class Postcodify
         {
             // 시도, 시군구, 일반구, 읍면 등으로 검색 결과를 제한하는 경우 추가 파라미터 목록을 작성한다.
             
-            $extra_params = $kw->use_area ? array($kw->sido, $kw->sigungu, $kw->ilbangu, $kw->eupmyeon) : array();
+            $extra_params = $kw->use_area ? array($kw->sido, $kw->sigungu, $kw->ilbangu, $kw->eupmyeon) : array(null, null, null, null);
             
             // 우편번호로 검색하는 경우...
             
@@ -295,11 +295,7 @@ class Postcodify
         
         if (strpos($proc_name, 'search') !== false)
         {
-            if (strpos($proc_name, 'postcode') === false)
-            {
-                $extra_params = count($extra_params) ? $extra_params : array(null, null, null, null);
-                $params = array_merge($params, $extra_params);
-            }
+            $params = array_merge($params, $extra_params);
             $params[] = 100;
             $params[] = 0;
         }
