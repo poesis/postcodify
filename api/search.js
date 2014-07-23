@@ -79,6 +79,7 @@
                 focusKeyword : true,
                 focusDetails : true,
                 hideOldAddresses : true,
+                hideSummary : false,
                 useFullJibeon : false,
                 useAlert : false
             }, options);
@@ -374,14 +375,16 @@
                         
                         // 검색 결과 요약을 작성한다.
                         
-                        var summary = $('<div class="postcode_search_status summary"></div>');
-                        summary.append('<div class="result_count">' + info.translations[resultLanguage].msgResultCount + ': ' +
-                            '<span>' + data.count + '</span></div>');
-                        summary.append('<div class="search_time">' + info.translations[resultLanguage].msgSearchTime + ': ' +
-                            '<span>' + Math.round(data.time * 1000) + 'ms</span></div>');
-                        summary.append('<div class="network_time">' + info.translations[resultLanguage].msgNetworkTime + ': ' +
-                            '<span>' + Math.round((searchTotalTime - parseFloat(data.time)) * 1000) + 'ms</span></div>');
-                        summary.appendTo(results);
+                        if (!settings.hideSummary) {
+                            var summary = $('<div class="postcode_search_status summary"></div>');
+                            summary.append('<div class="result_count">' + info.translations[resultLanguage].msgResultCount + ': ' +
+                                '<span>' + data.count + '</span></div>');
+                            summary.append('<div class="search_time">' + info.translations[resultLanguage].msgSearchTime + ': ' +
+                                '<span>' + Math.round(data.time * 1000) + 'ms</span></div>');
+                            summary.append('<div class="network_time">' + info.translations[resultLanguage].msgNetworkTime + ': ' +
+                                '<span>' + Math.round((searchTotalTime - parseFloat(data.time)) * 1000) + 'ms</span></div>');
+                            summary.appendTo(results);
+                        }
                         
                         // 검색 결과가 너무 많아 일부만 표시한 경우 그 사실을 알린다.
                         
