@@ -108,7 +108,7 @@ foreach ($articles as $url)
             echo 'Downloading ' . $matches[1] . '.TXT' . ' ... ';
             $filepath = DOWNLOAD_PATH . '/' . $matches[1] . '.TXT';
             $result = download($link, $filepath);
-            if (!$result || !file_exists($filepath) || filesize($filepath) < 100)
+            if (!$result || !file_exists($filepath))
             {
                 echo '[ERROR]' . "\n";
                 exit;
