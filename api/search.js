@@ -96,8 +96,10 @@
             
             var results = $(settings.results);
             var controls = $('<div class="postcode_search_controls"></div>');
-            var keywordInput = $('<input type="text" class="keyword" value="" />').appendTo(controls);
-            var searchButton = $('<button type="button" class="search_button"></button>').html(settings.searchButtonContent).appendTo(controls);
+            var uniqueId = "postcodify_" + new Date().getTime().toString() + Math.random().toString().substr(2, 4);
+            var keywordLabel = $('<label></label>').attr("for", uniqueId).text(info.translations[settings.language].msgKeywords).hide().appendTo(controls);
+            var keywordInput = $('<input type="text" class="keyword" value="" />').attr("id", uniqueId).appendTo(controls);
+            var searchButton = $('<button type="button" class="search_button"></button>').attr("id", uniqueId + "_button").html(settings.searchButtonContent).appendTo(controls);
             controls.prependTo(settings.controls);
             
             // 단시간내 중복 검색을 방지하기 위해 직전 검색어를 기억하는 변수.
@@ -192,7 +194,7 @@
                             cdn : info.location
                         },
                         dataType : "jsonp",
-                        jsonpCallback : "postcodify" + ajaxStartTime,
+                        jsonpCallback : "postcodify_" + ajaxStartTime.toString() + Math.random().toString().substr(2, 4),
                         processData : true,
                         cache : false,
                         timeout : timeout,
@@ -564,6 +566,7 @@
             msgSearchTime : "소요 시간",
             msgNetworkTime : "통신 지연",
             msgSeeOthers : "관련지번 보기",
+            msgKeywords : "검색 키워드",
             msgSearch : "검색",
             msgMap : "지도"
         },
@@ -578,6 +581,7 @@
             msgSearchTime : "Time taken",
             msgNetworkTime : "Network delay",
             msgSeeOthers : "See related addresses",
+            msgKeywords : "Search keywords",
             msgSearch : "Search",
             msgMap : "Map"
         }
