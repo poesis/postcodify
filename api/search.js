@@ -106,18 +106,18 @@
             
             var previousSearch = "";
             
-            // 키워드 입력란이 포커스를 잃거나 엔터키를 누르면 즉시 검색을 수행한다.
+            // 키워드 입력란에서 엔터키를 누르거나 검색 단추로 포커를 이동하면 즉시 검색을 수행한다.
             // 검색 단추를 누를 때까지 기다리는 것보다 검색 속도가 훨씬 빠르게 느껴진다.
-            
-            keywordInput.blur(function(event) {
-                searchButton.trigger("click");
-            });
             
             keywordInput.keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
                     searchButton.trigger("click");
                 }
+            });
+            
+            searchButton.focusin(function(event) {
+                searchButton.trigger("click");
             });
             
             // 실제 검색을 수행하는 이벤트를 등록한다.
