@@ -49,10 +49,13 @@
             var settings = $.extend({
                 api : info.freeAPI.defaultUrl,
                 apiBackup : null,
+                timeout : 3000,
+                timeoutBackup : 8000,
                 callBackupFirst : false,
                 controls : this,
                 results : this,
                 language : "ko",
+                autoSelect : false,
                 searchButtonContent : null,
                 mapLinkProvider : false,
                 mapLinkContent : null,
@@ -65,8 +68,6 @@
                 insertEnglishJibeonAddress : null,
                 insertDetails : null,
                 insertExtraInfo : null,
-                timeout : 3000,
-                timeoutBackup : 8000,
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results, lang, sort) { },
                 beforeSelect : function(selectedEntry) { },
@@ -106,7 +107,7 @@
             
             var previousSearch = "";
             
-            // 키워드 입력란에서 엔터키를 누르거나 검색 단추로 포커를 이동하면 즉시 검색을 수행한다.
+            // 키워드 입력란에서 엔터키를 누르거나 검색 단추로 포커스를 이동하면 즉시 검색을 수행한다.
             // 검색 단추를 누를 때까지 기다리는 것보다 검색 속도가 훨씬 빠르게 느껴진다.
             
             keywordInput.keypress(function(event) {
@@ -258,7 +259,7 @@
                     
                     // 정상 처리되었지만 검색 결과가 없는 경우...
                     
-                    else if (data.count === 0) {
+                    else if (data.count == 0) {
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorEmpty);
                         } else {
@@ -403,6 +404,12 @@
                     
                     settings.onSuccess();
                     settings.onComplete();
+                    
+                    // 검색 결과가 1개이고 autoSelect가 true인 경우 자동으로 선택한다.
+                    
+                    if (!data.error && data.count == 1 && settings.autoSelect) {
+                        results.find("div.postcode_search_result a.selector").first().trigger("click");
+                    }
                 };
                 
                 // AJAX 요청 1차 실패시 실행할 함수를 정의한다.
