@@ -37,6 +37,14 @@ class Postcodify_Client
     
     protected $config = array();
     
+    // 사용할 문자셋을 지정한다.
+    
+    public function set_charset($charset)
+    {
+        if (strtoupper($charset) === 'UTF-8') return;
+        $this->config['charset'] = $charset;
+    }
+    
     // 도메인을 지정한다.
     
     public function set_domain($domain)
@@ -102,7 +110,7 @@ class Postcodify_Client
         
         $params = http_build_query(array(
             'v' => self::VERSION,
-            'q' => $keywords,
+            'q' => isset($this->config['charset']) ? iconv($this->config['charset'], 'UTF-8', $keywords) : $keywords,
             'ref' => $this->config['domain'],
             'cdn' => '',
         ));
