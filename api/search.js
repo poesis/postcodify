@@ -407,7 +407,7 @@
                     
                     // 검색 결과가 1개이고 autoSelect가 true인 경우 자동으로 선택한다.
                     
-                    if (!data.error && data.count == 1 && settings.autoSelect) {
+                    if (!data.error && data.count == 1 && data.nums && settings.autoSelect) {
                         results.find("div.postcode_search_result a.selector").first().trigger("click");
                     }
                 };
