@@ -23,7 +23,7 @@ class Postcodify_Client
 {
     // 버전 상수.
     
-    const VERSION = '1.9';
+    const VERSION = '2.0.0';
     
     // 무료 API 경로 및 기타 설정 기본값들.
     
