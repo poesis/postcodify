@@ -21,14 +21,13 @@
 
 date_default_timezone_set('Asia/Seoul');
 error_reporting(-1);
-require 'config.php';
-require 'postcodify.class.php';
+require dirname(__FILE__) . '/autoload.php';
 
 // 검색 키워드, JSONP 콜백 함수명, 클라이언트 버전을 구한다.
 
 $keywords = isset($_GET['q']) ? trim($_GET['q']) : (isset($argv[1]) ? trim($argv[1], ' "\'') : '');
 $callback = isset($_GET['callback']) ? $_GET['callback'] : null;
-$client_version = isset($_GET['v']) ? trim($_GET['v']) : '1.8';
+$client_version = isset($_GET['v']) ? trim($_GET['v']) : POSTCODIFY_VERSION;
 if (function_exists('get_magic_quotes_gpc') && @get_magic_quotes_gpc()) $keywords = stripslashes($keywords);
 if (preg_match('/[^a-zA-Z0-9_.]/', $callback)) $callback = null;
 
@@ -37,8 +36,8 @@ if (preg_match('/[^a-zA-Z0-9_.]/', $callback)) $callback = null;
 header('Content-Type: application/javascript; charset=UTF-8');
 header('Cache-Control: private, must-revalidate, post-check=0, pre-check=0');
 header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
-Postcodify::dbconfig(DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_DBNAME, DB_DRIVER);
-$result = Postcodify::search($keywords, 'UTF-8', $client_version);
+Postcodify_Server::dbconfig(DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_DBNAME, DB_DRIVER);
+$result = Postcodify_Server::search($keywords, 'UTF-8', $client_version);
 $json_options = (PHP_SAPI === 'cli' && defined('JSON_PRETTY_PRINT')) ? 384 : 0;
 echo ($callback ? ($callback . '(') : '') . json_encode($result, $json_options) . ($callback ? ');' : '') . "\n";
 exit;

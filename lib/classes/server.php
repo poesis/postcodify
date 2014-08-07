@@ -19,12 +19,8 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-class Postcodify
+class Postcodify_Server
 {
-    // 버전 상수.
-    
-    const VERSION = '2.0.0';
-    
     // DB 설정을 저장하는 변수.
     
     protected static $db_config = array();
@@ -307,14 +303,12 @@ class Postcodify
             // MySQL.
             
             case 'mysql':
-                require_once dirname(__FILE__) . '/postcodify.mysql.php';
-                return Postcodify_MySQL::query(self::$db_config, $proc_name, $params);
+                return Postcodify_DB_MySQL::query(self::$db_config, $proc_name, $params);
             
             // SQLite.
             
             case 'sqlite':
-                require_once dirname(__FILE__) . '/postcodify.sqlite.php';
-                return Postcodify_SQLite::query(self::$db_config['dbname'], $proc_name, $params);
+                return Postcodify_DB_SQLite::query(self::$db_config['dbname'], $proc_name, $params);
             
             // 그 밖의 드라이버는 예외를 던진다.
             
@@ -388,10 +382,6 @@ class Postcodify
         // 검색어를 단어별로 분리한다.
         
         $str = preg_split('/\\s+/u', $str);
-        
-        // 대한민국 행정구역 목록 파일을 로딩한다.
-        
-        require_once dirname(__FILE__) . '/postcodify.areas.php';
         
         // 각 단어의 의미를 파악한다.
         
@@ -608,7 +598,7 @@ class Postcodify_Result
 {
     public function __construct($error = '')
     {
-        $this->version = Postcodify::VERSION;
+        $this->version = POSTCODIFY_VERSION;
         $this->error = $error;
     }
     
