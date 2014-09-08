@@ -85,7 +85,7 @@ foreach ($article_tags as $article_tag)
             $articles['부가정보'] = RELATIVE_DOMAIN . htmlspecialchars_decode($matches[1]);
         }
     }
-    if (strpos($article_tag[0], '상세건물명') !== false && strpos($article_tag[0], $articles['날짜'][0]) !== false)
+    if (strpos($article_tag[0], '상세건물명') !== false)
     {
         if (preg_match(FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
         {
