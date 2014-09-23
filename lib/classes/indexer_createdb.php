@@ -21,11 +21,36 @@
 
 class Postcodify_Indexer_CreateDB
 {
+    // 설정 저장.
+    
+    protected $_data_dir;
+    protected $_data_date;
+    
     // 엔트리 포인트.
     
     public function start()
     {
-        
-        
+        $this->_data_dir = dirname(POSTCODIFY_LIB_DIR) . '/data';
+        $this->load_data_date();
+        $this->load_road_info();
+    }
+    
+    // 데이터 기준일을 읽는다.
+    
+    public function load_data_date()
+    {
+        $date = trim(file_get_contents($this->_data_dir . '/도로명코드_기준일.txt'));
+        $this->_data_date = $date;
+    }
+    
+    // 도로명코드 목록을 읽는다.
+    
+    public function load_road_info()
+    {
+        $zip = new Postcodify_Indexer_ZipReader;
+        $zip->open_archive($this->_data_dir . '/도로명코드_전체분.zip');
+        $zip->open_first_file();
+        var_dump($zip->read_line());
+        $zip->close();
     }
 }
