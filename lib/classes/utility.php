@@ -23,9 +23,9 @@ class Postcodify_Utility
 {
     // DB에 연결하는 함수.
     
-    public function get_db()
+    public static function get_db()
     {
-        $dsn = DB_DRIVER . ':host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_DBNAME;
+        $dsn = POSTCODIFY_DB_DRIVER . ':host=' . POSTCODIFY_DB_HOST . ';port=' . POSTCODIFY_DB_PORT . ';dbname=' . POSTCODIFY_DB_DBNAME;
         $dsn .= ';charset=utf8';
         
         $pdo_options = array(
@@ -34,13 +34,13 @@ class Postcodify_Utility
             PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
         );
         
-        $db = new PDO($dsn, DB_USER, DB_PASS, $pdo_options);
+        $db = new PDO($dsn, POSTCODIFY_DB_USER, POSTCODIFY_DB_PASS, $pdo_options);
         return $db;
     }
 
     // 항상 64비트식으로 (음수 없이) CRC32를 계산하는 함수.
     
-    public function crc32_x64($str)
+    public static function crc32_x64($str)
     {
         $crc32 = crc32($str);
         return ($crc32 >= 0) ? $crc32 : ($crc32 + 0x100000000);
@@ -48,7 +48,7 @@ class Postcodify_Utility
     
     // 파일 다운로드 함수.
     
-    public function download($url, $target_filename = false)
+    public static function download($url, $target_filename = false)
     {
         $ch = curl_init($url);
         if ($target_filename)
@@ -80,14 +80,14 @@ class Postcodify_Utility
     
     // 터미널에서 커서를 후퇴시키는 함수.
     
-    public function print_negative_spaces($count)
+    public static function print_negative_spaces($count)
     {
         echo "\033[${count}D";
     }
     
     // 검색 키워드에서 불필요한 문자와 띄어쓰기를 제거하는 함수.
     
-    public function get_canonical($str)
+    public static function get_canonical($str)
     {
         $str = str_replace(array('(주)', '(유)', '(사)', '(재)', '(아)'), '', $str);
         return preg_replace('/[^ㄱ-ㅎ가-힣a-z0-9-]/uU', '', strtolower($str));
@@ -95,7 +95,7 @@ class Postcodify_Utility
     
     // 도로명의 일반적인 변형들을 구하는 함수.
     
-    public function get_variations_of_road_name($str)
+    public static function get_variations_of_road_name($str)
     {
         $keywords = array($str);
         
@@ -142,7 +142,7 @@ class Postcodify_Utility
     
     // 동명 및 리명의 일반적인 변형들을 구하는 함수.
     
-    public function get_variations_of_dongri($str)
+    public static function get_variations_of_dongri($str)
     {
         $keywords = preg_match('/[.,-]/', $str) ? array() : array($str);
         
@@ -197,7 +197,7 @@ class Postcodify_Utility
     
     // 건물명의 일반적인 변형들을 구하는 함수.
     
-    public function get_variations_of_building_name($str)
+    public static function get_variations_of_building_name($str)
     {
         // 무의미한 건물명은 무시한다.
         

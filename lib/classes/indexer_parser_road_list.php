@@ -52,7 +52,7 @@ class Postcodify_Indexer_Parser_Road_List extends Postcodify_Indexer_ZipReader
         
         // 동 정보는 여기서 기억할 필요가 없다.
         
-        if ($eupmyeon === '' || preg_match('/동$/u', $eupmyeon))
+        if ($eupmyeon === '' || !preg_match('/[읍면]$/u', $eupmyeon))
         {
             $eupmyeon = null;
             $eupmyeon_english = null;
