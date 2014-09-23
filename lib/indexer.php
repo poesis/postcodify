@@ -19,8 +19,13 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
+ini_set('default_socket_timeout', -1);
+ini_set('display_errors', 'on');
+ini_set('memory_limit', '1024M');
 date_default_timezone_set('Asia/Seoul');
 error_reporting(-1);
+if (function_exists('gc_enable')) gc_enable();
+
 require dirname(__FILE__) . '/autoload.php';
 
 // 명령줄에 주어진 옵션에 따라 적절한 클래스를 호출한다.

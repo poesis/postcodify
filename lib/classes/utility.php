@@ -78,6 +78,13 @@ class Postcodify_Utility
         return $result;
     }
     
+    // 터미널에서 커서를 후퇴시키는 함수.
+    
+    public function print_negative_spaces($count)
+    {
+        echo "\033[${count}D";
+    }
+    
     // 검색 키워드에서 불필요한 문자와 띄어쓰기를 제거하는 함수.
     
     public function get_canonical($str)

@@ -35,7 +35,7 @@ class Postcodify_Indexer_CreateDB
         $this->load_road_info();
     }
     
-    // 데이터 기준일을 읽는다.
+    // 데이터 기준일 정보를 로딩한다.
     
     public function load_data_date()
     {
@@ -43,11 +43,11 @@ class Postcodify_Indexer_CreateDB
         $this->_data_date = $date;
     }
     
-    // 도로명코드 목록을 읽는다.
+    // 도로명코드 목록을 로딩한다.
     
     public function load_road_info()
     {
-        $zip = new Postcodify_Indexer_ZipReader;
+        $zip = new Postcodify_Indexer_Parser_Road_List;
         $zip->open_archive($this->_data_dir . '/도로명코드_전체분.zip');
         $zip->open_first_file();
         var_dump($zip->read_line());
