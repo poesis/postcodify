@@ -38,6 +38,9 @@ $valid_actions = array(
 
 if (PHP_SAPI === 'cli' && isset($argv[1]) && in_array($argv[1], $valid_actions))
 {
+    $columns = @exec('tput cols');
+    define('TERMINAL_WIDTH', $columns ? $columns : 80);
+    
     $start_time = time();
     $class_name = 'Postcodify_Indexer_' . ucfirst($argv[1]);
     $obj = new $class_name();

@@ -43,20 +43,63 @@ class Postcodify_Indexer_CreateDB
     
     public function start()
     {
-        echo '테이블을 생성하는 중...' . PHP_EOL;
+        $this->print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
+        $this->print_newline();
+        
+        $this->print_message('테이블을 생성하는 중...');
         $this->create_tables();
+        $this->print_ok();
+        $this->print_newline();
         
-        echo '데이터 기준일 정보를 로딩하는 중...' . PHP_EOL;
+        $this->print_message('데이터 기준일 정보를 로딩하는 중...');
         $this->load_data_date();
+        $this->print_ok();
+        $this->print_newline();
         
-        echo '도로명코드 목록을 로딩하는 중...' . PHP_EOL;
+        $this->print_message('도로명코드 목록을 로딩하는 중...');
         $this->load_road_info();
+        $this->print_ok();
+        $this->print_newline();
         
-        echo '상세건물명을 로딩하는 중...' . PHP_EOL;
+        $this->print_message('상세건물명을 로딩하는 중...');
         $this->load_building_info();
+        $this->print_ok();
+        $this->print_newline();
         
-        echo '영문 행정구역명을 로딩하는 중...' . PHP_EOL;
+        $this->print_message('영문 행정구역명을 로딩하는 중...');
         $this->load_english_aliases();
+        $this->print_ok();
+        $this->print_newline();
+    }
+    
+    // 터미널에 메시지를 출력하고 커서를 오른쪽 끝으로 이동한다.
+    
+    public function print_message($str)
+    {
+        echo $str . str_repeat(' ', max(12, TERMINAL_WIDTH - Postcodify_Utility::get_terminal_width($str)));
+    }
+    
+    // 터미널에 진행 상황을 출력한다.
+    
+    public function print_progress($num)
+    {
+        Postcodify_Utility::print_negative_spaces(12);
+        echo str_pad(number_format($num), 10, ' ', STR_PAD_LEFT) . '  ';
+    }
+    
+    // 터미널에 OK 메시지를 출력한다.
+    
+    public function print_ok()
+    {
+        Postcodify_Utility::print_negative_spaces(12);
+        echo str_repeat(' ', 6) . '[ OK ]';
+    }
+    
+    // 터미널의 커서를 다음 줄로 이동한다.
+    
+    public function print_newline()
+    {
+        echo PHP_EOL;
     }
     
     // 테이블을 생성한다.
@@ -95,6 +138,8 @@ class Postcodify_Indexer_CreateDB
         $zip->open_archive($this->_data_dir . '/도로명코드_전체분.zip');
         $zip->open_next_file();
         
+        $count = 0;
+        
         while ($entry = $zip->read_line())
         {
             Postcodify_Utility::$english_cache[$entry->road_name] = $entry->road_name_english;
@@ -117,6 +162,7 @@ class Postcodify_Indexer_CreateDB
                 $entry->eupmyeon_english,
             ));
             
+            if (++$count % 512 === 0) $this->print_progress($count);
             unset($entry);
         }
         
@@ -134,10 +180,16 @@ class Postcodify_Indexer_CreateDB
         $zip->open_archive($this->_data_dir . '/상세건물명.zip');
         $zip->open_next_file();
         
+        $count = 0;
+        
         while ($entry = $zip->read_line())
         {
-            if (!count($entry->building_names)) continue;
-            Postcodify_Utility::$building_cache[$entry->address_id] = implode(',', $entry->building_names);
+            if (count($entry->building_names))
+            {
+                Postcodify_Utility::$building_cache[$entry->address_id] = implode(',', $entry->building_names);
+            }
+            
+            if (++$count % 512 === 0) $this->print_progress($count);
             unset($entry);
         }
     }
@@ -150,9 +202,12 @@ class Postcodify_Indexer_CreateDB
         $zip->open_archive($this->_data_dir . '/english_aliases_DB.zip');
         $zip->open_next_file();
         
+        $count = 0;
+        
         while ($entry = $zip->read_line())
         {
             Postcodify_Utility::$english_cache[$entry->ko] = $entry->en;
+            if (++$count % 512 === 0) $this->print_progress($count);
             unset($entry);
         }
     }

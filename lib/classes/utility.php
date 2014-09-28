@@ -45,7 +45,7 @@ class Postcodify_Utility
         $db = new PDO($dsn, POSTCODIFY_DB_USER, POSTCODIFY_DB_PASS, $pdo_options);
         return $db;
     }
-
+    
     // 항상 64비트식으로 (음수 없이) CRC32를 계산하는 함수.
     
     public static function crc32_x64($str)
@@ -84,6 +84,13 @@ class Postcodify_Utility
             }
         }
         return $result;
+    }
+    
+    // 터미널에 표시할 문자열의 가로 폭을 계산하는 함수.
+    
+    public static function get_terminal_width($str)
+    {
+        return strlen($str) - ((strlen($str) - mb_strlen($str, 'UTF-8')) / 2);
     }
     
     // 터미널에서 커서를 후퇴시키는 함수.
