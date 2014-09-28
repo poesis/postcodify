@@ -41,12 +41,15 @@ if (PHP_SAPI === 'cli' && isset($argv[1]) && in_array($argv[1], $valid_actions))
     $columns = @exec('tput cols');
     define('TERMINAL_WIDTH', $columns ? $columns : 80);
     
+    $dry_run = (isset($argv[2]) && $argv[2] == '--dry-run');
+    define('DRY_RUN', $dry_run);
+    
     $start_time = time();
     $class_name = 'Postcodify_Indexer_' . ucfirst($argv[1]);
     $obj = new $class_name();
     $obj->start();
     
-    echo str_repeat('-', 80) . PHP_EOL;
+    echo str_repeat('-', TERMINAL_WIDTH) . PHP_EOL;
     
     $elapsed = time() - $start_time;
     $elapsed_hours = floor($elapsed / 3600);

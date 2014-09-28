@@ -43,7 +43,7 @@ class Postcodify_Indexer_CreateDB
     
     public function start()
     {
-        $this->print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
+        $this->print_message('Postcodify Indexer ' . POSTCODIFY_VERSION . (DRY_RUN ? ' (시험구동)' : ''));
         $this->print_newline();
         
         $this->print_message('테이블을 생성하는 중...');
@@ -106,9 +106,12 @@ class Postcodify_Indexer_CreateDB
     
     public function create_tables()
     {
-        $db = Postcodify_Utility::get_db();
-        $db->exec(file_get_contents(POSTCODIFY_LIB_DIR . '/resources/schema-mysql.sql'));
-        unset($db);
+        if (!DRY_RUN)
+        {
+            $db = Postcodify_Utility::get_db();
+            $db->exec(file_get_contents(POSTCODIFY_LIB_DIR . '/resources/schema-mysql.sql'));
+            unset($db);
+        }
     }
     
     // 데이터 기준일 정보를 로딩한다.
@@ -118,21 +121,27 @@ class Postcodify_Indexer_CreateDB
         $date = trim(file_get_contents($this->_data_dir . '/도로명코드_기준일.txt'));
         $this->_data_date = $date;
         
-        $db = Postcodify_Utility::get_db();
-        $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('version', '" . POSTCODIFY_VERSION . "')");
-        $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('updated', '" . $this->_data_date . "')");
-        unset($db);
+        if (!DRY_RUN)
+        {
+            $db = Postcodify_Utility::get_db();
+            $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('version', '" . POSTCODIFY_VERSION . "')");
+            $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('updated', '" . $this->_data_date . "')");
+            unset($db);
+        }
     }
     
     // 도로명코드 목록을 로딩한다.
     
     public function load_road_info()
     {
-        $db = Postcodify_Utility::get_db();
-        $db->beginTransaction();
-        $ps = $db->prepare('INSERT INTO postcodify_roads (road_id, road_name_ko, road_name_en, ' .
-            'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en) ' .
-            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        if (!DRY_RUN)
+        {
+            $db = Postcodify_Utility::get_db();
+            $db->beginTransaction();
+            $ps = $db->prepare('INSERT INTO postcodify_roads (road_id, road_name_ko, road_name_en, ' .
+                'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en) ' .
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        }
         
         $zip = new Postcodify_Indexer_Parser_Road_List;
         $zip->open_archive($this->_data_dir . '/도로명코드_전체분.zip');
@@ -148,28 +157,35 @@ class Postcodify_Indexer_CreateDB
             if ($entry->ilbangu) Postcodify_Utility::$english_cache[$entry->ilbangu] = $entry->ilbangu_english;
             if ($entry->eupmyeon) Postcodify_Utility::$english_cache[$entry->eupmyeon] = $entry->eupmyeon_english;
             
-            $ps->execute(array(
-                $entry->road_id . $entry->road_section,
-                $entry->road_name,
-                $entry->road_name_english,
-                $entry->sido,
-                $entry->sido_english,
-                $entry->sigungu,
-                $entry->sigungu_english,
-                $entry->ilbangu,
-                $entry->ilbangu_english,
-                $entry->eupmyeon,
-                $entry->eupmyeon_english,
-            ));
+            if (!DRY_RUN)
+            {
+                $ps->execute(array(
+                    $entry->road_id . $entry->road_section,
+                    $entry->road_name,
+                    $entry->road_name_english,
+                    $entry->sido,
+                    $entry->sido_english,
+                    $entry->sigungu,
+                    $entry->sigungu_english,
+                    $entry->ilbangu,
+                    $entry->ilbangu_english,
+                    $entry->eupmyeon,
+                    $entry->eupmyeon_english,
+                ));
+            }
             
             if (++$count % 512 === 0) $this->print_progress($count);
             unset($entry);
         }
         
         $zip->close();
-        $db->commit();
         unset($zip);
-        unset($db);
+        
+        if (!DRY_RUN)
+        {
+            $db->commit();
+            unset($db);
+        }
     }
     
     // 상세건물명을 로딩한다.
