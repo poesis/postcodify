@@ -13,7 +13,8 @@ DROP TABLE IF EXISTS postcodify_settings;
 -- 주소 정보를 저장하는 메인 테이블.
 
 CREATE TABLE postcodify_addresses (
-    id NUMERIC(25) PRIMARY KEY,
+    id INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    address_id NUMERIC(25),
     postcode5 CHAR(5),
     postcode6 CHAR(6),
     road_id NUMERIC(14),
@@ -33,7 +34,7 @@ CREATE TABLE postcodify_addresses (
 -- 도로 정보를 저장하는 테이블.
 
 CREATE TABLE postcodify_roads (
-    id NUMERIC(14) PRIMARY KEY,
+    road_id NUMERIC(14) PRIMARY KEY,
     road_name_ko VARCHAR(40),
     road_name_en VARCHAR(40),
     sido_ko VARCHAR(40),
@@ -50,7 +51,7 @@ CREATE TABLE postcodify_roads (
 
 CREATE TABLE postcodify_keywords_ko (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    address_id NUMERIC(25) NOT NULL,
+    address_id INT UNSIGNED NOT NULL,
     keyword_crc32 INT(10) UNSIGNED
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
 
@@ -58,7 +59,7 @@ CREATE TABLE postcodify_keywords_ko (
 
 CREATE TABLE postcodify_keywords_en (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    address_id NUMERIC(25) NOT NULL,
+    address_id INT UNSIGNED NOT NULL,
     keyword_crc32 INT(10) UNSIGNED
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
 
@@ -66,7 +67,7 @@ CREATE TABLE postcodify_keywords_en (
 
 CREATE TABLE postcodify_numbers (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    address_id NUMERIC(25) NOT NULL,
+    address_id INT UNSIGNED NOT NULL,
     num_major SMALLINT(5) UNSIGNED,
     num_minor SMALLINT(5) UNSIGNED
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
@@ -75,7 +76,7 @@ CREATE TABLE postcodify_numbers (
 
 CREATE TABLE postcodify_buildings (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    address_id NUMERIC(25) NOT NULL,
+    address_id INT UNSIGNED NOT NULL,
     keyword VARCHAR(40)
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
 
@@ -83,7 +84,7 @@ CREATE TABLE postcodify_buildings (
 
 CREATE TABLE postcodify_poboxes (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    address_id NUMERIC(25) NOT NULL,
+    address_id INT UNSIGNED NOT NULL,
     keyword VARCHAR(40),
     range_start_major SMALLINT(5) UNSIGNED,
     range_start_minor SMALLINT(5) UNSIGNED,

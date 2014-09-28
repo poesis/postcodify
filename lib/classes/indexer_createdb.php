@@ -70,7 +70,7 @@ class Postcodify_Indexer_CreateDB
     {
         $db = Postcodify_Utility::get_db();
         $db->beginTransaction();
-        $ps = $db->prepare('INSERT INTO postcodify_roads (id, road_name_ko, road_name_en, ' .
+        $ps = $db->prepare('INSERT INTO postcodify_roads (road_id, road_name_ko, road_name_en, ' .
             'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en) ' .
             'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         
