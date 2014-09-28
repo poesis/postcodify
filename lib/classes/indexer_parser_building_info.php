@@ -19,7 +19,7 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-class Postcodify_Indexer_Parser_Extra_Info extends Postcodify_Indexer_ZipReader
+class Postcodify_Indexer_Parser_Building_Info extends Postcodify_Indexer_ZipReader
 {
     // 생성자에서 문자셋을 지정한다.
     
@@ -35,23 +35,22 @@ class Postcodify_Indexer_Parser_Extra_Info extends Postcodify_Indexer_ZipReader
         // 데이터를 읽는다.
         
         $line = parent::read_line($delimiter);
-        if ($line === false || count($line) < 9) return false;
+        if ($line === false || count($line) < 2) return false;
         
-        // 건물명을 정리한다.
+        // 건물명을 분석한다.
         
         $building_names = array();
-        if (($building = trim($line[5])) !== '') $building_names[] = Postcodify_Utility::get_canonical($building);
-        if (($building = trim($line[6])) !== '') $building_names[] = Postcodify_Utility::get_canonical($building);
-        if (($building = trim($line[7])) !== '') $building_names[] = Postcodify_Utility::get_canonical($building);
+        $building_names_raw = array_map('trim', explode(',', $line[6]));
+        foreach ($building_names_raw as $name)
+        {
+            $building_names[] = Postcodify_Utility::get_canonical($name);
+        }
         
         // 데이터를 정리하여 반환한다.
         
         return (object)array(
-            'address_id' => trim($line[0]),
-            'postcode6' => trim($line[3]),
-            'admin_dongri' => trim($line[2]),
+            'address_id' => trim($line[5]),
             'building_names' => array_unique($building_names),
-            'is_common_residence' => (int)$line[8],
         );
     }
 }
