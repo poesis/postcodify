@@ -37,8 +37,13 @@ class Postcodify_Indexer_CreateDB
     
     public function start()
     {
+        echo '테이블을 생성하는 중...' . PHP_EOL;
         $this->create_tables();
+        
+        echo '데이터 기준일 정보를 로딩하는 중...' . PHP_EOL;
         $this->load_data_date();
+        
+        echo '도로명코드 목록을 로딩하는 중...' . PHP_EOL;
         $this->load_road_info();
     }
     
@@ -59,8 +64,8 @@ class Postcodify_Indexer_CreateDB
         $this->_data_date = $date;
         
         $db = Postcodify_Utility::get_db();
-        $db->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('version', '" . POSTCODIFY_VERSION . "')");
-        $db->exec("INSERT INTO postcodify_metadata (k, v) VALUES ('updated', '" . $this->_data_date . "')");
+        $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('version', '" . POSTCODIFY_VERSION . "')");
+        $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('updated', '" . $this->_data_date . "')");
         unset($db);
     }
     
@@ -81,17 +86,17 @@ class Postcodify_Indexer_CreateDB
         while ($entry = $zip->read_line())
         {
             $ps->execute(array(
-                $entry['road_id'] . $entry['road_section'],
-                $entry['road_name'],
-                $entry['road_name_english'],
-                $entry['sido'],
-                $entry['sido_english'],
-                $entry['sigungu'],
-                $entry['sigungu_english'],
-                $entry['ilbangu'],
-                $entry['ilbangu_english'],
-                $entry['eupmyeon'],
-                $entry['eupmyeon_english'],
+                $entry->road_id . $entry->road_section,
+                $entry->road_name,
+                $entry->road_name_english,
+                $entry->sido,
+                $entry->sido_english,
+                $entry->sigungu,
+                $entry->sigungu_english,
+                $entry->ilbangu,
+                $entry->ilbangu_english,
+                $entry->eupmyeon,
+                $entry->eupmyeon_english,
             ));
         }
         

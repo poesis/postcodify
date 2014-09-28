@@ -45,7 +45,7 @@ class Postcodify_Indexer_Parser_Jibeon extends Postcodify_Indexer_ZipReader
         
         // 데이터를 정리하여 반환한다.
         
-        return array(
+        return (object)array(
             'address_id' => trim($line[0]),
             'dongri' => $dongri,
             'num_major' => $line[8] ? (int)$line[8] : null,

@@ -46,7 +46,7 @@ class Postcodify_Indexer_Parser_Extra_Info extends Postcodify_Indexer_ZipReader
         
         // 데이터를 정리하여 반환한다.
         
-        return array(
+        return (object)array(
             'address_id' => trim($line[0]),
             'postcode6' => trim($line[3]),
             'admin_dongri' => trim($line[2]),

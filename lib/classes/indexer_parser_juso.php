@@ -39,7 +39,7 @@ class Postcodify_Indexer_Parser_Juso extends Postcodify_Indexer_ZipReader
         
         // 데이터를 정리하여 반환한다.
         
-        return array(
+        return (object)array(
             'address_id' => trim($line[0]),
             'postcode5' => trim($line[6]),
             'road_id' => trim($line[1]),
