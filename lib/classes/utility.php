@@ -21,6 +21,14 @@
 
 class Postcodify_Utility
 {
+    // 영문 번역 캐시.
+    
+    public static $english_cache = array();
+    
+    // 상세건물명 캐시.
+    
+    public static $building_cache = array();
+    
     // DB에 연결하는 함수.
     
     public static function get_db()

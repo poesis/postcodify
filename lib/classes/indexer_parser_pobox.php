@@ -58,6 +58,13 @@ class Postcodify_Indexer_Parser_Pobox extends Postcodify_Indexer_ZipReader
             $ilbangu = null;
         }
         
+        // 시군구가 없는 경우(세종시)를 처리한다.
+        
+        if ($sigungu === '')
+        {
+            $sigungu = null;
+        }
+        
         // 관리번호를 생성한다.
         
         $address_id = '9999999999999999999' . str_pad(++$this->_count + 1, 6, '0', STR_PAD_LEFT);

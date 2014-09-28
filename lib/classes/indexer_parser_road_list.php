@@ -80,6 +80,14 @@ class Postcodify_Indexer_Parser_Road_List extends Postcodify_Indexer_ZipReader
             $ilbangu_english = null;
         }
         
+        // 시군구가 없는 경우(세종시)를 처리한다.
+        
+        if ($sigungu === '')
+        {
+            $sigungu = null;
+            $sigungu_english = null;
+        }
+        
         // 데이터를 정리하여 반환한다.
         
         return (object)array(

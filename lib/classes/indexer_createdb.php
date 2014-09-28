@@ -51,6 +51,12 @@ class Postcodify_Indexer_CreateDB
         
         echo '도로명코드 목록을 로딩하는 중...' . PHP_EOL;
         $this->load_road_info();
+        
+        echo '상세건물명을 로딩하는 중...' . PHP_EOL;
+        $this->load_building_info();
+        
+        echo '영문 행정구역명을 로딩하는 중...' . PHP_EOL;
+        $this->load_english_aliases();
     }
     
     // 테이블을 생성한다.
@@ -91,6 +97,12 @@ class Postcodify_Indexer_CreateDB
         
         while ($entry = $zip->read_line())
         {
+            Postcodify_Utility::$english_cache[$entry->road_name] = $entry->road_name_english;
+            Postcodify_Utility::$english_cache[$entry->sido] = $entry->sido_english;
+            if ($entry->sigungu) Postcodify_Utility::$english_cache[$entry->sigungu] = $entry->sigungu_english;
+            if ($entry->ilbangu) Postcodify_Utility::$english_cache[$entry->ilbangu] = $entry->ilbangu_english;
+            if ($entry->eupmyeon) Postcodify_Utility::$english_cache[$entry->eupmyeon] = $entry->eupmyeon_english;
+            
             $ps->execute(array(
                 $entry->road_id . $entry->road_section,
                 $entry->road_name,
@@ -104,11 +116,44 @@ class Postcodify_Indexer_CreateDB
                 $entry->eupmyeon,
                 $entry->eupmyeon_english,
             ));
+            
+            unset($entry);
         }
         
         $zip->close();
         $db->commit();
         unset($zip);
         unset($db);
+    }
+    
+    // 상세건물명을 로딩한다.
+    
+    public function load_building_info()
+    {
+        $zip = new Postcodify_Indexer_Parser_Building_Info;
+        $zip->open_archive($this->_data_dir . '/상세건물명.zip');
+        $zip->open_next_file();
+        
+        while ($entry = $zip->read_line())
+        {
+            if (!count($entry->building_names)) continue;
+            Postcodify_Utility::$building_cache[$entry->address_id] = implode(',', $entry->building_names);
+            unset($entry);
+        }
+    }
+    
+    // 영문 행정구역명을 로딩한다.
+    
+    public function load_english_aliases()
+    {
+        $zip = new Postcodify_Indexer_Parser_English_Aliases;
+        $zip->open_archive($this->_data_dir . '/english_aliases_DB.zip');
+        $zip->open_next_file();
+        
+        while ($entry = $zip->read_line())
+        {
+            Postcodify_Utility::$english_cache[$entry->ko] = $entry->en;
+            unset($entry);
+        }
     }
 }
