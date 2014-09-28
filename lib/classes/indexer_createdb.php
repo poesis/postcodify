@@ -26,6 +26,12 @@ class Postcodify_Indexer_CreateDB
     protected $_data_dir;
     protected $_data_date;
     
+    protected $_thread_groups = array(
+        '경기도', '경상남북도', '전라남북도', '충청남북도',
+        '서울특별시|부산광역시|세종특별자치시|제주특별자치도',
+        '강원도|광주광역시|대구광역시|대전광역시|울산광역시|인천광역시',
+    );
+    
     // 생성자.
     
     public function __construct()
@@ -81,7 +87,7 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Indexer_Parser_Road_List;
         $zip->open_archive($this->_data_dir . '/도로명코드_전체분.zip');
-        $zip->open_first_file();
+        $zip->open_next_file();
         
         while ($entry = $zip->read_line())
         {

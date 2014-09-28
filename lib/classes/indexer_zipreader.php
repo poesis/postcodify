@@ -22,6 +22,7 @@
 class Postcodify_Indexer_ZipReader
 {
     protected $_charset;
+    protected $_current;
     protected $_zip;
     protected $_fp;
     
@@ -33,14 +34,16 @@ class Postcodify_Indexer_ZipReader
         $this->_zip->open($filename);
     }
     
-    // Zip 아카이브 중 첫번째 파일을 연다.
+    // Zip 아카이브 중 다음 파일을 연다.
     // 성공하면 파일명을 반환하고, 실패하면 false를 반환한다.
     
-    public function open_first_file()
+    public function open_next_file()
     {
-        $first_filename = @$this->_zip->getNameIndex(0);
+        $index = ($this->_current === null) ? 0 : ($this->_current + 1);
+        $first_filename = @$this->_zip->getNameIndex($index);
         if ($first_filename === false) return false;
         $this->_fp = $this->_zip->getStream($first_filename);
+        $this->_current = $index;
         return $first_filename;
     }
     
