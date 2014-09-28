@@ -32,7 +32,7 @@ class Postcodify_Indexer_Parser_Pobox extends Postcodify_Indexer_ZipReader
         // 데이터를 읽는다.
         
         $line = parent::read_line($delimiter);
-        if ($line === false || count($line) < 11) return false;
+        if ($line === false || count($line) < 10) return false;
         
         // 상세 데이터를 읽어들인다.
         

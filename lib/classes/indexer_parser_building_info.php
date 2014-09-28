@@ -35,7 +35,7 @@ class Postcodify_Indexer_Parser_Building_Info extends Postcodify_Indexer_ZipRead
         // 데이터를 읽는다.
         
         $line = parent::read_line($delimiter);
-        if ($line === false || count($line) < 2) return false;
+        if ($line === false || count($line) < 7) return false;
         
         // 건물명을 분석한다.
         
