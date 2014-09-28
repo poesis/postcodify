@@ -51,7 +51,7 @@ class Postcodify_Indexer_CreateDB
         $this->print_ok();
         $this->print_newline();
         
-        $this->print_message('데이터 기준일 정보를 로딩하는 중...');
+        $this->print_message('데이터 기준일 정보를 저장하는 중...');
         $this->load_data_date();
         $this->print_ok();
         $this->print_newline();
@@ -70,6 +70,10 @@ class Postcodify_Indexer_CreateDB
         $this->load_english_aliases();
         $this->print_ok();
         $this->print_newline();
+        
+        $this->print_message('주소 파일을 로딩하는 중...');
+        $this->print_newline();
+        $this->load_juso();
     }
     
     // 터미널에 메시지를 출력하고 커서를 오른쪽 끝으로 이동한다.
@@ -110,6 +114,17 @@ class Postcodify_Indexer_CreateDB
         {
             $db = Postcodify_Utility::get_db();
             $db->exec(file_get_contents(POSTCODIFY_LIB_DIR . '/resources/schema-mysql.sql'));
+            unset($db);
+        }
+    }
+    
+    // 인덱스를 생성한다.
+    
+    public function create_indexes()
+    {
+        if (!DRY_RUN)
+        {
+            $db = Postcodify_Utility::get_db();
             unset($db);
         }
     }
@@ -226,5 +241,40 @@ class Postcodify_Indexer_CreateDB
             if (++$count % 512 === 0) $this->print_progress($count);
             unset($entry);
         }
+    }
+    
+    // 주소 파일을 로딩한다.
+    
+    public function load_juso()
+    {
+        
+    }
+    
+    // 지번 파일을 로딩한다.
+    
+    public function load_jibeon()
+    {
+        
+    }
+    
+    // 부가정보 파일을 로딩한다.
+    
+    public function load_extra_info()
+    {
+        
+    }
+    
+    // 사서함 파일을 로딩한다.
+    
+    public function load_pobox()
+    {
+        
+    }
+    
+    // 지번 우편번호 파일을 로딩한다.
+    
+    public function load_jibeon_postcode()
+    {
+        
     }
 }
