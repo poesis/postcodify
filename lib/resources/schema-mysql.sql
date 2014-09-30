@@ -98,7 +98,3 @@ CREATE TABLE postcodify_settings (
     k VARCHAR(20) PRIMARY KEY,
     v VARCHAR(40)
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
-
--- 기본으로 생성할 인덱스.
-
-CREATE INDEX postcodify_addresses_address_id ON postcodify_addresses (address_id);

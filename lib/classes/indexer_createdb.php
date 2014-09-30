@@ -75,6 +75,11 @@ class Postcodify_Indexer_CreateDB
         $this->start_threaded_workers('juso');
         $this->print_ok();
         $this->print_newline();
+        
+        $this->print_message('작업용 인덱스를 생성하는 중...');
+        $this->create_interim_indexes();
+        $this->print_ok();
+        $this->print_newline();
     }
     
     // 터미널에 메시지를 출력하고 커서를 오른쪽 끝으로 이동한다.
@@ -158,9 +163,21 @@ class Postcodify_Indexer_CreateDB
         }
     }
     
-    // 인덱스를 생성한다.
+    // 작업용 인덱스를 생성한다.
     
-    public function create_indexes()
+    public function create_interim_indexes()
+    {
+        if (!DRY_RUN)
+        {
+            $db = Postcodify_Utility::get_db();
+            $db->exec('CREATE INDEX postcodify_addresses_address_id ON postcodify_addresses (address_id)');
+            unset($db);
+        }
+    }
+    
+    // 최종 인덱스를 생성한다.
+    
+    public function create_final_indexes()
     {
         if (!DRY_RUN)
         {
