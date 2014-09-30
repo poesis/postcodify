@@ -142,7 +142,7 @@ class Postcodify_Indexer_CreateDB
             {
                 unset($children[$pid]);
             }
-            sleep(1);
+            usleep(100000);
         }
     }
     
@@ -287,7 +287,36 @@ class Postcodify_Indexer_CreateDB
     
     public function load_juso($sido)
     {
+        if (!DRY_RUN)
+        {
+            $db = Postcodify_Utility::get_db();
+            $db->beginTransaction();
+            $ps = $db->prepare('INSERT INTO postcodify_addresses');
+        }
         
+        $sidos = explode('|', $sido);
+        
+        foreach ($sidos as $sido)
+        {
+            $zip = new Postcodify_Indexer_Parser_Juso;
+            $zip->open_archive($this->_data_dir . '/주소_' . $sido . '.zip');
+            
+            while (($filename = $zip->open_next_file()) !== false)
+            {
+                
+            }
+        }
+        
+        $zip->close();
+        unset($zip);
+        
+        if (!DRY_RUN)
+        {
+            $db->commit();
+            unset($db);
+        }
+        
+        exit;
     }
     
     // 지번 파일을 로딩한다. (쓰레드 사용)
