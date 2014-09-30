@@ -25,6 +25,7 @@ class Postcodify_Indexer_CreateDB
     
     protected $_data_dir;
     protected $_data_date;
+    protected $_shmop_key;
     
     protected $_thread_groups = array(
         '경기도', '경상남북도', '전라남북도', '충청남북도',
@@ -37,6 +38,7 @@ class Postcodify_Indexer_CreateDB
     public function __construct()
     {
         $this->_data_dir = dirname(POSTCODIFY_LIB_DIR) . '/data';
+        $this->_shmop_key = ftok(__FILE__, 't');
     }
     
     // 엔트리 포인트.
@@ -116,6 +118,9 @@ class Postcodify_Indexer_CreateDB
     
     public function start_threaded_workers($task)
     {
+        $shmop = shmop_open($this->_shmop_key, 'c', 0644, 4);
+        shmop_write($shmop, pack('L', 0), 0);
+        
         $children = array();
         $sidos = $this->_thread_groups;
         
@@ -137,18 +142,20 @@ class Postcodify_Indexer_CreateDB
             {
                 $method_name = 'load_' . $task;
                 $this->$method_name($sido);
+                exit;
             }
         }
         
         while (count($children))
         {
             $pid = pcntl_wait($status, WNOHANG | WUNTRACED);
-            if ($pid)
-            {
-                unset($children[$pid]);
-            }
+            if ($pid) unset($children[$pid]);
+            $count = current(unpack('L', shmop_read($shmop, 0, 4)));
+            $this->print_progress($count);
             usleep(100000);
         }
+        
+        shmop_close($shmop);
     }
     
     // 테이블을 생성한다.
@@ -320,7 +327,19 @@ class Postcodify_Indexer_CreateDB
             
             while (($filename = $zip->open_next_file()) !== false)
             {
+                $count = 0;
                 
+                while ($entry = $zip->read_line())
+                {
+                    if (++$count % 512 === 0)
+                    {
+                        $shmop = shmop_open($this->_shmop_key, 'w', 0, 0);
+                        $prev = current(unpack('L', shmop_read($shmop, 0, 4)));
+                        shmop_write($shmop, pack('L', $prev + 512), 0);
+                        shmop_close($shmop);
+                    }
+                    unset($entry);
+                }
             }
         }
         
@@ -332,8 +351,6 @@ class Postcodify_Indexer_CreateDB
             $db->commit();
             unset($db);
         }
-        
-        exit;
     }
     
     // 지번 파일을 로딩한다. (쓰레드 사용)
