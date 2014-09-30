@@ -35,6 +35,26 @@ class Postcodify_Indexer_CreateDB
         '강원도|광주광역시|대구광역시|대전광역시|울산광역시|인천광역시',
     );
     
+    // 작업용 인덱스 목록.
+    
+    protected $_interim_indexes = array(
+        'postcodify_addresses' => array('address_id'),
+        'postcodify_keywords_ko' => array('address_id'),
+        'postcodify_keywords_en' => array('address_id'),
+    );
+    
+    // 최종 인덱스 목록.
+    
+    protected $_final_indexes = array(
+        'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
+        'postcodify_addresses' => array('road_id', 'postcode5', 'postcode6', 'updated'),
+        'postcodify_keywords_ko' => array('keyword_crc32'),
+        'postcodify_keywords_en' => array('keyword_crc32'),
+        'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
+        'postcodify_buildings' => array('address_id'),
+        'postcodify_poboxes' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
+    );
+    
     // 생성자.
     
     public function __construct()
@@ -76,22 +96,22 @@ class Postcodify_Indexer_CreateDB
         $this->print_newline();
         
         $this->print_message('주소 데이터를 로딩하는 중...');
-        $this->start_threaded_workers('juso');
+        $this->start_threaded_workers('load_juso');
         $this->print_ok();
         $this->print_newline();
         
         $this->print_message('작업용 인덱스를 생성하는 중...');
-        $this->create_interim_indexes();
+        $this->start_threaded_workers('interim_indexes');
         $this->print_ok();
         $this->print_newline();
         
         $this->print_message('지번 데이터를 로딩하는 중...');
-        $this->start_threaded_workers('jibeon');
+        $this->start_threaded_workers('load_jibeon');
         $this->print_ok();
         $this->print_newline();
         
         $this->print_message('부가정보 데이터를 로딩하는 중...');
-        $this->start_threaded_workers('extra_info');
+        $this->start_threaded_workers('load_extra_info');
         $this->print_ok();
         $this->print_newline();
         
@@ -101,7 +121,7 @@ class Postcodify_Indexer_CreateDB
         $this->print_newline();
         
         $this->print_message('최종 인덱스를 생성하는 중...');
-        $this->create_final_indexes();
+        $this->start_threaded_workers('final_indexes');
         $this->print_ok();
         $this->print_newline();
     }
@@ -138,7 +158,7 @@ class Postcodify_Indexer_CreateDB
     
     // 작업 쓰레드를 생성한다.
     
-    public function start_threaded_workers($task)
+    public function start_threaded_workers($task_name)
     {
         // 카운터로 사용하는 공유 메모리를 초기화한다.
         
@@ -148,13 +168,23 @@ class Postcodify_Indexer_CreateDB
         // 자식 프로세스 목록을 초기화한다.
         
         $children = array();
-        $sidos = $this->_thread_groups;
+        if (strpos($task_name, 'indexes') !== false)
+        {
+            $tasks = $this->${'_' . $task_name};
+            $task_name = 'create_indexes';
+        }
+        else
+        {
+            $tasks = $this->_thread_groups;
+        }
         
         // 자식 프로세스들을 생성한다.
         
-        while (count($sidos))
+        while (count($tasks))
         {
-            $sido = array_shift($sidos);
+            reset($tasks);
+            $task_key = key($tasks);
+            $task = array_shift($tasks);
             $pid = pcntl_fork();
             
             if ($pid == -1)
@@ -164,12 +194,11 @@ class Postcodify_Indexer_CreateDB
             }
             elseif ($pid > 0)
             {
-                $children[$pid] = $sido;
+                $children[$pid] = $task_key;
             }
             else
             {
-                $method_name = 'load_' . $task;
-                $this->$method_name($sido);
+                $this->$task_name($task, $task_key);
                 exit;
             }
         }
@@ -210,27 +239,35 @@ class Postcodify_Indexer_CreateDB
         }
     }
     
-    // 작업용 인덱스를 생성한다.
+    // 인덱스를 생성한다. (쓰레드 사용)
     
-    public function create_interim_indexes()
+    public function create_indexes($columns, $table_name)
     {
         if (!DRY_RUN)
         {
             $db = Postcodify_Utility::get_db();
-            $db->exec('CREATE INDEX postcodify_addresses_address_id ON postcodify_addresses (address_id)');
-            $db->exec('CREATE INDEX postcodify_keywords_ko_address_id ON postcodify_keywords_ko (address_id)');
-            $db->exec('CREATE INDEX postcodify_keywords_en_address_id ON postcodify_keywords_en (address_id)');
-            unset($db);
-        }
-    }
-    
-    // 최종 인덱스를 생성한다.
-    
-    public function create_final_indexes()
-    {
-        if (!DRY_RUN)
-        {
-            $db = Postcodify_Utility::get_db();
+            
+            foreach ($columns as $column)
+            {
+                // 인덱스 생성 쿼리를 실행한다.
+                
+                try
+                {
+                    $db->exec('CREATE INDEX ' . $table_name . '_' . $column . ' ON ' . $table_name . ' (' . $column . ')');
+                }
+                catch (PDOException $e)
+                {
+                    throw $e;  // TODO
+                }
+                
+                // 카운터를 표시한다.
+                
+                $shmop = shmop_open($this->_shmop_key, 'w', 0, 0);
+                $prev = current(unpack('L', shmop_read($shmop, 0, 4)));
+                shmop_write($shmop, pack('L', $prev + 1), 0);
+                shmop_close($shmop);
+            }
+            
             unset($db);
         }
     }
