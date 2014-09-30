@@ -72,8 +72,9 @@ class Postcodify_Indexer_CreateDB
         $this->print_newline();
         
         $this->print_message('주소 파일을 로딩하는 중...');
+        $this->start_threaded_workers('juso');
+        $this->print_ok();
         $this->print_newline();
-        $this->load_juso();
     }
     
     // 터미널에 메시지를 출력하고 커서를 오른쪽 끝으로 이동한다.
@@ -104,6 +105,45 @@ class Postcodify_Indexer_CreateDB
     public function print_newline()
     {
         echo PHP_EOL;
+    }
+    
+    // 작업 쓰레드를 생성한다.
+    
+    public function start_threaded_workers($task)
+    {
+        $children = array();
+        $sidos = $this->_thread_groups;
+        
+        while (count($sidos))
+        {
+            $sido = array_shift($sidos);
+            $pid = pcntl_fork();
+            
+            if ($pid == -1)
+            {
+                echo PHP_EOL . '[ ERROR ] 쓰레드를 생성할 수 없습니다.' . PHP_EOL;
+                exit(2);
+            }
+            elseif ($pid > 0)
+            {
+                $children[$pid] = $sido;
+            }
+            else
+            {
+                $method_name = 'load_' . $task;
+                $this->$method_name($sido);
+            }
+        }
+        
+        while (count($children))
+        {
+            $pid = pcntl_wait($status, WNOHANG | WUNTRACED);
+            if ($pid)
+            {
+                unset($children[$pid]);
+            }
+            sleep(1);
+        }
     }
     
     // 테이블을 생성한다.
@@ -243,23 +283,23 @@ class Postcodify_Indexer_CreateDB
         }
     }
     
-    // 주소 파일을 로딩한다.
+    // 주소 파일을 로딩한다. (쓰레드 사용)
     
-    public function load_juso()
+    public function load_juso($sido)
     {
         
     }
     
-    // 지번 파일을 로딩한다.
+    // 지번 파일을 로딩한다. (쓰레드 사용)
     
-    public function load_jibeon()
+    public function load_jibeon($sido)
     {
         
     }
     
-    // 부가정보 파일을 로딩한다.
+    // 부가정보 파일을 로딩한다. (쓰레드 사용)
     
-    public function load_extra_info()
+    public function load_extra_info($sido)
     {
         
     }
