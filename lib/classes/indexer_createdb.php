@@ -168,14 +168,21 @@ class Postcodify_Indexer_CreateDB
         // 자식 프로세스 목록을 초기화한다.
         
         $children = array();
-        if (strpos($task_name, 'indexes') !== false)
+        
+        // 수행할 작업을 판단한다.
+        
+        switch ($task_name)
         {
-            $tasks = $this->${'_' . $task_name};
-            $task_name = 'create_indexes';
-        }
-        else
-        {
-            $tasks = $this->_thread_groups;
+            case 'interim_indexes':
+                $tasks = $this->_interim_indexes;
+                $task_name = 'create_indexes';
+                break;
+            case 'final_indexes':
+                $tasks = $this->_final_indexes;
+                $task_name = 'create_indexes';
+                break;
+            default:
+                $tasks = $this->_thread_groups;
         }
         
         // 자식 프로세스들을 생성한다.
@@ -607,13 +614,14 @@ class Postcodify_Indexer_CreateDB
                     
                     // 키워드를 확장한다.
                     
-                    $dongri_ko_array = Postcodify_Utility::get_variations_of_dongri($dongri);
+                    $dongri_ko_array = Postcodify_Utility::get_variations_of_dongri($entry->dongri);
                     $dongri_en_array = array(preg_replace('/[^a-z0-9]/', '', strtolower($dongri_en)));
                     
                     // 이 주소의 대체키 번호를 구한다.
                     
                     $ps_addr_select->execute(array($entry->address_id));
                     $proxy_id = intval($ps_addr_select->fetchColumn());
+                    $ps_addr_select->closeCursor();
                     
                     // 지번 정보를 저장한다.
                     
@@ -658,6 +666,7 @@ class Postcodify_Indexer_CreateDB
                         {
                             $existing_ko[$crc32] = true;
                         }
+                        $ps_kwko_select->closeCursor();
                         
                         // 등록되지 않은 한글 키워드는 새로 추가한다.
                         
@@ -678,6 +687,7 @@ class Postcodify_Indexer_CreateDB
                         {
                             $existing_en[$crc32] = true;
                         }
+                        $ps_kwen_select->closeCursor();
                         
                         // 등록되지 않은 영문 키워드는 새로 추가한다.
                         
