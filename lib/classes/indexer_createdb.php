@@ -284,6 +284,7 @@ class Postcodify_Indexer_CreateDB
         {
             // 영문 행정구역명을 캐시에 저장한다.
             
+            Postcodify_Utility::$english_cache['R_' . $entry->road_id] = $entry->road_name;
             Postcodify_Utility::$english_cache[$entry->road_name] = $entry->road_name_english;
             Postcodify_Utility::$english_cache[$entry->sido] = $entry->sido_english;
             if ($entry->sigungu) Postcodify_Utility::$english_cache[$entry->sigungu] = $entry->sigungu_english;
@@ -408,7 +409,14 @@ class Postcodify_Indexer_CreateDB
         {
             $db = Postcodify_Utility::get_db();
             $db->beginTransaction();
-            $ps = $db->prepare('INSERT INTO postcodify_addresses');
+            $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (address_id, postcode5, ' .
+                'road_id, num_major, num_minor, is_basement) VALUES (?, ?, ?, ?, ?, ?)');
+            $ps_kwko_insert = $db->prepare('INSERT INTO postcodify_keywords_ko (address_id, keyword_crc32) ' .
+                'VALUES (?, ?)');
+            $ps_kwen_insert = $db->prepare('INSERT INTO postcodify_keywords_en (address_id, keyword_crc32) ' .
+                'VALUES (?, ?)');
+            $ps_numb_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) ' .
+                'VALUES (?, ?, ?)');
         }
         
         // 이 쓰레드에서 처리할 시·도 목록을 구한다.
@@ -436,6 +444,49 @@ class Postcodify_Indexer_CreateDB
                 
                 while ($entry = $zip->read_line())
                 {
+                    // 이 주소에 해당하는 도로명을 구한다.
+                    
+                    $road_name_ko = Postcodify_Utility::$english_cache['R_' . $entry->road_id];
+                    $road_name_en = Postcodify_Utility::$english_cache[$road_name_ko];
+                    $address_id = null;
+                    
+                    // 키워드를 확장한다.
+                    
+                    $road_name_ko_array = Postcodify_Utility::get_variations_of_road_name($road_name_ko);
+                    $road_name_en_array = array(preg_replace('/[^a-z0-9]/', '', strtolower($road_name_en)));
+                    
+                    // 주소를 저장한다.
+                    
+                    if (!DRY_RUN)
+                    {
+                        $ps_addr_insert->execute(array(
+                            $entry->address_id,
+                            $entry->postcode5,
+                            $entry->road_id . $entry->road_section,
+                            $entry->num_major,
+                            $entry->num_minor,
+                            $entry->is_basement,
+                        ));
+                        $address_id = $db->lastInsertId();
+                    }
+                    
+                    // 키워드와 번호들을 저장한다.
+                    
+                    if (!DRY_RUN)
+                    {
+                        foreach ($road_name_ko_array as $road_name_ko)
+                        {
+                            $ps_kwko_insert->execute(array($address_id, Postcodify_Utility::crc32_x64($road_name_ko)));
+                        }
+                        
+                        foreach ($road_name_en_array as $road_name_en)
+                        {
+                            $ps_kwen_insert->execute(array($address_id, Postcodify_Utility::crc32_x64($road_name_en)));
+                        }
+                        
+                        $ps_numb_insert->execute(array($address_id, $entry->num_major, $entry->num_minor));
+                    }
+                    
                     // 카운터를 표시한다.
                     
                     if (++$count % 512 === 0)
@@ -446,6 +497,10 @@ class Postcodify_Indexer_CreateDB
                         shmop_close($shmop);
                     }
                     
+                    unset($road_name_ko);
+                    unset($road_name_en);
+                    unset($road_name_ko_array);
+                    unset($road_name_en_array);
                     unset($entry);
                 }
             }
