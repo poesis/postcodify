@@ -38,7 +38,7 @@ $valid_actions = array(
 
 if (PHP_SAPI === 'cli' && isset($argv[1]) && in_array($argv[1], $valid_actions))
 {
-    $columns = @exec('tput cols');
+    $columns = @intval(exec('tput cols 2>&1'));
     define('TERMINAL_WIDTH', $columns ? $columns : 80);
     
     $dry_run = (isset($argv[2]) && $argv[2] == '--dry-run');
