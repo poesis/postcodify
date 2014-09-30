@@ -576,9 +576,7 @@ class Postcodify_Indexer_CreateDB
                 'jibeon_major = ?, jibeon_minor = ?, is_mountain = ? WHERE id = ?');
             $ps_addr_update2 = $db->prepare('UPDATE postcodify_addresses SET other_addresses = ' .
                 'CONCAT_WS(\'\\n\', other_addresses, ?) WHERE id = ?');
-            $ps_kwko_select = $db->prepare('SELECT keyword_crc32 FROM postcodify_keywords_ko WHERE address_id = ?');
             $ps_kwko_insert = $db->prepare('INSERT INTO postcodify_keywords_ko (address_id, keyword_crc32) VALUES (?, ?)');
-            $ps_kwen_select = $db->prepare('SELECT keyword_crc32 FROM postcodify_keywords_en WHERE address_id = ?');
             $ps_kwen_insert = $db->prepare('INSERT INTO postcodify_keywords_en (address_id, keyword_crc32) VALUES (?, ?)');
             $ps_numb_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
         }
@@ -604,6 +602,10 @@ class Postcodify_Indexer_CreateDB
             
             while (($filename = $zip->open_next_file()) !== false)
             {
+                // 동·리 키워드 중복 방지 캐시를 초기화한다.
+                
+                $kwcache = array();
+                
                 // 데이터를 한 줄씩 읽는다.
                 
                 while ($entry = $zip->read_line())
@@ -622,6 +624,14 @@ class Postcodify_Indexer_CreateDB
                     $ps_addr_select->execute(array($entry->address_id));
                     $proxy_id = intval($ps_addr_select->fetchColumn());
                     $ps_addr_select->closeCursor();
+                    
+                    // 동·리 키워드 중복 방지 캐시에 현재 항목을 추가한다.
+                    
+                    $kwcache[$proxy_id] = implode('|', $dongri_ko_array + $dongri_en_array);
+                    if (count($kwcache) > 2100)
+                    {
+                        $kwcache = array_slice($kwcache, 100);
+                    }
                     
                     // 지번 정보를 저장한다.
                     
@@ -658,49 +668,23 @@ class Postcodify_Indexer_CreateDB
                     
                     if (!DRY_RUN)
                     {
-                        // 한글 키워드 목록에 해당 동·리 키워드가 이미 등록되어 있는지 확인한다.
-                        
-                        $ps_kwko_select->execute(array($proxy_id));
-                        $existing_ko = array();
-                        while ($crc32 = $ps_kwko_select->fetchColumn())
-                        {
-                            $existing_ko[$crc32] = true;
-                        }
-                        $ps_kwko_select->closeCursor();
-                        
-                        // 등록되지 않은 한글 키워드는 새로 추가한다.
-                        
                         foreach ($dongri_ko_array as $dongri_ko)
                         {
-                            $crc32 = Postcodify_Utility::crc32_x64($dongri_ko);
-                            if (!isset($existing_ko[$crc32]))
+                            if (!isset($kwcache[$proxy_id]) || strpos($kwcache[$proxy_id], $dongri_ko) === false)
                             {
-                                $ps_kwko_insert->execute(array($proxy_id, $crc32));
+                                $kwcache[$proxy_id] = isset($kwcache[$proxy_id]) ? ($kwcache[$proxy_id] . '|' . $dongri_ko) : $dongri_ko;
+                                $ps_kwko_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($dongri_ko)));
                             }
                         }
-                        
-                        // 영문 키워드 목록에 해당 동·리 키워드가 이미 등록되어 있는지 확인한다.
-                        
-                        $ps_kwen_select->execute(array($proxy_id));
-                        $existing_en = array();
-                        while ($crc32 = $ps_kwen_select->fetchColumn())
-                        {
-                            $existing_en[$crc32] = true;
-                        }
-                        $ps_kwen_select->closeCursor();
-                        
-                        // 등록되지 않은 영문 키워드는 새로 추가한다.
                         
                         foreach ($dongri_en_array as $dongri_en)
                         {
-                            $crc32 = Postcodify_Utility::crc32_x64($dongri_en);
-                            if (!isset($existing_en[$crc32]))
+                            if (!isset($kwcache[$proxy_id]) || strpos($kwcache[$proxy_id], $dongri_en) === false)
                             {
-                                $ps_kwen_insert->execute(array($proxy_id, $crc32));
+                                $kwcache[$proxy_id] = isset($kwcache[$proxy_id]) ? ($kwcache[$proxy_id] . '|' . $dongri_en) : $dongri_en;
+                                $ps_kwen_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($dongri_en)));
                             }
                         }
-                        
-                        // 지번 키워드를 추가한다.
                         
                         $ps_numb_insert->execute(array($proxy_id, $entry->num_major, $entry->num_minor));
                     }
