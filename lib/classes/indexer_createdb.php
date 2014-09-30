@@ -39,8 +39,6 @@ class Postcodify_Indexer_CreateDB
     
     protected $_interim_indexes = array(
         'postcodify_addresses' => array('address_id'),
-        'postcodify_keywords_ko' => array('address_id'),
-        'postcodify_keywords_en' => array('address_id'),
     );
     
     // 최종 인덱스 목록.
@@ -48,8 +46,8 @@ class Postcodify_Indexer_CreateDB
     protected $_final_indexes = array(
         'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
         'postcodify_addresses' => array('road_id', 'postcode5', 'postcode6', 'updated'),
-        'postcodify_keywords_ko' => array('keyword_crc32'),
-        'postcodify_keywords_en' => array('keyword_crc32'),
+        'postcodify_keywords_ko' => array('address_id', 'keyword_crc32'),
+        'postcodify_keywords_en' => array('address_id', 'keyword_crc32'),
         'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
         'postcodify_buildings' => array('address_id'),
         'postcodify_poboxes' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
