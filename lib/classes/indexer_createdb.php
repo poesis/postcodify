@@ -264,7 +264,10 @@ class Postcodify_Indexer_CreateDB
                 }
                 catch (PDOException $e)
                 {
-                    throw $e;  // TODO
+                    if (strpos($e->getMessage(), 'STMT_CLOSE') === false)
+                    {
+                        throw $e;
+                    }
                 }
                 
                 // 카운터를 표시한다.
