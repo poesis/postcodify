@@ -93,17 +93,17 @@ class Postcodify_Indexer_CreateDB
         $this->load_english_aliases();
         $this->print_ok();
         $this->print_newline();
-        /*
+        
         $this->print_message('주소 데이터를 로딩하는 중...');
         $this->start_threaded_workers('load_juso');
         $this->print_ok();
         $this->print_newline();
-        */
+        
         $this->print_message('작업용 인덱스를 생성하는 중...');
         $this->start_threaded_workers('interim_indexes');
         $this->print_ok();
         $this->print_newline();
-        /*
+        
         $this->print_message('지번 데이터를 로딩하는 중...');
         $this->start_threaded_workers('load_jibeon');
         $this->print_ok();
@@ -113,7 +113,7 @@ class Postcodify_Indexer_CreateDB
         $this->start_threaded_workers('load_extra_info');
         $this->print_ok();
         $this->print_newline();
-        */
+        
         $this->print_message('사서함 데이터를 로딩하는 중...');
         $this->load_pobox();
         $this->print_ok();
