@@ -49,7 +49,7 @@ class Postcodify_Indexer_CreateDB
         'postcodify_addresses' => array('road_id', 'postcode5', 'postcode6', 'updated'),
         'postcodify_keywords_ko' => array('keyword_crc32'),
         'postcodify_keywords_en' => array('address_id', 'keyword_crc32'),
-        'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
+        'postcodify_numbers' => array('address_id', 'num_major'),
         'postcodify_buildings' => array('address_id'),
         'postcodify_poboxes' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
     );
@@ -639,21 +639,6 @@ class Postcodify_Indexer_CreateDB
                         $other_addresses = '';
                     }
                     
-                    // 동·리 키워드 중복 방지 캐시에 현재 항목을 추가한다.
-                    
-                    foreach ($dongri_ko_array as $dongri_ko)
-                    {
-                        $kwcache[$proxy_id][$dongri_ko] = true;
-                    }
-                    foreach ($dongri_en_array as $dongri_en)
-                    {
-                        $kwcache[$proxy_id][$dongri_en] = true;
-                    }
-                    if (count($kwcache) > 200)
-                    {
-                        $kwcache = array_slice($kwcache, 100);
-                    }
-                    
                     // 지번 정보를 저장한다.
                     
                     if (!DRY_RUN)
@@ -705,6 +690,11 @@ class Postcodify_Indexer_CreateDB
                                 $kwcache[$proxy_id][$dongri_en] = true;
                                 $ps_kwen_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($dongri_en)));
                             }
+                        }
+                        
+                        if (count($kwcache) > 200)
+                        {
+                            $kwcache = array_slice($kwcache, 100);
                         }
                         
                         $ps_numb_insert->execute(array($proxy_id, $entry->num_major, $entry->num_minor));
@@ -802,6 +792,10 @@ class Postcodify_Indexer_CreateDB
                         $dongri_ko = '';
                         $other_addresses = '';
                     }
+                    
+                    // 법정동명과 행정동명이 같은 경우 행정동명을 삭제한다.
+                    
+                    if ($dongri_ko === $entry->admin_dongri) $entry->admin_dongri = null;
                     
                     // 공동주택명을 구한다.
                     

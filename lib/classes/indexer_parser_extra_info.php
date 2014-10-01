@@ -51,7 +51,7 @@ class Postcodify_Indexer_Parser_Extra_Info extends Postcodify_Indexer_ZipReader
             'postcode6' => trim($line[3]),
             'admin_dongri' => trim($line[2]),
             'building_names' => array_unique($building_names),
-            'common_residence_name' => $line[8] ? trim($line[6]) : null,
+            'common_residence_name' => intval(trim($line[8])) > 0 ? trim($line[6]) : null,
         );
     }
 }
