@@ -69,6 +69,9 @@ class Postcodify_Indexer_CreateDB
         $this->print_message('Postcodify Indexer ' . POSTCODIFY_VERSION . (DRY_RUN ? ' (시험구동)' : ''));
         $this->print_newline();
         
+        $checkenv = new Postcodify_Indexer_CheckEnv;
+        $checkenv->check();
+        
         $this->print_message('테이블을 생성하는 중...');
         $this->create_tables();
         $this->print_ok();
@@ -195,8 +198,8 @@ class Postcodify_Indexer_CreateDB
             
             if ($pid == -1)
             {
-                echo PHP_EOL . '[ ERROR ] 쓰레드를 생성할 수 없습니다.' . PHP_EOL;
-                exit(2);
+                echo PHP_EOL . '[ERROR] 쓰레드를 생성할 수 없습니다.' . PHP_EOL;
+                exit(3);
             }
             elseif ($pid > 0)
             {
