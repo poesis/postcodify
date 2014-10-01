@@ -65,17 +65,10 @@ class Postcodify_Indexer_Parser_Pobox extends Postcodify_Indexer_ZipReader
             $sigungu = null;
         }
         
-        // 관리번호를 생성한다.
-        
-        $address_id = '9999999999999999999' . str_pad(++$this->_count + 1, 6, '0', STR_PAD_LEFT);
-        
         // 데이터를 정리하여 반환한다.
         
         return (object)array(
-            'address_id' => $address_id,
             'postcode6' => trim($line[0]),
-            'road_id' => '999999999999',
-            'road_section' => '99',
             'sido' => $sido,
             'sigungu' => $sigungu,
             'ilbangu' => $ilbangu,

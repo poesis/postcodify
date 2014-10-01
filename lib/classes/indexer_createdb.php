@@ -40,7 +40,6 @@ class Postcodify_Indexer_CreateDB
     protected $_interim_indexes = array(
         'postcodify_addresses' => array('address_id'),
         'postcodify_keywords_ko' => array('address_id'),
-        'postcodify_keywords_en' => array('address_id'),
     );
     
     // 최종 인덱스 목록.
@@ -49,7 +48,7 @@ class Postcodify_Indexer_CreateDB
         'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
         'postcodify_addresses' => array('road_id', 'postcode5', 'postcode6', 'updated'),
         'postcodify_keywords_ko' => array('keyword_crc32'),
-        'postcodify_keywords_en' => array('keyword_crc32'),
+        'postcodify_keywords_en' => array('address_id', 'keyword_crc32'),
         'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
         'postcodify_buildings' => array('address_id'),
         'postcodify_poboxes' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
@@ -94,17 +93,17 @@ class Postcodify_Indexer_CreateDB
         $this->load_english_aliases();
         $this->print_ok();
         $this->print_newline();
-        
+        /*
         $this->print_message('주소 데이터를 로딩하는 중...');
         $this->start_threaded_workers('load_juso');
         $this->print_ok();
         $this->print_newline();
-        
+        */
         $this->print_message('작업용 인덱스를 생성하는 중...');
         $this->start_threaded_workers('interim_indexes');
         $this->print_ok();
         $this->print_newline();
-        
+        /*
         $this->print_message('지번 데이터를 로딩하는 중...');
         $this->start_threaded_workers('load_jibeon');
         $this->print_ok();
@@ -114,7 +113,7 @@ class Postcodify_Indexer_CreateDB
         $this->start_threaded_workers('load_extra_info');
         $this->print_ok();
         $this->print_newline();
-        
+        */
         $this->print_message('사서함 데이터를 로딩하는 중...');
         $this->load_pobox();
         $this->print_ok();
@@ -896,7 +895,146 @@ class Postcodify_Indexer_CreateDB
     
     public function load_pobox()
     {
+        // DB를 준비한다.
         
+        if (!DRY_RUN)
+        {
+            $db = Postcodify_Utility::get_db();
+            $db->beginTransaction();
+            $ps_road_insert = $db->prepare('INSERT INTO postcodify_roads (road_id, ' .
+                'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en) ' .
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (road_id, dongri_ko, dongri_en) ' .
+                'VALUES (?, ?, ?)');
+            $ps_pobox_insert = $db->prepare('INSERT INTO postcodify_poboxes (address_id, keyword, ' .
+                'range_start_major, range_start_minor, range_end_major, range_end_minor) ' .
+                'VALUES (?, ?, ?, ?, ?, ?)');
+        }
+        
+        // Zip 파일을 연다.
+        
+        $zip = new Postcodify_Indexer_Parser_Pobox;
+        $zip->open_archive($this->_data_dir . '/newaddr_pobox_DB.zip');
+        $zip->open_next_file();
+        
+        // 행정구역 캐시와 카운터를 초기화한다.
+        
+        $region_cache = array();
+        $road_count = 0;
+        $count = 0;
+        
+        // 데이터를 한 줄씩 읽는다.
+        
+        while ($entry = $zip->read_line())
+        {
+            // 불필요한 줄은 건너뛴다.
+            
+            if ($entry->sido === '시도') continue;
+            
+            // 행정구역 정보를 생성한다.
+            
+            $road_id_hash = sha1($entry->sido . '|' . $entry->sigungu . '|' . $entry->ilbangu . '|' . $entry->eupmyeon);
+            if (isset($region_cache[$road_id_hash]))
+            {
+                $road_id = $region_cache[$road_id_hash];
+            }
+            elseif (!DRY_RUN)
+            {
+                $road_id = sprintf('999999%06d00', ++$road_count);
+                $region_cache[$road_id_hash] = $road_id;
+                $ps_road_insert->execute(array(
+                    $road_id,
+                    $entry->sido,
+                    $entry->sido ? Postcodify_Utility::$english_cache[$entry->sido] : null,
+                    $entry->sigungu,
+                    $entry->sigungu ? Postcodify_Utility::$english_cache[$entry->sigungu] : null,
+                    $entry->ilbangu,
+                    $entry->ilbangu ? Postcodify_Utility::$english_cache[$entry->ilbangu] : null,
+                    $entry->eupmyeon,
+                    $entry->eupmyeon ? Postcodify_Utility::$english_cache[$entry->eupmyeon] : null,
+                ));
+            }
+            else
+            {
+                $road_id = null;
+            }
+            
+            // 시작번호와 끝번호를 정리한다.
+            
+            $startnum = $entry->range_start_major . ($entry->range_start_minor ? ('-' . $entry->range_start_minor) : '');
+            $endnum = $entry->range_end_major . ($entry->range_end_minor ? ('-' . $entry->range_end_minor) : '');
+            if ($endnum === '' || $endnum === '-') $endnum = null;
+            
+            // 사서함 명칭을 생성한다.
+            
+            $pobox_name_ko = trim($entry->pobox_name . ' ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum)));
+            $pobox_name_en = 'P.O.Box ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum));
+            
+            // 주소 레코드를 저장한다.
+            
+            if (!DRY_RUN)
+            {
+                $ps_addr_insert->execute(array(
+                    $road_id,
+                    $pobox_name_ko,
+                    $pobox_name_en,
+                ));
+                $proxy_id = $db->lastInsertId();
+            }
+            else
+            {
+                $proxy_id = null;
+            }
+            
+            // 검색 키워드들을 정리하여 저장한다.
+            
+            if (!DRY_RUN)
+            {
+                $keywords = array(Postcodify_Utility::get_canonical($entry->pobox_name));
+                
+                if ($entry->pobox_name === '사서함')
+                {
+                    if ($entry->sigungu !== '') $keywords[] = Postcodify_Utility::get_canonical($entry->sigungu . $entry->pobox_name);
+                    if ($entry->ilbangu !== '') $keywords[] = Postcodify_Utility::get_canonical($entry->ilbangu . $entry->pobox_name);
+                    if ($entry->eupmyeon !== '') $keywords[] = Postcodify_Utility::get_canonical($entry->eupmyeon . $entry->pobox_name);
+                }
+                
+                if (!$entry->range_end_major) $entry->range_end_major = $entry->range_start_major;
+                if (!$entry->range_end_minor) $entry->range_end_minor = $entry->range_start_minor;
+                
+                foreach ($keywords as $keyword)
+                {
+                    $ps_pobox_insert->execute(array(
+                        $proxy_id,
+                        $keyword,
+                        $entry->range_start_major,
+                        $entry->range_start_minor,
+                        $entry->range_end_major,
+                        $entry->range_end_minor,
+                    ));
+                }
+            }
+            
+            // 카운터를 표시한다.
+            
+            if (++$count % 512 === 0) $this->print_progress($count);
+            
+            // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
+            
+            unset($keywords);
+            unset($entry);
+        }
+        
+        // 뒷정리.
+        
+        $zip->close();
+        unset($zip);
+        
+        if (!DRY_RUN)
+        {
+            $db->commit();
+            unset($db);
+        }
     }
     
     // 지번 우편번호 데이터를 로딩한다.
