@@ -572,11 +572,10 @@ class Postcodify_Indexer_CreateDB
         {
             $db = Postcodify_Utility::get_db();
             $db->beginTransaction();
-            $ps_addr_select = $db->prepare('SELECT id FROM postcodify_addresses where address_id = ?');
+            $ps_addr_select = $db->prepare('SELECT id, other_addresses FROM postcodify_addresses where address_id = ?');
             $ps_addr_update1 = $db->prepare('UPDATE postcodify_addresses SET dongri_ko = ?, dongri_en = ?, ' .
                 'jibeon_major = ?, jibeon_minor = ?, is_mountain = ? WHERE id = ?');
-            $ps_addr_update2 = $db->prepare('UPDATE postcodify_addresses SET other_addresses = ' .
-                'CONCAT_WS(\'\\n\', other_addresses, ?) WHERE id = ?');
+            $ps_addr_update2 = $db->prepare('UPDATE postcodify_addresses SET other_addresses = ? WHERE id = ?');
             $ps_kwko_insert = $db->prepare('INSERT INTO postcodify_keywords_ko (address_id, keyword_crc32) VALUES (?, ?)');
             $ps_kwen_insert = $db->prepare('INSERT INTO postcodify_keywords_en (address_id, keyword_crc32) VALUES (?, ?)');
             $ps_numb_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
@@ -613,23 +612,32 @@ class Postcodify_Indexer_CreateDB
                 {
                     // 영문 동·리명을 구한다.
                     
-                    $dongri_en = Postcodify_Utility::$english_cache[$entry->dongri];
+                    $dongri_en_full = Postcodify_Utility::$english_cache[$entry->dongri];
                     
                     // 키워드를 확장한다.
                     
                     $dongri_ko_array = Postcodify_Utility::get_variations_of_dongri($entry->dongri);
-                    $dongri_en_array = array(preg_replace('/[^a-z0-9]/', '', strtolower($dongri_en)));
+                    $dongri_en_array = array(preg_replace('/[^a-z0-9]/', '', strtolower($dongri_en_full)));
                     
                     // 이 주소의 대체키 번호를 구한다.
                     
                     $ps_addr_select->execute(array($entry->address_id));
-                    $proxy_id = intval($ps_addr_select->fetchColumn());
+                    list($proxy_id, $other_addresses) = $ps_addr_select->fetch(PDO::FETCH_NUM);
                     $ps_addr_select->closeCursor();
+                    $proxy_id = intval($proxy_id);
+                    if (!$proxy_id) continue;
                     
                     // 동·리 키워드 중복 방지 캐시에 현재 항목을 추가한다.
                     
-                    $kwcache[$proxy_id] = implode('|', $dongri_ko_array + $dongri_en_array);
-                    if (count($kwcache) > 2100)
+                    foreach ($dongri_ko_array as $dongri_ko)
+                    {
+                        $kwcache[$proxy_id][$dongri_ko] = true;
+                    }
+                    foreach ($dongri_en_array as $dongri_en)
+                    {
+                        $kwcache[$proxy_id][$dongri_en] = true;
+                    }
+                    if (count($kwcache) > 200)
                     {
                         $kwcache = array_slice($kwcache, 100);
                     }
@@ -644,7 +652,7 @@ class Postcodify_Indexer_CreateDB
                         {
                             $ps_addr_update1->execute(array(
                                 $entry->dongri,
-                                $dongri_en,
+                                $dongri_en_full,
                                 $entry->num_major,
                                 $entry->num_minor,
                                 $entry->is_mountain,
@@ -659,7 +667,7 @@ class Postcodify_Indexer_CreateDB
                             $nums = ($entry->is_mountain ? '산' : '') . $entry->num_major .
                                 ($entry->num_minor ? ('-' . $entry->num_minor) : '');
                             $ps_addr_update2->execute(array(
-                                $entry->dongri . ' ' . $nums,
+                                $other_addresses . $entry->dongri . ' ' . $nums . "\n",
                                 $proxy_id,
                             ));
                         }
@@ -671,18 +679,18 @@ class Postcodify_Indexer_CreateDB
                     {
                         foreach ($dongri_ko_array as $dongri_ko)
                         {
-                            if (!isset($kwcache[$proxy_id]) || strpos($kwcache[$proxy_id], $dongri_ko) === false)
+                            if (!isset($kwcache[$proxy_id][$dongri_ko]))
                             {
-                                $kwcache[$proxy_id] = isset($kwcache[$proxy_id]) ? ($kwcache[$proxy_id] . '|' . $dongri_ko) : $dongri_ko;
+                                $kwcache[$proxy_id][$dongri_ko] = true;
                                 $ps_kwko_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($dongri_ko)));
                             }
                         }
                         
                         foreach ($dongri_en_array as $dongri_en)
                         {
-                            if (!isset($kwcache[$proxy_id]) || strpos($kwcache[$proxy_id], $dongri_en) === false)
+                            if (!isset($kwcache[$proxy_id][$dongri_en]))
                             {
-                                $kwcache[$proxy_id] = isset($kwcache[$proxy_id]) ? ($kwcache[$proxy_id] . '|' . $dongri_en) : $dongri_en;
+                                $kwcache[$proxy_id][$dongri_en] = true;
                                 $ps_kwen_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($dongri_en)));
                             }
                         }
