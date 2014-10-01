@@ -755,6 +755,7 @@ class Postcodify_Indexer_CreateDB
                 'building_name = ?, other_addresses = ? WHERE id = ?');
             $ps_kwko_select = $db->prepare('SELECT keyword_crc32 FROM postcodify_keywords_ko WHERE address_id = ?');
             $ps_kwko_insert = $db->prepare('INSERT INTO postcodify_keywords_ko (address_id, keyword_crc32) VALUES (?, ?)');
+            $ps_building_insert = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
         }
         
         // 이 쓰레드에서 처리할 시·도 목록을 구한다.
@@ -866,7 +867,7 @@ class Postcodify_Indexer_CreateDB
                                 if (!isset($building_names_inserted[$building_name_variation]))
                                 {
                                     $building_names_inserted[$building_name_variation] = true;
-                                    $ps_kwko_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($building_name_variation)));
+                                    $ps_building_insert->execute(array($proxy_id, $building_name_variation));
                                 }
                             }
                         }
