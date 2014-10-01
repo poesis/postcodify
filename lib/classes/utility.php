@@ -108,6 +108,55 @@ class Postcodify_Utility
         return preg_replace('/[^ㄱ-ㅎ가-힣a-z0-9-]/uU', '', strtolower($str));
     }
     
+    // 기타 주소를 정리하는 함수.
+    
+    public static function organize_other_addresses($other_addresses, $building_names, $admin_dongri)
+    {
+        // 지번주소 목록을 분리한다.
+        
+        if (!is_array($other_addresses))
+        {
+            $other_addresses = explode("\n", $other_addresses);
+        }
+        
+        // 동별로 묶어서 재구성한다.
+        
+        $numeric_addresses = array();
+        foreach ($other_addresses as $address)
+        {
+            $address = explode(' ', $address);
+            if (count($address) < 2) continue;
+            $numeric_addresses[$address[0]][] = $address[1];
+        }
+        
+        $other_addresses = array();
+        foreach ($numeric_addresses as $dongri => $numbers)
+        {
+            natsort($numbers);
+            $other_addresses[] = $dongri . ' ' . implode(', ', $numbers);
+        }
+        
+        // 행정동명을 추가한다.
+        
+        $admin_dongri = strval($admin_dongri);
+        if ($admin_dongri !== '' && !isset($numeric_addresses[$admin_dongri]))
+        {
+            $other_addresses[] = $admin_dongri;
+        }
+        
+        // 건물 이름들을 추가한다.
+        
+        natsort($building_names);
+        foreach ($building_names as $building_name)
+        {
+            $other_addresses[] = str_replace(';', ':', $building_name);
+        }
+        
+        // 정리하여 반환한다.
+        
+        return implode('; ', $other_addresses);
+    }
+    
     // 도로명의 일반적인 변형들을 구하는 함수.
     
     public static function get_variations_of_road_name($str)

@@ -39,6 +39,8 @@ class Postcodify_Indexer_CreateDB
     
     protected $_interim_indexes = array(
         'postcodify_addresses' => array('address_id'),
+        'postcodify_keywords_ko' => array('address_id'),
+        'postcodify_keywords_en' => array('address_id'),
     );
     
     // 최종 인덱스 목록.
@@ -46,8 +48,8 @@ class Postcodify_Indexer_CreateDB
     protected $_final_indexes = array(
         'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
         'postcodify_addresses' => array('road_id', 'postcode5', 'postcode6', 'updated'),
-        'postcodify_keywords_ko' => array('address_id', 'keyword_crc32'),
-        'postcodify_keywords_en' => array('address_id', 'keyword_crc32'),
+        'postcodify_keywords_ko' => array('keyword_crc32'),
+        'postcodify_keywords_en' => array('keyword_crc32'),
         'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
         'postcodify_buildings' => array('address_id'),
         'postcodify_poboxes' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
@@ -397,7 +399,7 @@ class Postcodify_Indexer_CreateDB
             
             if (count($entry->building_names))
             {
-                Postcodify_Utility::$building_cache[$entry->address_id] = implode(',', $entry->building_names);
+                Postcodify_Utility::$building_cache[$entry->address_id] = implode('|', $entry->building_names);
             }
             
             // 카운터를 표시한다.
@@ -735,7 +737,159 @@ class Postcodify_Indexer_CreateDB
     
     public function load_extra_info($sido)
     {
+        // DB를 준비한다.
         
+        if (!DRY_RUN)
+        {
+            $db = Postcodify_Utility::get_db();
+            $db->beginTransaction();
+            $ps_addr_select = $db->prepare('SELECT id, dongri_ko, other_addresses FROM postcodify_addresses where address_id = ?');
+            $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode6 = ?, ' .
+                'building_name = ?, other_addresses = ? WHERE id = ?');
+            $ps_kwko_select = $db->prepare('SELECT keyword_crc32 FROM postcodify_keywords_ko WHERE address_id = ?');
+            $ps_kwko_insert = $db->prepare('INSERT INTO postcodify_keywords_ko (address_id, keyword_crc32) VALUES (?, ?)');
+        }
+        
+        // 이 쓰레드에서 처리할 시·도 목록을 구한다.
+        
+        $sidos = explode('|', $sido);
+        
+        // 카운터를 초기화한다.
+        
+        $count = 0;
+        
+        // 시·도를 하나씩 처리한다.
+        
+        foreach ($sidos as $sido)
+        {
+            // Zip 파일을 연다.
+            
+            $zip = new Postcodify_Indexer_Parser_Extra_Info;
+            $zip->open_archive($this->_data_dir . '/부가정보_' . $sido . '.zip');
+            
+            // Zip 파일에 포함된 텍스트 파일들을 하나씩 처리한다.
+            
+            while (($filename = $zip->open_next_file()) !== false)
+            {
+                // 데이터를 한 줄씩 읽는다.
+                
+                while ($entry = $zip->read_line())
+                {
+                    // 이 주소의 대체키 번호를 구한다.
+                    
+                    $ps_addr_select->execute(array($entry->address_id));
+                    list($proxy_id, $dongri_ko, $other_addresses) = $ps_addr_select->fetch(PDO::FETCH_NUM);
+                    $ps_addr_select->closeCursor();
+                    $proxy_id = intval($proxy_id);
+                    if (!$proxy_id) continue;
+                    
+                    // 공동주택명을 구한다.
+                    
+                    $common_residence_name = strval($entry->common_residence_name);
+                    if ($common_residence_name === '') $common_residence_name = null;
+                    
+                    // 기타 주소를 정리한다.
+                    
+                    $building_names = $entry->building_names;
+                    if (isset(Postcodify_Utility::$building_cache[$entry->address_id]))
+                    {
+                        $extra_building_names = explode('|', Postcodify_Utility::$building_cache[$entry->address_id]);
+                        foreach ($extra_building_names as $extra_building_name)
+                        {
+                            $building_names[] = $extra_building_name;
+                        }
+                        $building_names = array_unique($building_names);
+                    }
+                    
+                    $other_addresses = Postcodify_Utility::organize_other_addresses($other_addresses, $building_names, $entry->admin_dongri);
+                    
+                    // 우편번호와 공동주택명 등의 정보를 저장한다.
+                    
+                    if (!DRY_RUN)
+                    {
+                        $ps_addr_update->execute(array(
+                            $entry->postcode6,
+                            $common_residence_name,
+                            $other_addresses,
+                            $proxy_id,
+                        ));
+                    }
+                    
+                    // 행정동·리 및 건물명 키워드를 저장한다.
+                    
+                    if (!DRY_RUN)
+                    {
+                        if ($entry->admin_dongri)
+                        {
+                            $ps_kwko_select->execute(array($proxy_id));
+                            $existing_keywords = array();
+                            $existing_keywords_raw = $ps_kwko_select->fetchAll(PDO::FETCH_NUM);
+                            foreach ($existing_keywords_raw as $existing_keyword)
+                            {
+                                $existing_keywords[$existing_keyword[0]] = true;
+                                unset($existing_keyword);
+                            }
+                            
+                            $admin_dongri_variations = Postcodify_Utility::get_variations_of_dongri($entry->admin_dongri);
+                            foreach ($admin_dongri_variations as $dongri)
+                            {
+                                $crc32 = Postcodify_Utility::crc32_x64($dongri);
+                                if (!isset($existing_keywords[$crc32]))
+                                {
+                                    $ps_kwko_insert->execute(array($proxy_id, $crc32));
+                                }
+                            }
+                        }
+                        
+                        $building_names_inserted = array();
+                        foreach ($building_names as $building_name)
+                        {
+                            $building_name_variations = Postcodify_Utility::get_variations_of_building_name($building_name);
+                            foreach ($building_name_variations as $building_name_variation)
+                            {
+                                if (!isset($building_names_inserted[$building_name_variation]))
+                                {
+                                    $building_names_inserted[$building_name_variation] = true;
+                                    $ps_kwko_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($building_name_variation)));
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 카운터를 표시한다.
+                    
+                    if (++$count % 512 === 0)
+                    {
+                        $shmop = shmop_open($this->_shmop_key, 'w', 0, 0);
+                        $prev = current(unpack('L', shmop_read($shmop, 0, 4)));
+                        shmop_write($shmop, pack('L', $prev + 512), 0);
+                        shmop_close($shmop);
+                    }
+                    
+                    // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
+                    
+                    unset($admin_dongri_variations);
+                    unset($building_names);
+                    unset($extra_building_names);
+                    unset($building_names_inserted);
+                    unset($building_name_variations);
+                    unset($existing_keywords_raw);
+                    unset($existing_keywords);
+                    unset($entry);
+                }
+            }
+        }
+        
+        // 뒷정리.
+        
+        $zip->close();
+        unset($zip);
+        
+        if (!DRY_RUN)
+        {
+            $db->commit();
+            unset($db);
+        }
     }
     
     // 사서함 데이터를 로딩한다.
