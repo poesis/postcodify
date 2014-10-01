@@ -299,7 +299,7 @@ class Postcodify_Utility
     
     // 무시할 건물명인지 확인하는 함수.
     
-    protected function is_ignorable_building_name($str)
+    protected static function is_ignorable_building_name($str)
     {
         static $ignore_list = array();
         if (!count($ignore_list))
