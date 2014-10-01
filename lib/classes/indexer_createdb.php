@@ -622,11 +622,19 @@ class Postcodify_Indexer_CreateDB
                     
                     // 이 주소의 대체키 번호를 구한다.
                     
-                    $ps_addr_select->execute(array($entry->address_id));
-                    list($proxy_id, $other_addresses) = $ps_addr_select->fetch(PDO::FETCH_NUM);
-                    $ps_addr_select->closeCursor();
-                    $proxy_id = intval($proxy_id);
-                    if (!$proxy_id) continue;
+                    if (!DRY_RUN)
+                    {
+                        $ps_addr_select->execute(array($entry->address_id));
+                        list($proxy_id, $other_addresses) = $ps_addr_select->fetch(PDO::FETCH_NUM);
+                        $ps_addr_select->closeCursor();
+                        $proxy_id = intval($proxy_id);
+                        if (!$proxy_id) continue;
+                    }
+                    else
+                    {
+                        $proxy_id = null;
+                        $other_addresses = '';
+                    }
                     
                     // 동·리 키워드 중복 방지 캐시에 현재 항목을 추가한다.
                     
@@ -776,11 +784,20 @@ class Postcodify_Indexer_CreateDB
                 {
                     // 이 주소의 대체키 번호를 구한다.
                     
-                    $ps_addr_select->execute(array($entry->address_id));
-                    list($proxy_id, $dongri_ko, $other_addresses) = $ps_addr_select->fetch(PDO::FETCH_NUM);
-                    $ps_addr_select->closeCursor();
-                    $proxy_id = intval($proxy_id);
-                    if (!$proxy_id) continue;
+                    if (!DRY_RUN)
+                    {
+                        $ps_addr_select->execute(array($entry->address_id));
+                        list($proxy_id, $dongri_ko, $other_addresses) = $ps_addr_select->fetch(PDO::FETCH_NUM);
+                        $ps_addr_select->closeCursor();
+                        $proxy_id = intval($proxy_id);
+                        if (!$proxy_id) continue;
+                    }
+                    else
+                    {
+                        $proxy_id = null;
+                        $dongri_ko = '';
+                        $other_addresses = '';
+                    }
                     
                     // 공동주택명을 구한다.
                     
