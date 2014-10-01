@@ -121,6 +121,10 @@ class Postcodify_Indexer_CheckEnv
             exit(2);
         }
         
+        // 시험구동인 경우 여기서 종료한다.
+        
+        if (DRY_RUN) return;
+        
         // DB의 사양을 점검한다.
         
         if (!($db = Postcodify_Utility::get_db()))
