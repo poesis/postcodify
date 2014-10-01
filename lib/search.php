@@ -36,7 +36,8 @@ if (preg_match('/[^a-zA-Z0-9_.]/', $callback)) $callback = null;
 header('Content-Type: application/javascript; charset=UTF-8');
 header('Cache-Control: private, must-revalidate, post-check=0, pre-check=0');
 header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
-Postcodify_Server::dbconfig(DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_DBNAME, DB_DRIVER);
+Postcodify_Server::dbconfig(POSTCODIFY_DB_HOST, POSTCODIFY_DB_PORT,
+    POSTCODIFY_DB_USER, POSTCODIFY_DB_PASS, POSTCODIFY_DB_DBNAME, POSTCODIFY_DB_DRIVER);
 $result = Postcodify_Server::search($keywords, 'UTF-8', $client_version);
 $json_options = (PHP_SAPI === 'cli' && defined('JSON_PRETTY_PRINT')) ? 384 : 0;
 echo ($callback ? ($callback . '(') : '') . json_encode($result, $json_options) . ($callback ? ');' : '') . "\n";
