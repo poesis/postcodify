@@ -92,7 +92,7 @@ class Postcodify_Utility
     
     // 터미널에 표시할 문자열의 가로 폭을 계산하는 함수.
     
-    public static function get_terminal_width($str)
+    public static function get_printed_width($str)
     {
         return strlen($str) - ((strlen($str) - mb_strlen($str, 'UTF-8')) / 2);
     }
@@ -102,6 +102,45 @@ class Postcodify_Utility
     public static function print_negative_spaces($count)
     {
         echo "\033[${count}D";
+    }
+    
+    // 터미널에 메시지를 출력하고 커서를 오른쪽 끝으로 이동한다.
+    
+    public static function print_message($str)
+    {
+        echo $str . str_repeat(' ', max(22, TERMINAL_WIDTH - self::get_printed_width($str)));
+    }
+    
+    // 터미널에 진행 상황을 출력한다.
+    
+    public static function print_progress($num, $max = null)
+    {
+        if ($max === null)
+        {
+            self::print_negative_spaces(12);
+            echo str_pad(number_format($num), 10, ' ', STR_PAD_LEFT) . '  ';
+        }
+        else
+        {
+            self::print_negative_spaces(22);
+            echo str_pad(number_format($num) . ' / ' . number_format($max), 20, ' ', STR_PAD_LEFT) . '  ';
+        }
+    }
+    
+    // 터미널에 OK 메시지를 출력하고 커서를 다음 줄로 이동한다.
+    
+    public static function print_ok()
+    {
+        self::print_negative_spaces(12);
+        echo str_repeat(' ', 6) . '[ OK ]';
+        echo PHP_EOL;
+    }
+    
+    // 터미널의 커서를 다음 줄로 이동한다.
+    
+    public static function print_newline()
+    {
+        echo PHP_EOL;
     }
     
     // 검색 키워드에서 불필요한 문자와 띄어쓰기를 제거하는 함수.

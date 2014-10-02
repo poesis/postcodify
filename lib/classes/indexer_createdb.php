@@ -66,101 +66,59 @@ class Postcodify_Indexer_CreateDB
     
     public function start()
     {
-        $this->print_message('Postcodify Indexer ' . POSTCODIFY_VERSION . (DRY_RUN ? ' (시험구동)' : ''));
-        $this->print_newline();
+        Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION . (DRY_RUN ? ' (시험구동)' : ''));
+        Postcodify_Utility::print_newline();
         
         $checkenv = new Postcodify_Indexer_CheckEnv;
         $checkenv->check();
         
-        $this->print_message('테이블을 생성하는 중...');
+        Postcodify_Utility::print_message('테이블을 생성하는 중...');
         $this->create_tables();
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('데이터 기준일 정보를 저장하는 중...');
+        Postcodify_Utility::print_message('데이터 기준일 정보를 저장하는 중...');
         $this->load_data_date();
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('도로명코드 목록을 로딩하는 중...');
+        Postcodify_Utility::print_message('도로명코드 목록을 로딩하는 중...');
         $this->load_road_info();
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('상세건물명을 로딩하는 중...');
+        Postcodify_Utility::print_message('상세건물명을 로딩하는 중...');
         $this->load_building_info();
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('영문 행정구역명을 로딩하는 중...');
+        Postcodify_Utility::print_message('영문 행정구역명을 로딩하는 중...');
         $this->load_english_aliases();
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('주소 데이터를 로딩하는 중...');
+        Postcodify_Utility::print_message('주소 데이터를 로딩하는 중...');
         $this->start_threaded_workers('load_juso');
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('작업용 인덱스를 생성하는 중...');
+        Postcodify_Utility::print_message('작업용 인덱스를 생성하는 중...');
         $this->start_threaded_workers('interim_indexes');
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('지번 데이터를 로딩하는 중...');
+        Postcodify_Utility::print_message('지번 데이터를 로딩하는 중...');
         $this->start_threaded_workers('load_jibeon');
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('부가정보 데이터를 로딩하는 중...');
+        Postcodify_Utility::print_message('부가정보 데이터를 로딩하는 중...');
         $this->start_threaded_workers('load_extra_info');
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('사서함 데이터를 로딩하는 중...');
+        Postcodify_Utility::print_message('사서함 데이터를 로딩하는 중...');
         $this->load_pobox();
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('영문 검색 키워드를 저장하는 중...');
+        Postcodify_Utility::print_message('영문 검색 키워드를 저장하는 중...');
         $this->save_english_keywords();
-        $this->print_ok();
-        $this->print_newline();
+        Postcodify_Utility::print_ok();
         
-        $this->print_message('최종 인덱스를 생성하는 중...');
+        Postcodify_Utility::print_message('최종 인덱스를 생성하는 중...');
         $this->start_threaded_workers('final_indexes');
-        $this->print_ok();
-        $this->print_newline();
-    }
-    
-    // 터미널에 메시지를 출력하고 커서를 오른쪽 끝으로 이동한다.
-    
-    public function print_message($str)
-    {
-        echo $str . str_repeat(' ', max(12, TERMINAL_WIDTH - Postcodify_Utility::get_terminal_width($str)));
-    }
-    
-    // 터미널에 진행 상황을 출력한다.
-    
-    public function print_progress($num)
-    {
-        Postcodify_Utility::print_negative_spaces(12);
-        echo str_pad(number_format($num), 10, ' ', STR_PAD_LEFT) . '  ';
-    }
-    
-    // 터미널에 OK 메시지를 출력한다.
-    
-    public function print_ok()
-    {
-        Postcodify_Utility::print_negative_spaces(12);
-        echo str_repeat(' ', 6) . '[ OK ]';
-    }
-    
-    // 터미널의 커서를 다음 줄로 이동한다.
-    
-    public function print_newline()
-    {
-        echo PHP_EOL;
+        Postcodify_Utility::print_ok();
     }
     
     // 작업 쓰레드를 생성한다.
@@ -229,7 +187,7 @@ class Postcodify_Indexer_CreateDB
             // 카운터를 확인한다.
             
             $count = current(unpack('L', shmop_read($shmop, 0, 4)));
-            $this->print_progress($count);
+            Postcodify_Utility::print_progress($count);
             
             // 부모 프로세스는 쉰다.
             
@@ -371,7 +329,7 @@ class Postcodify_Indexer_CreateDB
             
             // 카운터를 표시한다.
             
-            if (++$count % 512 === 0) $this->print_progress($count);
+            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
             unset($entry);
         }
         
@@ -414,7 +372,7 @@ class Postcodify_Indexer_CreateDB
             
             // 카운터를 표시한다.
             
-            if (++$count % 512 === 0) $this->print_progress($count);
+            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
             unset($entry);
         }
         
@@ -448,7 +406,7 @@ class Postcodify_Indexer_CreateDB
             
             // 카운터를 표시한다.
             
-            if (++$count % 512 === 0) $this->print_progress($count);
+            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
             unset($entry);
         }
         
@@ -1016,7 +974,7 @@ class Postcodify_Indexer_CreateDB
             
             // 카운터를 표시한다.
             
-            if (++$count % 512 === 0) $this->print_progress($count);
+            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
             
             // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
             
@@ -1071,7 +1029,7 @@ class Postcodify_Indexer_CreateDB
                 
                 // 카운터를 표시한다.
                 
-                if (++$count % 512 === 0) $this->print_progress($count);
+                if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
             }
             
             // 뒷정리.
