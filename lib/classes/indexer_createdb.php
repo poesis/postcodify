@@ -46,10 +46,10 @@ class Postcodify_Indexer_CreateDB
     
     protected $_final_indexes = array(
         'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
-        'postcodify_addresses' => array('road_id', 'postcode5', 'postcode6', 'updated'),
+        'postcodify_addresses' => array('road_id'),
         'postcodify_keywords' => array('keyword_crc32'),
         'postcodify_english' => array('en_crc32', 'ko_crc32'),
-        'postcodify_numbers' => array('address_id', 'num_major'),
+        'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
         'postcodify_buildings' => array('address_id'),
         'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
     );
