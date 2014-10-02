@@ -48,13 +48,13 @@ class Postcodify_Indexer_SQLite_Convert
     
     // 엔트리 포인트.
     
-    public function start()
+    public function start($args)
     {
         // SQLite 파일명을 구한다.
         
-        if (isset($GLOBALS['argv'][2]))
+        if (count($args->args))
         {
-            $filename = $GLOBALS['argv'][2];
+            $filename = $args->args[0];
             if (@file_put_contents($filename, '') === false)
             {
                 echo $filename . ' 파일을 생성할 수 없습니다. 경로와 퍼미션을 확인해 주십시오.' . PHP_EOL;

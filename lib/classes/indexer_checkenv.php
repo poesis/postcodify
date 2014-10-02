@@ -23,7 +23,7 @@ class Postcodify_Indexer_CheckEnv
 {
     // 구동 환경을 점검한다.
     
-    public function check()
+    public function check($dry_run)
     {
         // 기본적인 환경을 확인한다.
         
@@ -123,7 +123,7 @@ class Postcodify_Indexer_CheckEnv
         
         // 시험구동인 경우 여기서 종료한다.
         
-        if (DRY_RUN) return;
+        if ($dry_run) return;
         
         // DB의 사양을 점검한다.
         

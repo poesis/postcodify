@@ -28,44 +28,40 @@ if (function_exists('gc_enable')) gc_enable();
 
 require dirname(__FILE__) . '/autoload.php';
 
-// 명령줄에 주어진 옵션에 따라 적절한 클래스를 호출한다.
+// 명령줄에 주어진 옵션을 파악한다.
 
-$valid_actions = array(
-    'download',
-    'createdb',
-    'verifydb',
-    'sqlite-convert',
-);
+if (PHP_SAPI !== 'cli')
+{
+    Postcodify_Utility::print_usage_instructions();
+}
 
-if (PHP_SAPI === 'cli' && isset($argv[1]) && in_array($argv[1], $valid_actions))
+$args = Postcodify_Utility::get_terminal_args();
+
+if ($args->command === null)
 {
-    $dry_run = (isset($argv[2]) && $argv[2] == '--dry-run');
-    define('DRY_RUN', $dry_run);
-    
-    $start_time = time();
-    $class_name = 'Postcodify_Indexer_' . ucfirst(str_replace('-', '_', $argv[1]));
-    $obj = new $class_name();
-    $obj->start();
-    
-    echo str_repeat('-', Postcodify_Utility::get_terminal_width()) . PHP_EOL;
-    
-    $elapsed = time() - $start_time;
-    $elapsed_hours = floor($elapsed / 3600);
-    $elapsed = $elapsed - ($elapsed_hours * 3600);
-    $elapsed_minutes = floor($elapsed / 60);
-    $elapsed_seconds = $elapsed % 60;
-    
-    echo '작업을 모두 마쳤습니다. 경과 시간 : ';
-    if ($elapsed_hours) echo $elapsed_hours . '시간 ';
-    if ($elapsed_hours || $elapsed_minutes) echo $elapsed_minutes . '분 ';
-    echo $elapsed_seconds . '초';
-    echo PHP_EOL;
-    exit(0);
+    Postcodify_Utility::print_usage_instructions();
 }
-else
-{
-    $stderr = fopen('php://stderr', 'w');
-    fwrite($stderr, 'Usage: php indexer.php (' . implode('|', $valid_actions) . ')' . PHP_EOL);
-    fclose($stderr);
-    exit(1);
-}
+
+// 필요한 클래스를 호출한다.
+
+$start_time = time();
+$class_name = 'Postcodify_Indexer_' . ucfirst(str_replace('-', '_', $argv[1]));
+$obj = new $class_name();
+$obj->start($args);
+
+// 소요된 시간을 출력한다.
+
+echo str_repeat('-', Postcodify_Utility::get_terminal_width()) . PHP_EOL;
+
+$elapsed = time() - $start_time;
+$elapsed_hours = floor($elapsed / 3600);
+$elapsed = $elapsed - ($elapsed_hours * 3600);
+$elapsed_minutes = floor($elapsed / 60);
+$elapsed_seconds = $elapsed % 60;
+
+echo '작업을 모두 마쳤습니다. 경과 시간 : ';
+if ($elapsed_hours) echo $elapsed_hours . '시간 ';
+if ($elapsed_hours || $elapsed_minutes) echo $elapsed_minutes . '분 ';
+echo $elapsed_seconds . '초';
+echo PHP_EOL;
+exit(0);

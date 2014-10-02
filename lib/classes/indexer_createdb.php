@@ -26,6 +26,7 @@ class Postcodify_Indexer_CreateDB
     protected $_data_dir;
     protected $_data_date;
     protected $_shmop_key;
+    protected $_dry_run = false;
     
     // 쓰레드별로 작업을 분할하는 데 사용하는 시도 목록.
     
@@ -64,13 +65,18 @@ class Postcodify_Indexer_CreateDB
     
     // 엔트리 포인트.
     
-    public function start()
+    public function start($args)
     {
-        Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION . (DRY_RUN ? ' (시험구동)' : ''));
+        if (in_array('--dry-run', $args->options))
+        {
+            $this->_dry_run = true;
+        }
+        
+        Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION . ($this->_dry_run ? ' (시험구동)' : ''));
         Postcodify_Utility::print_newline();
         
         $checkenv = new Postcodify_Indexer_CheckEnv;
-        $checkenv->check();
+        $checkenv->check($this->_dry_run);
         
         Postcodify_Utility::print_message('테이블을 생성하는 중...');
         $this->create_tables();
@@ -203,7 +209,7 @@ class Postcodify_Indexer_CreateDB
     
     public function create_tables()
     {
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db = Postcodify_Utility::get_db();
             $db->exec(file_get_contents(POSTCODIFY_LIB_DIR . '/resources/schema-mysql.sql'));
@@ -215,7 +221,7 @@ class Postcodify_Indexer_CreateDB
     
     public function create_indexes($columns, $table_name)
     {
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db = Postcodify_Utility::get_db();
             
@@ -258,7 +264,7 @@ class Postcodify_Indexer_CreateDB
         
         // DB에 저장한다.
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db = Postcodify_Utility::get_db();
             $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('version', '" . POSTCODIFY_VERSION . "')");
@@ -273,7 +279,7 @@ class Postcodify_Indexer_CreateDB
     {
         // DB를 준비한다.
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db = Postcodify_Utility::get_db();
             $db->beginTransaction();
@@ -310,7 +316,7 @@ class Postcodify_Indexer_CreateDB
             
             // 도로명 및 소속 행정구역 정보를 DB에 저장한다.
             
-            if (!DRY_RUN)
+            if (!$this->_dry_run)
             {
                 $ps->execute(array(
                     $entry->road_id . $entry->road_section,
@@ -338,7 +344,7 @@ class Postcodify_Indexer_CreateDB
         $zip->close();
         unset($zip);
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db->commit();
             unset($db);
@@ -422,7 +428,7 @@ class Postcodify_Indexer_CreateDB
     {
         // DB를 준비한다.
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db = Postcodify_Utility::get_db();
             $db->beginTransaction();
@@ -467,7 +473,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 주소를 저장한다.
                     
-                    if (!DRY_RUN)
+                    if (!$this->_dry_run)
                     {
                         $ps_addr_insert->execute(array(
                             $entry->address_id,
@@ -486,7 +492,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 검색 키워드와 번호들을 저장한다.
                     
-                    if (!DRY_RUN)
+                    if (!$this->_dry_run)
                     {
                         foreach ($road_name_array as $road_name)
                         {
@@ -519,7 +525,7 @@ class Postcodify_Indexer_CreateDB
         $zip->close();
         unset($zip);
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db->commit();
             unset($db);
@@ -532,7 +538,7 @@ class Postcodify_Indexer_CreateDB
     {
         // DB를 준비한다.
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db = Postcodify_Utility::get_db();
             $db->beginTransaction();
@@ -579,7 +585,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 이 주소의 대체키 번호를 구한다.
                     
-                    if (!DRY_RUN)
+                    if (!$this->_dry_run)
                     {
                         $ps_addr_select->execute(array($entry->address_id));
                         list($proxy_id, $other_addresses) = $ps_addr_select->fetch(PDO::FETCH_NUM);
@@ -595,7 +601,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 지번 정보를 저장한다.
                     
-                    if (!DRY_RUN)
+                    if (!$this->_dry_run)
                     {
                         // 대표지번인 경우 해당 레코드에 직접 저장한다.
                         
@@ -626,7 +632,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 키워드와 번호들을 저장한다.
                     
-                    if (!DRY_RUN)
+                    if (!$this->_dry_run)
                     {
                         foreach ($dongri_array as $dongri)
                         {
@@ -668,7 +674,7 @@ class Postcodify_Indexer_CreateDB
         $zip->close();
         unset($zip);
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db->commit();
             unset($db);
@@ -681,7 +687,7 @@ class Postcodify_Indexer_CreateDB
     {
         // DB를 준비한다.
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db = Postcodify_Utility::get_db();
             $db->beginTransaction();
@@ -720,7 +726,7 @@ class Postcodify_Indexer_CreateDB
                 {
                     // 이 주소의 대체키 번호를 구한다.
                     
-                    if (!DRY_RUN)
+                    if (!$this->_dry_run)
                     {
                         $ps_addr_select->execute(array($entry->address_id));
                         list($proxy_id, $dongri_ko, $other_addresses) = $ps_addr_select->fetch(PDO::FETCH_NUM);
@@ -761,7 +767,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 우편번호와 공동주택명 등의 정보를 저장한다.
                     
-                    if (!DRY_RUN)
+                    if (!$this->_dry_run)
                     {
                         $ps_addr_update->execute(array(
                             $entry->postcode6,
@@ -773,7 +779,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 행정동·리 및 건물명 키워드를 저장한다.
                     
-                    if (!DRY_RUN)
+                    if (!$this->_dry_run)
                     {
                         if ($entry->admin_dongri)
                         {
@@ -841,7 +847,7 @@ class Postcodify_Indexer_CreateDB
         $zip->close();
         unset($zip);
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db->commit();
             unset($db);
@@ -854,7 +860,7 @@ class Postcodify_Indexer_CreateDB
     {
         // DB를 준비한다.
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db = Postcodify_Utility::get_db();
             $db->beginTransaction();
@@ -895,7 +901,7 @@ class Postcodify_Indexer_CreateDB
             {
                 $road_id = $region_cache[$road_id_hash];
             }
-            elseif (!DRY_RUN)
+            elseif (!$this->_dry_run)
             {
                 $road_id = sprintf('999999%06d00', ++$road_count);
                 $region_cache[$road_id_hash] = $road_id;
@@ -929,7 +935,7 @@ class Postcodify_Indexer_CreateDB
             
             // 주소 레코드를 저장한다.
             
-            if (!DRY_RUN)
+            if (!$this->_dry_run)
             {
                 $ps_addr_insert->execute(array(
                     $road_id,
@@ -945,7 +951,7 @@ class Postcodify_Indexer_CreateDB
             
             // 검색 키워드들을 정리하여 저장한다.
             
-            if (!DRY_RUN)
+            if (!$this->_dry_run)
             {
                 $keywords = array(Postcodify_Utility::get_canonical($entry->pobox_name));
                 
@@ -987,7 +993,7 @@ class Postcodify_Indexer_CreateDB
         $zip->close();
         unset($zip);
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             $db->commit();
             unset($db);
@@ -1000,7 +1006,7 @@ class Postcodify_Indexer_CreateDB
     {
         // 시험구동인 경우 이 과정은 건너뛰어도 된다.
         
-        if (!DRY_RUN)
+        if (!$this->_dry_run)
         {
             // DB를 준비한다.
             

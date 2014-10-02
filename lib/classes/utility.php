@@ -21,16 +21,19 @@
 
 class Postcodify_Utility
 {
-    // 도로명 캐시.
+    // 인덱서가 지원하는 명령 목록.
+    
+    public static $indexer_commands = array(
+        'download',
+        'createdb',
+        'verifydb',
+        'sqlite-convert',
+    );
+    
+    // 캐시를 위한 변수들.
     
     public static $road_cache = array();
-    
-    // 영문 번역 캐시.
-    
     public static $english_cache = array();
-    
-    // 상세건물명 캐시.
-    
     public static $building_cache = array();
     
     // DB에 연결하는 함수.
@@ -88,6 +91,39 @@ class Postcodify_Utility
             }
         }
         return $result;
+    }
+    
+    // 터미널에서 입력한 변수들을 확인하는 함수.
+    
+    public static function get_terminal_args()
+    {
+        $result = array(
+            'command' => null,
+            'args' => array(),
+            'options' => array(),
+        );
+        
+        foreach ($_SERVER['argv'] as $key => $arg)
+        {
+            if ($key === 0)
+            {
+                continue;
+            }
+            elseif (in_array($arg, self::$indexer_commands))
+            {
+                $result['command'] = $arg;
+            }
+            elseif (preg_match('/^--[a-z0-9-]+$/', $arg))
+            {
+                $result['options'][] = $arg;
+            }
+            else
+            {
+                $result['args'][] = $arg;
+            }
+        }
+        
+        return (object)$result;
     }
     
     // 터미널의 가로 폭을 측정하는 함수.
@@ -162,6 +198,16 @@ class Postcodify_Utility
     public static function print_newline()
     {
         echo PHP_EOL;
+    }
+    
+    // 터미널에 인덱서 사용 방법을 출력하고 종료한다.
+    
+    public static function print_usage_instructions()
+    {
+        $stderr = fopen('php://stderr', 'w');
+        fwrite($stderr, 'Usage: php indexer.php (' . implode('|', self::$indexer_commands) . ')' . PHP_EOL);
+        fclose($stderr);
+        exit(1);
     }
     
     // 검색 키워드에서 불필요한 문자와 띄어쓰기를 제거하는 함수.
