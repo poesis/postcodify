@@ -108,7 +108,7 @@ class Postcodify_Utility
     
     public static function print_message($str)
     {
-        echo $str . str_repeat(' ', max(22, TERMINAL_WIDTH - self::get_printed_width($str)));
+        echo $str . str_repeat(' ', TERMINAL_WIDTH - self::get_printed_width($str));
     }
     
     // 터미널에 진행 상황을 출력한다.
@@ -117,13 +117,13 @@ class Postcodify_Utility
     {
         if ($max === null)
         {
-            self::print_negative_spaces(12);
-            echo str_pad(number_format($num), 10, ' ', STR_PAD_LEFT) . '  ';
+            self::print_negative_spaces(25);
+            echo str_pad(number_format($num), 23, ' ', STR_PAD_LEFT) . '  ';
         }
         else
         {
-            self::print_negative_spaces(22);
-            echo str_pad(number_format($num) . ' / ' . number_format($max), 20, ' ', STR_PAD_LEFT) . '  ';
+            self::print_negative_spaces(25);
+            echo str_pad(number_format($num) . ' / ' . number_format($max), 23, ' ', STR_PAD_LEFT) . '  ';
         }
     }
     
@@ -131,8 +131,8 @@ class Postcodify_Utility
     
     public static function print_ok()
     {
-        self::print_negative_spaces(12);
-        echo str_repeat(' ', 6) . '[ OK ]';
+        self::print_negative_spaces(25);
+        echo str_repeat(' ', 19) . '[ OK ]';
         echo PHP_EOL;
     }
     

@@ -77,7 +77,10 @@ class Postcodify_Indexer_SQLite_Convert
         
         // SQLite DB를 초기화한다.
         
-        echo 'SQLite DB를 초기화하는 중...' . PHP_EOL;
+        Postcodify_Utility::print_message('Postcodify SQLite Converter ' . POSTCODIFY_VERSION);
+        Postcodify_Utility::print_newline();
+        
+        Postcodify_Utility::print_message('SQLite DB를 초기화하는 중...');
         try
         {
             $sqlite = $this->initialize_db($filename);
@@ -88,6 +91,7 @@ class Postcodify_Indexer_SQLite_Convert
             echo $e->getMessage() . PHP_EOL;
             exit(1);
         }
+        Postcodify_Utility::print_ok();
         
         // 데이터를 복사한다.
         
@@ -99,7 +103,9 @@ class Postcodify_Indexer_SQLite_Convert
         
         // 인덱스를 최적화한다.
         
+        Postcodify_Utility::print_message('인덱스 최적화 중...');
         $this->wrap_up($sqlite);
+        Postcodify_Utility::print_ok();
     }
     
     // SQLite DB를 초기화한다.
@@ -121,7 +127,7 @@ class Postcodify_Indexer_SQLite_Convert
     {
         foreach ($this->_tables as $table_name => $table_info)
         {
-            echo $table_name . ' 데이터 복사 중...' . PHP_EOL;
+            Postcodify_Utility::print_message($table_name . ' 데이터 복사 중...');
             
             $row_count_query = $mysql->query('SELECT COUNT(*) FROM ' . $table_name);
             $row_count = intval($row_count_query->fetchColumn());
@@ -135,6 +141,8 @@ class Postcodify_Indexer_SQLite_Convert
             
             for ($i = 0; $i < $row_count; $i += $increment)
             {
+                Postcodify_Utility::print_progress($i, $row_count);
+                
                 $sqlite->beginTransaction();
                 
                 $query = $mysql->prepare('SELECT * FROM ' . $table_name . ' WHERE ' . $primary_key . ' > ? ORDER BY ' . $primary_key . ' LIMIT ' . $increment);
@@ -149,6 +157,8 @@ class Postcodify_Indexer_SQLite_Convert
                 
                 $sqlite->commit();
             }
+            
+            Postcodify_Utility::print_ok();
         }
     }
     
@@ -158,12 +168,16 @@ class Postcodify_Indexer_SQLite_Convert
     {
         foreach ($this->_indexes as $table_name => $columns)
         {
-            echo $table_name . ' 인덱스 생성 중...' . PHP_EOL;
+            Postcodify_Utility::print_message($table_name . ' 인덱스 생성 중...');
             
+            $count = 0;
             foreach ($columns as $column)
             {
+                Postcodify_Utility::print_progress($count++, count($columns));
                 $sqlite->exec('CREATE INDEX ' . $table_name . '_' . $column . ' ON ' . $table_name . ' (' . $column . ')');
             }
+            
+            Postcodify_Utility::print_ok();
         }
     }
     
@@ -171,7 +185,6 @@ class Postcodify_Indexer_SQLite_Convert
     
     public function wrap_up($sqlite)
     {
-        echo '최적화 중...' . PHP_EOL;
         $sqlite->exec('ANALYZE');
     }
 }
