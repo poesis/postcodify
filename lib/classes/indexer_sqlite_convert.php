@@ -171,7 +171,7 @@ class Postcodify_Indexer_SQLite_Convert
     
     public function wrap_up($sqlite)
     {
-        echo '최적화 중...';
+        echo '최적화 중...' . PHP_EOL;
         $sqlite->exec('ANALYZE');
     }
 }
