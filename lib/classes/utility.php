@@ -90,6 +90,18 @@ class Postcodify_Utility
         return $result;
     }
     
+    // 터미널의 가로 폭을 측정하는 함수.
+    
+    public static function get_terminal_width()
+    {
+        static $width = null;
+        if ($width !== null) return $width;
+        
+        $width = intval(trim(exec('tput cols')));
+        if (!$width) $width = 80;
+        return $width;
+    }
+    
     // 터미널에 표시할 문자열의 가로 폭을 계산하는 함수.
     
     public static function get_printed_width($str)
@@ -108,7 +120,7 @@ class Postcodify_Utility
     
     public static function print_message($str)
     {
-        echo $str . str_repeat(' ', TERMINAL_WIDTH - self::get_printed_width($str));
+        echo $str . str_repeat(' ', self::get_terminal_width() - self::get_printed_width($str));
     }
     
     // 터미널에 진행 상황을 출력한다.
