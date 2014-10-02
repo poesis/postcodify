@@ -148,6 +148,15 @@ class Postcodify_Utility
         echo PHP_EOL;
     }
     
+    // 터미널에 ERROR 메시지를 출력하고 커서를 다음 줄로 이동한다.
+    
+    public static function print_error()
+    {
+        self::print_negative_spaces(25);
+        echo str_repeat(' ', 16) . '[ ERROR ]';
+        echo PHP_EOL;
+    }
+    
     // 터미널의 커서를 다음 줄로 이동한다.
     
     public static function print_newline()

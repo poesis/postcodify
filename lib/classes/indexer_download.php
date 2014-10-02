@@ -117,8 +117,8 @@ class Postcodify_Indexer_Download
         {
             if ($value === '')
             {
-                echo 'ERROR' . "\n";
-                exit;
+                echo '[ERROR] 다운로드할 파일의 일부 또는 전부를 찾을 수 없습니다.' . PHP_EOL;
+                exit(2);
             }
         }
         
@@ -142,16 +142,16 @@ class Postcodify_Indexer_Download
                 
                 if (strpos($filename, $key) !== false)
                 {
-                    echo 'Downloading ' . $filename . ' ... ';
+                    Postcodify_Utility::print_message('다운로드: ' . $filename);
                     $result = Postcodify_Utility::download($link, $filepath);
                     if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
                     {
-                        echo '[ERROR]' . "\n";
-                        exit;
+                        Postcodify_Utility::print_error();
+                        exit(2);
                     }
                     else
                     {
-                        echo '[SUCCESS]' . "\n";
+                        Postcodify_Utility::print_ok();
                         $downloaded_files++;
                     }
                 }
@@ -160,44 +160,44 @@ class Postcodify_Indexer_Download
         
         // 우체국 사서함 및 지번우편번호 파일을 다운로드한다.
         
-        echo 'Downloading ' . basename(self::POBOX_URL) . ' ... ';
+        Postcodify_Utility::print_message('다운로드: ' . basename(self::POBOX_URL));
         $result = Postcodify_Utility::download(self::POBOX_URL, $download_path . '/' . basename(self::POBOX_URL));
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
-            echo '[ERROR]' . "\n";
-            exit;
+            Postcodify_Utility::print_error();
+            exit(2);
         }
         else
         {
-            echo '[SUCCESS]' . "\n";
+            Postcodify_Utility::print_ok();
             $downloaded_files++;
         }
         
-        echo 'Downloading ' . basename(self::JIBEON_URL) . ' ... ';
+        Postcodify_Utility::print_message('다운로드: ' . basename(self::JIBEON_URL));
         $result = Postcodify_Utility::download(self::JIBEON_URL, $download_path . '/' . basename(self::JIBEON_URL));
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
-            echo '[ERROR]' . "\n";
-            exit;
+            Postcodify_Utility::print_error();
+            exit(2);
         }
         else
         {
-            echo '[SUCCESS]' . "\n";
+            Postcodify_Utility::print_ok();
             $downloaded_files++;
         }
         
         // 영문 동 명칭을 다운로드한다.
         
-        echo 'Downloading ' . basename(self::ENGLISH_URL) . ' ... ';
+        Postcodify_Utility::print_message('다운로드: ' . basename(self::ENGLISH_URL));
         $result = Postcodify_Utility::download(self::ENGLISH_URL, $download_path . '/' . basename(self::ENGLISH_URL));
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
-            echo '[ERROR]' . "\n";
-            exit;
+            Postcodify_Utility::print_error();
+            exit(2);
         }
         else
         {
-            echo '[SUCCESS]' . "\n";
+            Postcodify_Utility::print_ok();
             $downloaded_files++;
         }
         
@@ -205,8 +205,8 @@ class Postcodify_Indexer_Download
         
         if ($downloaded_files < 47)
         {
-            echo '[ERROR] 다운로드한 파일 수가 일치하지 않습니다.' . "\n";
-            exit;
+            echo '[ERROR] 다운로드한 파일 수가 일치하지 않습니다.' . PHP_EOL;
+            exit(2);
         }
         
         // 기준일을 기록한다.
