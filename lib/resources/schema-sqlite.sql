@@ -2,80 +2,88 @@
 -- 주소 정보를 저장하는 메인 테이블.
 
 CREATE TABLE postcodify_addresses (
-    id CHARACTER(25) PRIMARY KEY,
-    postcode5 CHARACTER(5),
-    postcode6 CHARACTER(6),
-    road_id CHARACTER(12),
-    road_section CHARACTER(2),
-    road_name VARCHAR(80),
-    num_major INTEGER,
-    num_minor INTEGER,
-    is_basement INTEGER DEFAULT 0,
-    sido VARCHAR(20),
-    sigungu VARCHAR(20),
-    ilbangu VARCHAR(20),
-    eupmyeon VARCHAR(20),
-    dongri VARCHAR(20),
-    jibeon_major INTEGER,
-    jibeon_minor INTEGER,
-    is_mountain INTEGER DEFAULT 0,
-    building_name VARCHAR(40),
-    english_address VARCHAR(300),
-    other_addresses VARCHAR(600),
-    updated CHARACTER(8)
+    id INTEGER PRIMARY KEY,
+    address_id NUMERIC(25),
+    postcode5 CHAR(5),
+    postcode6 CHAR(6),
+    road_id NUMERIC(14),
+    num_major INTEGER(5),
+    num_minor INTEGER(5),
+    is_basement INTEGER(1) DEFAULT 0,
+    dongri_ko VARCHAR(80),
+    dongri_en VARCHAR(80),
+    jibeon_major INTEGER(5),
+    jibeon_minor INTEGER(5),
+    is_mountain INTEGER(1) DEFAULT 0,
+    building_name VARCHAR(80),
+    other_addresses VARCHAR(2000),
+    updated NUMERIC(8)
 );
 
--- 도로명주소 검색을 위한 키워드 테이블.
+-- 도로 정보를 저장하는 테이블.
 
-CREATE TABLE postcodify_keywords_juso (
-    seq INTEGER PRIMARY KEY,
-    address_id CHARACTER(25) NOT NULL,
-    keyword_crc32 INTEGER,
-    num_major INTEGER,
-    num_minor INTEGER
+CREATE TABLE postcodify_roads (
+    road_id NUMERIC(14) PRIMARY KEY,
+    road_name_ko VARCHAR(40),
+    road_name_en VARCHAR(40),
+    sido_ko VARCHAR(40),
+    sido_en VARCHAR(40),
+    sigungu_ko VARCHAR(40),
+    sigungu_en VARCHAR(40),
+    ilbangu_ko VARCHAR(40),
+    ilbangu_en VARCHAR(40),
+    eupmyeon_ko VARCHAR(40),
+    eupmyeon_en VARCHAR(40)
 );
 
--- 지번 검색을 위한 키워드 테이블.
+-- 한글 검색 키워드 테이블.
 
-CREATE TABLE postcodify_keywords_jibeon (
+CREATE TABLE postcodify_keywords (
     seq INTEGER PRIMARY KEY,
-    address_id CHARACTER(25) NOT NULL,
-    keyword_crc32 INTEGER,
-    num_major INTEGER,
-    num_minor INTEGER
+    address_id INTEGER NOT NULL,
+    keyword_crc32 INTEGER(10)
 );
 
--- 건물명 검색을 위한 키워드 테이블.
+-- 영문 검색 키워드 테이블.
 
-CREATE TABLE postcodify_keywords_building (
+CREATE TABLE postcodify_english (
     seq INTEGER PRIMARY KEY,
-    address_id CHARACTER(25) NOT NULL,
+    en_crc32 INTEGER(10),
+    ko_crc32 INTEGER(10)
+);
+
+-- 지번 및 건물번호 검색 테이블.
+
+CREATE TABLE postcodify_numbers (
+    seq INTEGER PRIMARY KEY,
+    address_id INTEGER NOT NULL,
+    num_major INTEGER(5),
+    num_minor INTEGER(5)
+);
+
+-- 건물명 검색 키워드 테이블.
+
+CREATE TABLE postcodify_buildings (
+    seq INTEGER PRIMARY KEY,
+    address_id INTEGER NOT NULL,
     keyword VARCHAR(40)
 );
 
--- 사서함 검색을 위한 키워드 테이블.
+-- 사서함 검색 키워드 테이블.
 
-CREATE TABLE postcodify_keywords_pobox (
+CREATE TABLE postcodify_pobox (
     seq INTEGER PRIMARY KEY,
-    address_id CHARACTER(25) NOT NULL,
+    address_id INTEGER NOT NULL,
     keyword VARCHAR(40),
-    range_start_major INTEGER,
-    range_start_minor INTEGER,
-    range_end_major INTEGER,
-    range_end_minor INTEGER
-);
-
--- 대체 키워드 테이블.
-
-CREATE TABLE postcodify_keywords_synonyms (
-    seq INTEGER PRIMARY KEY,
-    original_crc32 INTEGER,
-    canonical_crc32 INTEGER
+    range_start_major INTEGER(5),
+    range_start_minor INTEGER(5),
+    range_end_major INTEGER(5),
+    range_end_minor INTEGER(5)
 );
 
 -- 각종 설정을 저장하는 테이블.
 
-CREATE TABLE postcodify_metadata (
+CREATE TABLE postcodify_settings (
     k VARCHAR(20) PRIMARY KEY,
     v VARCHAR(40)
 );

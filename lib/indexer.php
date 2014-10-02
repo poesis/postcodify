@@ -34,6 +34,7 @@ $valid_actions = array(
     'download',
     'createdb',
     'verifydb',
+    'sqlite-convert',
 );
 
 if (PHP_SAPI === 'cli' && isset($argv[1]) && in_array($argv[1], $valid_actions))
@@ -45,7 +46,7 @@ if (PHP_SAPI === 'cli' && isset($argv[1]) && in_array($argv[1], $valid_actions))
     define('DRY_RUN', $dry_run);
     
     $start_time = time();
-    $class_name = 'Postcodify_Indexer_' . ucfirst($argv[1]);
+    $class_name = 'Postcodify_Indexer_' . ucfirst(str_replace('-', '_', $argv[1]));
     $obj = new $class_name();
     $obj->start();
     
