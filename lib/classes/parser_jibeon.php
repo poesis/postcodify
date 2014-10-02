@@ -19,13 +19,13 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-class Postcodify_Indexer_Parser_English_Aliases extends Postcodify_Indexer_ZipReader
+class Postcodify_Parser_Jibeon extends Postcodify_ZipReader
 {
     // 생성자에서 문자셋을 지정한다.
     
     public function __construct()
     {
-        $this->_charset = 'UTF-8';
+        $this->_charset = 'CP949';
     }
     
     // 한 줄을 읽어 반환한다.
@@ -35,13 +35,23 @@ class Postcodify_Indexer_Parser_English_Aliases extends Postcodify_Indexer_ZipRe
         // 데이터를 읽는다.
         
         $line = parent::read_line($delimiter);
-        if ($line === false || count($line) < 2) return false;
+        if ($line === false || count($line) < 11) return false;
+        
+        // 동·리 정보를 정리한다.
+        
+        $dongri = trim($line[6]);
+        if ($dongri === '') $dongri = trim($line[5]);
+        $dongri = preg_replace('/\\(.+\\)/', '', $dongri);
         
         // 데이터를 정리하여 반환한다.
         
         return (object)array(
-            'ko' => trim($line[0]),
-            'en' => trim($line[1]),
+            'address_id' => trim($line[0]),
+            'dongri' => $dongri,
+            'num_major' => $line[8] ? (int)$line[8] : null,
+            'num_minor' => $line[9] ? (int)$line[9] : null,
+            'is_mountain' => (int)$line[7],
+            'is_canonical' => (int)$line[10],
         );
     }
 }

@@ -19,13 +19,13 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-class Postcodify_Indexer_Parser_Juso extends Postcodify_Indexer_ZipReader
+class Postcodify_Parser_English_Aliases extends Postcodify_ZipReader
 {
     // 생성자에서 문자셋을 지정한다.
     
     public function __construct()
     {
-        $this->_charset = 'CP949';
+        $this->_charset = 'UTF-8';
     }
     
     // 한 줄을 읽어 반환한다.
@@ -35,18 +35,13 @@ class Postcodify_Indexer_Parser_Juso extends Postcodify_Indexer_ZipReader
         // 데이터를 읽는다.
         
         $line = parent::read_line($delimiter);
-        if ($line === false || count($line) < 11) return false;
+        if ($line === false || count($line) < 2) return false;
         
         // 데이터를 정리하여 반환한다.
         
         return (object)array(
-            'address_id' => trim($line[0]),
-            'postcode5' => trim($line[6]),
-            'road_id' => trim($line[1]),
-            'road_section' => str_pad(trim($line[2]), 2, '0', STR_PAD_LEFT),
-            'num_major' => $line[4] ? (int)$line[4] : null,
-            'num_minor' => $line[5] ? (int)$line[5] : null,
-            'is_basement' => (int)$line[3],
+            'ko' => trim($line[0]),
+            'en' => trim($line[1]),
         );
     }
 }

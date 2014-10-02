@@ -326,7 +326,7 @@ class Postcodify_Indexer_CreateDB
         
         // Zip 파일을 연다.
         
-        $zip = new Postcodify_Indexer_Parser_Road_List;
+        $zip = new Postcodify_Parser_Road_List;
         $zip->open_archive($this->_data_dir . '/도로명코드_전체분.zip');
         $zip->open_next_file();
         
@@ -393,7 +393,7 @@ class Postcodify_Indexer_CreateDB
     {
         // Zip 파일을 연다.
         
-        $zip = new Postcodify_Indexer_Parser_Building_Info;
+        $zip = new Postcodify_Parser_Building_Info;
         $zip->open_archive($this->_data_dir . '/상세건물명.zip');
         $zip->open_next_file();
         
@@ -430,7 +430,7 @@ class Postcodify_Indexer_CreateDB
     {
         // Zip 파일을 연다.
         
-        $zip = new Postcodify_Indexer_Parser_English_Aliases;
+        $zip = new Postcodify_Parser_English_Aliases;
         $zip->open_archive($this->_data_dir . '/english_aliases_DB.zip');
         $zip->open_next_file();
         
@@ -488,7 +488,7 @@ class Postcodify_Indexer_CreateDB
         {
             // Zip 파일을 연다.
             
-            $zip = new Postcodify_Indexer_Parser_Juso;
+            $zip = new Postcodify_Parser_Juso;
             $zip->open_archive($this->_data_dir . '/주소_' . $sido . '.zip');
             
             // Zip 파일에 포함된 텍스트 파일들을 하나씩 처리한다.
@@ -600,7 +600,7 @@ class Postcodify_Indexer_CreateDB
         {
             // Zip 파일을 연다.
             
-            $zip = new Postcodify_Indexer_Parser_Jibeon;
+            $zip = new Postcodify_Parser_Jibeon;
             $zip->open_archive($this->_data_dir . '/지번_' . $sido . '.zip');
             
             // Zip 파일에 포함된 텍스트 파일들을 하나씩 처리한다.
@@ -749,7 +749,7 @@ class Postcodify_Indexer_CreateDB
         {
             // Zip 파일을 연다.
             
-            $zip = new Postcodify_Indexer_Parser_Extra_Info;
+            $zip = new Postcodify_Parser_Extra_Info;
             $zip->open_archive($this->_data_dir . '/부가정보_' . $sido . '.zip');
             
             // Zip 파일에 포함된 텍스트 파일들을 하나씩 처리한다.
@@ -912,7 +912,7 @@ class Postcodify_Indexer_CreateDB
         
         // Zip 파일을 연다.
         
-        $zip = new Postcodify_Indexer_Parser_Pobox;
+        $zip = new Postcodify_Parser_Pobox;
         $zip->open_archive($this->_data_dir . '/newaddr_pobox_DB.zip');
         $zip->open_next_file();
         
