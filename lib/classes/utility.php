@@ -21,6 +21,10 @@
 
 class Postcodify_Utility
 {
+    // 도로명 캐시.
+    
+    public static $road_cache = array();
+    
     // 영문 번역 캐시.
     
     public static $english_cache = array();

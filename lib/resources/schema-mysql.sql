@@ -49,7 +49,7 @@ CREATE TABLE postcodify_roads (
 
 -- 한글 검색 키워드 테이블.
 
-CREATE TABLE postcodify_keywords_ko (
+CREATE TABLE postcodify_keywords (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     address_id INT UNSIGNED NOT NULL,
     keyword_crc32 INT(10) UNSIGNED
@@ -57,10 +57,10 @@ CREATE TABLE postcodify_keywords_ko (
 
 -- 영문 검색 키워드 테이블.
 
-CREATE TABLE postcodify_keywords_en (
+CREATE TABLE postcodify_english (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    address_id INT UNSIGNED NOT NULL,
-    keyword_crc32 INT(10) UNSIGNED
+    en_crc32 INT(10) UNSIGNED,
+    ko_crc32 INT(10) UNSIGNED
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
 
 -- 지번 및 건물번호 검색 테이블.
@@ -82,7 +82,7 @@ CREATE TABLE postcodify_buildings (
 
 -- 사서함 검색 키워드 테이블.
 
-CREATE TABLE postcodify_poboxes (
+CREATE TABLE postcodify_pobox (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     address_id INT UNSIGNED NOT NULL,
     keyword VARCHAR(40),

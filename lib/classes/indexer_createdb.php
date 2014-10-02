@@ -39,7 +39,7 @@ class Postcodify_Indexer_CreateDB
     
     protected $_interim_indexes = array(
         'postcodify_addresses' => array('address_id'),
-        'postcodify_keywords_ko' => array('address_id'),
+        'postcodify_keywords' => array('address_id'),
     );
     
     // 최종 인덱스 목록.
@@ -47,11 +47,11 @@ class Postcodify_Indexer_CreateDB
     protected $_final_indexes = array(
         'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
         'postcodify_addresses' => array('road_id', 'postcode5', 'postcode6', 'updated'),
-        'postcodify_keywords_ko' => array('keyword_crc32'),
-        'postcodify_keywords_en' => array('address_id', 'keyword_crc32'),
+        'postcodify_keywords' => array('keyword_crc32'),
+        'postcodify_english' => array('en_crc32', 'ko_crc32'),
         'postcodify_numbers' => array('address_id', 'num_major'),
         'postcodify_buildings' => array('address_id'),
-        'postcodify_poboxes' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
+        'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
     );
     
     // 생성자.
@@ -119,6 +119,11 @@ class Postcodify_Indexer_CreateDB
         
         $this->print_message('사서함 데이터를 로딩하는 중...');
         $this->load_pobox();
+        $this->print_ok();
+        $this->print_newline();
+        
+        $this->print_message('영문 검색 키워드를 저장하는 중...');
+        $this->save_english_keywords();
         $this->print_ok();
         $this->print_newline();
         
@@ -333,9 +338,12 @@ class Postcodify_Indexer_CreateDB
         
         while ($entry = $zip->read_line())
         {
+            // 도로명을 캐시에 저장한다.
+            
+            Postcodify_Utility::$road_cache[$entry->road_id] = $entry->road_name;
+            
             // 영문 행정구역명을 캐시에 저장한다.
             
-            Postcodify_Utility::$english_cache['R_' . $entry->road_id] = $entry->road_name;
             Postcodify_Utility::$english_cache[$entry->road_name] = $entry->road_name_english;
             Postcodify_Utility::$english_cache[$entry->sido] = $entry->sido_english;
             if ($entry->sigungu) Postcodify_Utility::$english_cache[$entry->sigungu] = $entry->sigungu_english;
@@ -462,9 +470,8 @@ class Postcodify_Indexer_CreateDB
             $db->beginTransaction();
             $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (address_id, postcode5, ' .
                 'road_id, num_major, num_minor, is_basement) VALUES (?, ?, ?, ?, ?, ?)');
-            $ps_kwko_insert = $db->prepare('INSERT INTO postcodify_keywords_ko (address_id, keyword_crc32) VALUES (?, ?)');
-            $ps_kwen_insert = $db->prepare('INSERT INTO postcodify_keywords_en (address_id, keyword_crc32) VALUES (?, ?)');
-            $ps_numb_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
+            $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
+            $ps_num_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
         }
         
         // 이 쓰레드에서 처리할 시·도 목록을 구한다.
@@ -494,14 +501,11 @@ class Postcodify_Indexer_CreateDB
                 {
                     // 이 주소에 해당하는 도로명을 구한다.
                     
-                    $road_name_ko = Postcodify_Utility::$english_cache['R_' . $entry->road_id];
-                    $road_name_en = Postcodify_Utility::$english_cache[$road_name_ko];
-                    $proxy_id = null;
+                    $road_name = Postcodify_Utility::$road_cache[$entry->road_id];
                     
                     // 키워드를 확장한다.
                     
-                    $road_name_ko_array = Postcodify_Utility::get_variations_of_road_name($road_name_ko);
-                    $road_name_en_array = array(preg_replace('/[^a-z0-9]/', '', strtolower($road_name_en)));
+                    $road_name_array = Postcodify_Utility::get_variations_of_road_name($road_name);
                     
                     // 주소를 저장한다.
                     
@@ -517,22 +521,21 @@ class Postcodify_Indexer_CreateDB
                         ));
                         $proxy_id = $db->lastInsertId();
                     }
+                    else
+                    {
+                        $proxy_id = null;
+                    }
                     
-                    // 키워드와 번호들을 저장한다.
+                    // 검색 키워드와 번호들을 저장한다.
                     
                     if (!DRY_RUN)
                     {
-                        foreach ($road_name_ko_array as $road_name_ko)
+                        foreach ($road_name_array as $road_name)
                         {
-                            $ps_kwko_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($road_name_ko)));
+                            $ps_kwd_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($road_name)));
                         }
                         
-                        foreach ($road_name_en_array as $road_name_en)
-                        {
-                            $ps_kwen_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($road_name_en)));
-                        }
-                        
-                        $ps_numb_insert->execute(array($proxy_id, $entry->num_major, $entry->num_minor));
+                        $ps_num_insert->execute(array($proxy_id, $entry->num_major, $entry->num_minor));
                     }
                     
                     // 카운터를 표시한다.
@@ -547,8 +550,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
                     
-                    unset($road_name_ko_array);
-                    unset($road_name_en_array);
+                    unset($road_name_array);
                     unset($entry);
                 }
             }
@@ -580,9 +582,8 @@ class Postcodify_Indexer_CreateDB
             $ps_addr_update1 = $db->prepare('UPDATE postcodify_addresses SET dongri_ko = ?, dongri_en = ?, ' .
                 'jibeon_major = ?, jibeon_minor = ?, is_mountain = ? WHERE id = ?');
             $ps_addr_update2 = $db->prepare('UPDATE postcodify_addresses SET other_addresses = ? WHERE id = ?');
-            $ps_kwko_insert = $db->prepare('INSERT INTO postcodify_keywords_ko (address_id, keyword_crc32) VALUES (?, ?)');
-            $ps_kwen_insert = $db->prepare('INSERT INTO postcodify_keywords_en (address_id, keyword_crc32) VALUES (?, ?)');
-            $ps_numb_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
+            $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
+            $ps_num_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
         }
         
         // 이 쓰레드에서 처리할 시·도 목록을 구한다.
@@ -614,14 +615,9 @@ class Postcodify_Indexer_CreateDB
                 
                 while ($entry = $zip->read_line())
                 {
-                    // 영문 동·리명을 구한다.
-                    
-                    $dongri_en_full = Postcodify_Utility::$english_cache[$entry->dongri];
-                    
                     // 키워드를 확장한다.
                     
-                    $dongri_ko_array = Postcodify_Utility::get_variations_of_dongri($entry->dongri);
-                    $dongri_en_array = array(preg_replace('/[^a-z0-9]/', '', strtolower($dongri_en_full)));
+                    $dongri_array = Postcodify_Utility::get_variations_of_dongri($entry->dongri);
                     
                     // 이 주소의 대체키 번호를 구한다.
                     
@@ -649,7 +645,7 @@ class Postcodify_Indexer_CreateDB
                         {
                             $ps_addr_update1->execute(array(
                                 $entry->dongri,
-                                $dongri_en_full,
+                                Postcodify_Utility::$english_cache[$entry->dongri],
                                 $entry->num_major,
                                 $entry->num_minor,
                                 $entry->is_mountain,
@@ -674,21 +670,12 @@ class Postcodify_Indexer_CreateDB
                     
                     if (!DRY_RUN)
                     {
-                        foreach ($dongri_ko_array as $dongri_ko)
+                        foreach ($dongri_array as $dongri)
                         {
-                            if (!isset($kwcache[$proxy_id][$dongri_ko]))
+                            if (!isset($kwcache[$proxy_id][$dongri]))
                             {
-                                $kwcache[$proxy_id][$dongri_ko] = true;
-                                $ps_kwko_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($dongri_ko)));
-                            }
-                        }
-                        
-                        foreach ($dongri_en_array as $dongri_en)
-                        {
-                            if (!isset($kwcache[$proxy_id][$dongri_en]))
-                            {
-                                $kwcache[$proxy_id][$dongri_en] = true;
-                                $ps_kwen_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($dongri_en)));
+                                $kwcache[$proxy_id][$dongri] = true;
+                                $ps_kwd_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($dongri)));
                             }
                         }
                         
@@ -697,7 +684,7 @@ class Postcodify_Indexer_CreateDB
                             $kwcache = array_slice($kwcache, 100);
                         }
                         
-                        $ps_numb_insert->execute(array($proxy_id, $entry->num_major, $entry->num_minor));
+                        $ps_num_insert->execute(array($proxy_id, $entry->num_major, $entry->num_minor));
                     }
                     
                     // 카운터를 표시한다.
@@ -712,10 +699,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
                     
-                    unset($dongri_ko_array);
-                    unset($dongri_en_array);
-                    unset($existing_ko);
-                    unset($existing_en);
+                    unset($dongri_array);
                     unset($entry);
                 }
             }
@@ -746,8 +730,8 @@ class Postcodify_Indexer_CreateDB
             $ps_addr_select = $db->prepare('SELECT id, dongri_ko, other_addresses FROM postcodify_addresses where address_id = ?');
             $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode6 = ?, ' .
                 'building_name = ?, other_addresses = ? WHERE id = ?');
-            $ps_kwko_select = $db->prepare('SELECT keyword_crc32 FROM postcodify_keywords_ko WHERE address_id = ?');
-            $ps_kwko_insert = $db->prepare('INSERT INTO postcodify_keywords_ko (address_id, keyword_crc32) VALUES (?, ?)');
+            $ps_kwd_select = $db->prepare('SELECT keyword_crc32 FROM postcodify_keywords WHERE address_id = ?');
+            $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
             $ps_building_insert = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
         }
         
@@ -835,9 +819,9 @@ class Postcodify_Indexer_CreateDB
                     {
                         if ($entry->admin_dongri)
                         {
-                            $ps_kwko_select->execute(array($proxy_id));
+                            $ps_kwd_select->execute(array($proxy_id));
                             $existing_keywords = array();
-                            $existing_keywords_raw = $ps_kwko_select->fetchAll(PDO::FETCH_NUM);
+                            $existing_keywords_raw = $ps_kwd_select->fetchAll(PDO::FETCH_NUM);
                             foreach ($existing_keywords_raw as $existing_keyword)
                             {
                                 $existing_keywords[$existing_keyword[0]] = true;
@@ -850,7 +834,7 @@ class Postcodify_Indexer_CreateDB
                                 $crc32 = Postcodify_Utility::crc32_x64($dongri);
                                 if (!isset($existing_keywords[$crc32]))
                                 {
-                                    $ps_kwko_insert->execute(array($proxy_id, $crc32));
+                                    $ps_kwd_insert->execute(array($proxy_id, $crc32));
                                 }
                             }
                         }
@@ -921,7 +905,7 @@ class Postcodify_Indexer_CreateDB
                 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
             $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (road_id, dongri_ko, dongri_en) ' .
                 'VALUES (?, ?, ?)');
-            $ps_pobox_insert = $db->prepare('INSERT INTO postcodify_poboxes (address_id, keyword, ' .
+            $ps_pobox_insert = $db->prepare('INSERT INTO postcodify_pobox (address_id, keyword, ' .
                 'range_start_major, range_start_minor, range_end_major, range_end_minor) ' .
                 'VALUES (?, ?, ?, ?, ?, ?)');
         }
@@ -1052,10 +1036,48 @@ class Postcodify_Indexer_CreateDB
         }
     }
     
-    // 지번 우편번호 데이터를 로딩한다.
+    // 영문 검색 키워드를 저장한다.
     
-    public function load_jibeon_postcode()
+    public function save_english_keywords()
     {
+        // 시험구동인 경우 이 과정은 건너뛰어도 된다.
         
+        if (!DRY_RUN)
+        {
+            // DB를 준비한다.
+            
+            $db = Postcodify_Utility::get_db();
+            $db->beginTransaction();
+            $ps = $db->prepare('INSERT INTO postcodify_english (en_crc32, ko_crc32) VALUES (?, ?)');
+            
+            // 카운터를 초기화한다.
+            
+            $count = 0;
+            
+            // 각 영문 키워드와 거기에 해당하는 한글 키워드를 DB에 입력한다.
+            
+            foreach (Postcodify_Utility::$english_cache as $ko => $en)
+            {
+                // 영문 키워드에서 불필요한 문자를 제거한다.
+                
+                $en = preg_replace('/[^a-z0-9]/', '', strtolower($en));
+                
+                // 양쪽 모두 CRC32 처리하여 저장한다.
+                
+                $ps->execute(array(
+                    Postcodify_Utility::crc32_x64($en),
+                    Postcodify_Utility::crc32_x64($ko),
+                ));
+                
+                // 카운터를 표시한다.
+                
+                if (++$count % 512 === 0) $this->print_progress($count);
+            }
+            
+            // 뒷정리.
+            
+            $db->commit();
+            unset($db);
+        }
     }
 }
