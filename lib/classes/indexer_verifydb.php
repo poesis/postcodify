@@ -59,6 +59,8 @@ class Postcodify_Indexer_VerifyDB
         
         $pass = true;
         
+        echo 'Postcodify Indexer ' . POSTCODIFY_VERSION . PHP_EOL;
+        
         echo '테이블 확인 중...' . PHP_EOL;
         $pass = $this->check_tables($db) && $pass;
         
