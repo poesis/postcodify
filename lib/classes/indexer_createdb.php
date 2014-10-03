@@ -867,8 +867,9 @@ class Postcodify_Indexer_CreateDB
             $ps_road_insert = $db->prepare('INSERT INTO postcodify_roads (road_id, ' .
                 'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en) ' .
                 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (road_id, dongri_ko, dongri_en) ' .
-                'VALUES (?, ?, ?)');
+            $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (road_id, dongri_ko, dongri_en, ' .
+                'jibeon_major, jibeon_minor, other_addresses) ' .
+                'VALUES (?, ?, ?, ?, ?, ?)');
             $ps_pobox_insert = $db->prepare('INSERT INTO postcodify_pobox (address_id, keyword, ' .
                 'range_start_major, range_start_minor, range_end_major, range_end_minor) ' .
                 'VALUES (?, ?, ?, ?, ?, ?)');
@@ -928,19 +929,17 @@ class Postcodify_Indexer_CreateDB
             $endnum = $entry->range_end_major . ($entry->range_end_minor ? ('-' . $entry->range_end_minor) : '');
             if ($endnum === '' || $endnum === '-') $endnum = null;
             
-            // 사서함 명칭을 생성한다.
-            
-            $pobox_name_ko = trim($entry->pobox_name . ' ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum)));
-            $pobox_name_en = 'P.O.Box ' . $startnum . ($endnum === null ? '' : (' ~ ' . $endnum));
-            
             // 주소 레코드를 저장한다.
             
             if (!$this->_dry_run)
             {
                 $ps_addr_insert->execute(array(
                     $road_id,
-                    $pobox_name_ko,
-                    $pobox_name_en,
+                    $entry->pobox_name,
+                    'P.O.Box',
+                    $entry->range_start_major,
+                    $entry->range_start_minor,
+                    $startnum . ($endnum === null ? '' : (' ~ ' . $endnum)),
                 ));
                 $proxy_id = $db->lastInsertId();
             }

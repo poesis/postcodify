@@ -307,12 +307,15 @@ class Postcodify_Server
             
             if ($result->sort === 'POBOX')
             {
-                $extra_info_long = $extra_info_short = '';
+                $address_ko_new = $address_ko_old = $row->dongri_ko . ' ' . $row->other_addresses;
+                $address_en_new = $address_en_old = $row->dongri_en . ' ' . $row->other_addresses;
+                $extra_info_long = $extra_info_short = $other_addresses = '';
             }
             else
             {
                 $extra_info_long = trim($address_ko_old . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
                 $extra_info_short = trim($row->dongri_ko . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+                $other_addresses = strval($row->other_addresses);
             }
             
             // 요청받은 버전에 따라 다른 형태로 작성한다.
@@ -325,7 +328,7 @@ class Postcodify_Server
                 $record->code5 = strval($row->postcode5);
                 $record->address = array('base' => $address_ko_base, 'new' => $address_ko_new, 'old' => $address_ko_old, 'building' => $row->building_name);
                 $record->english = array('base' => $address_en_base, 'new' => $address_en_new, 'old' => $address_en_old, 'building' => '');
-                $record->other = array('long' => strval($extra_info_long), 'short' => strval($extra_info_short), 'others' => strval($row->other_addresses));
+                $record->other = array('long' => strval($extra_info_long), 'short' => strval($extra_info_short), 'others' => $other_addresses);
             }
             else
             {
@@ -339,7 +342,7 @@ class Postcodify_Server
                 $record->extra_info_short = strval($extra_info_short);
                 $record->english_address = trim($address_en_new . ', ' . $address_en_base);
                 $record->jibeon_address = trim($address_ko_base . ' ' . $address_ko_old);
-                $record->other = strval($row->other_addresses);
+                $record->other = $other_addresses;
             }
             
             // 반환할 인코딩이 UTF-8이 아닌 경우 여기서 변환한다.

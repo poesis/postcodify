@@ -37,6 +37,11 @@ class Postcodify_Parser_Extra_Info extends Postcodify_ZipReader
         $line = parent::read_line($delimiter);
         if ($line === false || count($line) < 9) return false;
         
+        // 행정동명을 파악한다.
+        
+        $admin_dongri = trim($line[2]);
+        if (!preg_match('/[동리]$/u', $admin_dongri)) $admin_dongri = null;
+        
         // 건물명을 정리한다.
         
         $building_names = array();
@@ -49,7 +54,7 @@ class Postcodify_Parser_Extra_Info extends Postcodify_ZipReader
         return (object)array(
             'address_id' => trim($line[0]),
             'postcode6' => trim($line[3]),
-            'admin_dongri' => trim($line[2]),
+            'admin_dongri' => $admin_dongri,
             'building_names' => array_unique($building_names),
             'common_residence_name' => intval(trim($line[8])) > 0 ? trim($line[6]) : null,
         );
