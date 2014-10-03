@@ -19,7 +19,7 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-class Postcodify_Areas
+class Postcodify_Server_Areas
 {
     // 전국의 시도 목록.
     
