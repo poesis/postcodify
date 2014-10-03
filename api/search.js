@@ -49,10 +49,13 @@
             var settings = $.extend({
                 api : info.freeAPI.defaultUrl,
                 apiBackup : null,
+                timeout : 3000,
+                timeoutBackup : 8000,
                 callBackupFirst : false,
                 controls : this,
                 results : this,
                 language : "ko",
+                autoSelect : false,
                 searchButtonContent : null,
                 mapLinkProvider : false,
                 mapLinkContent : null,
@@ -65,8 +68,6 @@
                 insertEnglishJibeonAddress : null,
                 insertDetails : null,
                 insertExtraInfo : null,
-                timeout : 3000,
-                timeoutBackup : 8000,
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results, lang, sort) { },
                 beforeSelect : function(selectedEntry) { },
@@ -79,6 +80,7 @@
                 focusKeyword : true,
                 focusDetails : true,
                 hideOldAddresses : true,
+                hideSummary : false,
                 useFullJibeon : false,
                 useAlert : false
             }, options);
@@ -95,26 +97,28 @@
             
             var results = $(settings.results);
             var controls = $('<div class="postcode_search_controls"></div>');
-            var keywordInput = $('<input type="text" class="keyword" value="" />').appendTo(controls);
-            var searchButton = $('<button type="button" class="search_button"></button>').html(settings.searchButtonContent).appendTo(controls);
+            var uniqueId = "postcodify_" + new Date().getTime().toString() + Math.random().toString().substr(2, 4);
+            var keywordLabel = $('<label></label>').attr("for", uniqueId).text(info.translations[settings.language].msgKeywords).hide().appendTo(controls);
+            var keywordInput = $('<input type="text" class="keyword" value="" />').attr("id", uniqueId).appendTo(controls);
+            var searchButton = $('<button type="button" class="search_button"></button>').attr("id", uniqueId + "_button").html(settings.searchButtonContent).appendTo(controls);
             controls.prependTo(settings.controls);
             
             // 단시간내 중복 검색을 방지하기 위해 직전 검색어를 기억하는 변수.
             
             var previousSearch = "";
             
-            // 키워드 입력란이 포커스를 잃거나 엔터키를 누르면 즉시 검색을 수행한다.
+            // 키워드 입력란에서 엔터키를 누르거나 검색 단추로 포커스를 이동하면 즉시 검색을 수행한다.
             // 검색 단추를 누를 때까지 기다리는 것보다 검색 속도가 훨씬 빠르게 느껴진다.
-            
-            keywordInput.blur(function(event) {
-                searchButton.trigger("click");
-            });
             
             keywordInput.keypress(function(event) {
                 if (event.which == 13) {
                     event.preventDefault();
                     searchButton.trigger("click");
                 }
+            });
+            
+            searchButton.focusin(function(event) {
+                searchButton.trigger("click");
             });
             
             // 실제 검색을 수행하는 이벤트를 등록한다.
@@ -205,7 +209,7 @@
                         ajaxOptions.dataType = "json";
                     } else {
                         ajaxOptions.dataType = "jsonp";
-                        ajaxOptions.jsonpCallback = "postcodify" + ajaxStartTime;
+                        ajaxOptions.jsonpCallback = "postcodify_" + ajaxStartTime.toString() + Math.random().toString().substr(2, 4);
                     }
                     $.ajax(ajaxOptions);
                 };
@@ -260,7 +264,7 @@
                     
                     // 정상 처리되었지만 검색 결과가 없는 경우...
                     
-                    else if (data.count === 0) {
+                    else if (data.count == 0) {
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorEmpty);
                         } else {
@@ -379,14 +383,16 @@
                         
                         // 검색 결과 요약을 작성한다.
                         
-                        var summary = $('<div class="postcode_search_status summary"></div>');
-                        summary.append('<div class="result_count">' + info.translations[resultLanguage].msgResultCount + ': ' +
-                            '<span>' + data.count + '</span></div>');
-                        summary.append('<div class="search_time">' + info.translations[resultLanguage].msgSearchTime + ': ' +
-                            '<span>' + Math.round(data.time * 1000) + 'ms</span></div>');
-                        summary.append('<div class="network_time">' + info.translations[resultLanguage].msgNetworkTime + ': ' +
-                            '<span>' + Math.round((searchTotalTime - parseFloat(data.time)) * 1000) + 'ms</span></div>');
-                        summary.appendTo(results);
+                        if (!settings.hideSummary) {
+                            var summary = $('<div class="postcode_search_status summary"></div>');
+                            summary.append('<div class="result_count">' + info.translations[resultLanguage].msgResultCount + ': ' +
+                                '<span>' + data.count + '</span></div>');
+                            summary.append('<div class="search_time">' + info.translations[resultLanguage].msgSearchTime + ': ' +
+                                '<span>' + Math.round(data.time * 1000) + 'ms</span></div>');
+                            summary.append('<div class="network_time">' + info.translations[resultLanguage].msgNetworkTime + ': ' +
+                                '<span>' + Math.round((searchTotalTime - parseFloat(data.time)) * 1000) + 'ms</span></div>');
+                            summary.appendTo(results);
+                        }
                         
                         // 검색 결과가 너무 많아 일부만 표시한 경우 그 사실을 알린다.
                         
@@ -403,6 +409,12 @@
                     
                     settings.onSuccess();
                     settings.onComplete();
+                    
+                    // 검색 결과가 1개이고 autoSelect가 true인 경우 자동으로 선택한다.
+                    
+                    if (!data.error && data.count == 1 && data.nums && settings.autoSelect) {
+                        results.find("div.postcode_search_result a.selector").first().trigger("click");
+                    }
                 };
                 
                 // AJAX 요청 1차 실패시 실행할 함수를 정의한다.
@@ -566,6 +578,7 @@
             msgSearchTime : "소요 시간",
             msgNetworkTime : "통신 지연",
             msgSeeOthers : "관련지번 보기",
+            msgKeywords : "검색 키워드",
             msgSearch : "검색",
             msgMap : "지도"
         },
@@ -580,6 +593,7 @@
             msgSearchTime : "Time taken",
             msgNetworkTime : "Network delay",
             msgSeeOthers : "See related addresses",
+            msgKeywords : "Search keywords",
             msgSearch : "Search",
             msgMap : "Map"
         }
