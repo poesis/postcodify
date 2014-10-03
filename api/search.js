@@ -182,7 +182,7 @@
                 var ajaxCall = function(url, timeout, errorCallback) {
                     ajaxStartTime = new Date().getTime();
                     settings.currentRequestUrl = url;
-                    $.ajax({
+                    var ajaxOptions = {
                         url : url,
                         data : {
                             v : info.version,
@@ -190,8 +190,6 @@
                             ref : window.location.hostname,
                             cdn : info.location
                         },
-                        dataType : "jsonp",
-                        jsonpCallback : "postcodify" + ajaxStartTime,
                         processData : true,
                         cache : false,
                         timeout : timeout,
@@ -202,7 +200,14 @@
                             if (searchButtonAnimation !== false) clearTimeout(searchButtonAnimation);
                             searchButton.removeAttr("disabled").html(settings.searchButtonContent);
                         }
-                    });
+                    };
+                    if ("withCredentials" in new XMLHttpRequest() || typeof XDomainRequest !== "undefined") {
+                        ajaxOptions.dataType = "json";
+                    } else {
+                        ajaxOptions.dataType = "jsonp";
+                        ajaxOptions.jsonpCallback = "postcodify" + ajaxStartTime;
+                    }
+                    $.ajax(ajaxOptions);
                 };
                 
                 // AJAX 요청 성공시 실행할 함수를 정의한다.
