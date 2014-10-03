@@ -3,11 +3,11 @@
 
 DROP TABLE IF EXISTS postcodify_addresses;
 DROP TABLE IF EXISTS postcodify_roads;
-DROP TABLE IF EXISTS postcodify_keywords_ko;
-DROP TABLE IF EXISTS postcodify_keywords_en;
+DROP TABLE IF EXISTS postcodify_keywords;
+DROP TABLE IF EXISTS postcodify_english;
 DROP TABLE IF EXISTS postcodify_numbers;
 DROP TABLE IF EXISTS postcodify_buildings;
-DROP TABLE IF EXISTS postcodify_poboxes;
+DROP TABLE IF EXISTS postcodify_pobox;
 DROP TABLE IF EXISTS postcodify_settings;
 
 -- 주소 정보를 저장하는 메인 테이블.
