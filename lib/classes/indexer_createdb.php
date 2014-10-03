@@ -867,9 +867,9 @@ class Postcodify_Indexer_CreateDB
             $ps_road_insert = $db->prepare('INSERT INTO postcodify_roads (road_id, ' .
                 'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en) ' .
                 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (road_id, dongri_ko, dongri_en, ' .
-                'jibeon_major, jibeon_minor, other_addresses) ' .
-                'VALUES (?, ?, ?, ?, ?, ?)');
+            $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (road_id, postcode6, ' .
+                'dongri_ko, dongri_en, jibeon_major, jibeon_minor, other_addresses) ' .
+                'VALUES (?, ?, ?, ?, ?, ?, ?)');
             $ps_pobox_insert = $db->prepare('INSERT INTO postcodify_pobox (address_id, keyword, ' .
                 'range_start_major, range_start_minor, range_end_major, range_end_minor) ' .
                 'VALUES (?, ?, ?, ?, ?, ?)');
@@ -935,6 +935,7 @@ class Postcodify_Indexer_CreateDB
             {
                 $ps_addr_insert->execute(array(
                     $road_id,
+                    $entry->postcode6,
                     $entry->pobox_name,
                     'P.O.Box',
                     $entry->range_start_major,

@@ -298,10 +298,10 @@ class Postcodify_Server
                 $row->sido_en);
             $address_en_new = trim(($row->is_basement ? 'Jiha ' : '') .
                 ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : '') .
-                ' ' . $row->road_name_en);
+                ', ' . $row->road_name_en);
             $address_en_old = trim(($row->is_mountain ? 'San ' : '') .
                 ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : '') .
-                ' ' . $row->dongri_en);
+                ', ' . $row->dongri_en);
             
             // 추가정보를 정리한다.
             
