@@ -168,13 +168,26 @@ class Postcodify_Server_Database
     
     protected function query_mysqli($querystring, $args)
     {
-        $escaped_args = array();
-        foreach ($args as $arg)
+        $querystring = explode('?', $querystring);
+        foreach ($querystring as $key => $part)
         {
-           $escaped_args[] = $arg === null ? 'null' : ("'" . $this->_dbh->real_escape_string($arg) . "'");
+            if (isset($args[$key]))
+            {
+                if ($args[$key] === null)
+                {
+                    $querystring[$key] .= 'null';
+                }
+                elseif (is_numeric($args[$key]))
+                {
+                    $querystring[$key] .= $args[$key];
+                }
+                else
+                {
+                    $querystring[$key] .= "'" . $this->_dbh->real_escape_string($args[$key]) . "'";
+                }
+            }
         }
-        $escaped_args = implode(', ', $escaped_args);
-        $query = $this->_dbh->query('CALL ' . $proc_name . '(' . $escaped_args . ')');
+        $query = $this->_dbh->query(implode('', $querystring));
         $result = array();
         while ($row = $query->fetch_object())
         {
@@ -187,13 +200,26 @@ class Postcodify_Server_Database
     
     protected function query_mysql($querystring, $args)
     {
-        $escaped_args = array();
-        foreach ($args as $arg)
+        $querystring = explode('?', $querystring);
+        foreach ($querystring as $key => $part)
         {
-           $escaped_args[] = $arg === null ? 'null' : ("'" . mysql_real_escape_string($arg, $this->_dbh) . "'");
+            if (isset($args[$key]))
+            {
+                if ($args[$key] === null)
+                {
+                    $querystring[$key] .= 'null';
+                }
+                elseif (is_numeric($args[$key]))
+                {
+                    $querystring[$key] .= $args[$key];
+                }
+                else
+                {
+                    $querystring[$key] .= "'" . mysql_real_escape_string($args[$key], $this->_dbh) . "'";
+                }
+            }
         }
-        $escaped_args = implode(', ', $escaped_args);
-        $query = @mysql_query('CALL ' . $proc_name . '(' . $escaped_args . ')', $this->_dbh);
+        $query = @mysql_query(implode('', $querystring), $this->_dbh);
         if (!$query) throw new Exception(mysql_error($this->_dbh));
         $result = array();
         while ($row = mysql_fetch_object($query))
