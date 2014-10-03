@@ -246,7 +246,7 @@ class Postcodify_Server
                     $args[] = $q->numbers[0];
                     if ($q->numbers[1])
                     {
-                        $conds[] = 'pp.range_start_minor <= ? AND pp.range_end_minor >= ?';
+                        $conds[] = '(pp.range_start_minor IS NULL OR (pp.range_start_minor <= ? AND pp.range_end_minor >= ?))';
                         $args[] = $q->numbers[1];
                         $args[] = $q->numbers[1];
                     }
