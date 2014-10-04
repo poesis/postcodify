@@ -37,9 +37,15 @@ class Postcodify_Indexer_Download
     
     public function start()
     {
-        // 다운로드할 경로를 구한다.
+        // 다운로드할 경로가 존재하는지 확인한다.
         
         $download_path = dirname(POSTCODIFY_LIB_DIR) . '/data';
+        
+        if ((!file_exists($download_path) || !is_dir($download_path)) && !@mkdir($download_path, 0755))
+        {
+            echo '[ERROR] 다운로드 대상 경로(' . $download_path . ')가 존재하지 않습니다.' . PHP_EOL;
+            exit(2);
+        }
         
         // 게시물 목록을 다운로드한다.
         
