@@ -179,6 +179,7 @@ class Postcodify_Indexer_Download
             $downloaded_files++;
         }
         
+        /*
         Postcodify_Utility::print_message('다운로드: ' . basename(self::JIBEON_URL));
         $result = Postcodify_Utility::download(self::JIBEON_URL, $download_path . '/' . basename(self::JIBEON_URL));
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
@@ -191,6 +192,7 @@ class Postcodify_Indexer_Download
             Postcodify_Utility::print_ok();
             $downloaded_files++;
         }
+        */
         
         // 영문 동 명칭을 다운로드한다.
         
@@ -209,7 +211,7 @@ class Postcodify_Indexer_Download
         
         // 파일 수가 맞는지 확인한다.
         
-        if ($downloaded_files < 47)
+        if ($downloaded_files < 46)
         {
             echo '[ERROR] 다운로드한 파일 수가 일치하지 않습니다.' . PHP_EOL;
             exit(2);
