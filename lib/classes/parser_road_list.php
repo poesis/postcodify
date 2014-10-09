@@ -66,8 +66,8 @@ class Postcodify_Parser_Road_List extends Postcodify_ZipReader
             $sigungu = substr($sigungu, 0, $pos);
             if (($engpos = strpos($sigungu_english, ',')) !== false)
             {
-                $sigungu_english = trim(substr($sigungu_english, $engpos + 1));
                 $ilbangu_english = trim(substr($sigungu_english, 0, $engpos));
+                $sigungu_english = trim(substr($sigungu_english, $engpos + 1));
             }
             else
             {
