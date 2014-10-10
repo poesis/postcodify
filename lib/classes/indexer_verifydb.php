@@ -27,7 +27,7 @@ class Postcodify_Indexer_VerifyDB
         'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
         'postcodify_addresses' => array('address_id', 'road_id'),
         'postcodify_keywords' => array('address_id', 'keyword_crc32'),
-        'postcodify_english' => array('en_crc32', 'ko_crc32'),
+        'postcodify_english' => array('ko', 'ko_crc32', 'en', 'en_crc32'),
         'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
         'postcodify_buildings' => array('address_id'),
         'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),

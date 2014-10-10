@@ -59,8 +59,10 @@ CREATE TABLE postcodify_keywords (
 
 CREATE TABLE postcodify_english (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    en_crc32 INT(10) UNSIGNED,
-    ko_crc32 INT(10) UNSIGNED
+    ko VARCHAR(40),
+    ko_crc32 INT(10) UNSIGNED,
+    en VARCHAR(40),
+    en_crc32 INT(10) UNSIGNED
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
 
 -- 지번 및 건물번호 검색 테이블.

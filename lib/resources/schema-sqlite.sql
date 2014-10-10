@@ -48,8 +48,10 @@ CREATE TABLE postcodify_keywords (
 
 CREATE TABLE postcodify_english (
     seq INTEGER PRIMARY KEY,
-    en_crc32 INTEGER(10),
-    ko_crc32 INTEGER(10)
+    ko VARCHAR(40),
+    ko_crc32 INTEGER(10),
+    en VARCHAR(40),
+    en_crc32 INTEGER(10)
 );
 
 -- 지번 및 건물번호 검색 테이블.

@@ -49,7 +49,7 @@ class Postcodify_Indexer_CreateDB
         'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
         'postcodify_addresses' => array('road_id'),
         'postcodify_keywords' => array('keyword_crc32'),
-        'postcodify_english' => array('en_crc32', 'ko_crc32'),
+        'postcodify_english' => array('ko', 'ko_crc32', 'en', 'en_crc32'),
         'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
         'postcodify_buildings' => array('address_id'),
         'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
@@ -1012,7 +1012,7 @@ class Postcodify_Indexer_CreateDB
             
             $db = Postcodify_Utility::get_db();
             $db->beginTransaction();
-            $ps = $db->prepare('INSERT INTO postcodify_english (en_crc32, ko_crc32) VALUES (?, ?)');
+            $ps = $db->prepare('INSERT INTO postcodify_english (ko, ko_crc32, en, en_crc32) VALUES (?, ?, ?, ?)');
             
             // 카운터를 초기화한다.
             
@@ -1024,13 +1024,15 @@ class Postcodify_Indexer_CreateDB
             {
                 // 영문 키워드에서 불필요한 문자를 제거한다.
                 
-                $en = preg_replace('/[^a-z0-9]/', '', strtolower($en));
+                $en_canonical = preg_replace('/[^a-z0-9]/', '', strtolower($en));
                 
                 // 양쪽 모두 CRC32 처리하여 저장한다.
                 
                 $ps->execute(array(
-                    Postcodify_Utility::crc32_x64($en),
+                    $ko,
                     Postcodify_Utility::crc32_x64($ko),
+                    $en,
+                    Postcodify_Utility::crc32_x64($en_canonical),
                 ));
                 
                 // 카운터를 표시한다.
