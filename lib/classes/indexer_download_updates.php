@@ -109,8 +109,7 @@ class Postcodify_Indexer_Download_Updates
         
         foreach ($articles as $url)
         {
-            $html = download($url);
-            
+            $html = Postcodify_Utility::download($url);
             preg_match_all(self::FIND_DOWNLOAD_REGEXP, $html, $downloads, PREG_SET_ORDER);
         
             foreach ($downloads as $download)
