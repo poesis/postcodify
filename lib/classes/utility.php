@@ -25,9 +25,11 @@ class Postcodify_Utility
     
     public static $indexer_commands = array(
         'download',
+        'download-updates',
         'createdb',
         'verifydb',
         'sqlite-convert',
+        'update',
     );
     
     // 캐시를 위한 변수들.
