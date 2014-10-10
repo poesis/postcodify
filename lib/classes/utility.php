@@ -25,10 +25,10 @@ class Postcodify_Utility
     
     public static $indexer_commands = array(
         'download',
-        'download-updates',
         'createdb',
         'verifydb',
         'sqlite-convert',
+        'download-updates',
         'update',
     );
     
@@ -207,7 +207,15 @@ class Postcodify_Utility
     public static function print_usage_instructions()
     {
         $stderr = fopen('php://stderr', 'w');
-        fwrite($stderr, 'Usage: php indexer.php (' . implode('|', self::$indexer_commands) . ')' . PHP_EOL);
+        fwrite($stderr, 'Usage: php indexer.php <command> [--dry-run] [filename]' . PHP_EOL);
+        fwrite($stderr, 'Valid commands:' . PHP_EOL);
+        foreach (self::$indexer_commands as $command)
+        {
+            fwrite($stderr, '  ' . $command . PHP_EOL);
+        }
+        fwrite($stderr, 'Valid options:' . PHP_EOL);
+        fwrite($stderr, '  --dry-run (only with `createdb`)' . PHP_EOL);
+        fwrite($stderr, '  filename (only with `sqlite-convert`)' . PHP_EOL);
         fclose($stderr);
         exit(1);
     }
