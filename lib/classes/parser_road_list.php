@@ -37,6 +37,14 @@ class Postcodify_Parser_Road_List extends Postcodify_ZipReader
         $line = parent::read_line($delimiter);
         if ($line === false || count($line) < 17) return false;
         
+        // 새 형식으로 제공되는 데이터인 경우 앞의 지역코드를 제거한다.
+        
+        if (count($line) > 17)
+        {
+            array_shift($line);
+            array_shift($line);
+        }
+        
         // 주소의 각 구성요소를 파악한다.
         
         $road_id = trim($line[0]);
