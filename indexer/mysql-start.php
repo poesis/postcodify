@@ -249,6 +249,14 @@ while ($line = trim(fgets($fp)))
     $line = explode('|', iconv('CP949', 'UTF-8', $line));
     if (count($line) < 17 || !ctype_digit($line[0])) continue;
     
+    // 2014년 9월 말 이후 변경된 데이터 형식을 감안한다.
+    
+    if (count($line) > 17)
+    {
+        array_shift($line);
+        array_shift($line);
+    }
+    
     // 도로ID, 도로명, 통과하는 읍면동별 구간번호, 소속 행정구역을 읽어들인다.
     
     $road_id = trim($line[0]);
