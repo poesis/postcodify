@@ -24,7 +24,7 @@ class Postcodify_Indexer_Download
     // 상수 선언 부분.
     
     const RELATIVE_DOMAIN = 'http://www.juso.go.kr';
-    const LIST_URL = 'http://www.juso.go.kr/notice/OpenArchivesList.do?currentPage=1&countPerPage=20&noticeKd=26&type=matching';
+    const LIST_URL = '/notice/OpenArchivesList.do?currentPage=1&countPerPage=20&noticeKd=26&type=matching';
     const POBOX_URL = 'http://www.epost.go.kr/search/zipcode/newaddr_pobox_DB.zip';
     const JIBEON_URL = 'http://www.epost.go.kr/search/zipcode/koreapost_zipcode_DB.zip';
     const ENGLISH_URL = 'http://storage.poesis.kr/downloads/english/english_aliases_DB.zip';
@@ -49,7 +49,7 @@ class Postcodify_Indexer_Download
         
         // 게시물 목록을 다운로드한다.
         
-        $html = Postcodify_Utility::download(self::LIST_URL);
+        $html = Postcodify_Utility::download(self::RELATIVE_DOMAIN . self::LIST_URL);
         
         // 필요한 게시물들을 찾는다.
         
@@ -104,7 +104,7 @@ class Postcodify_Indexer_Download
                     $articles['부가정보'] = self::RELATIVE_DOMAIN . htmlspecialchars_decode($matches[1]);
                 }
             }
-            if (strpos($article_tag[0], '상세건물명') !== false && strpos($article_tag[0], $articles['날짜'][0]) !== false)
+            if (strpos($article_tag[0], '상세건물명') !== false)
             {
                 if (preg_match(self::FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
                 {
