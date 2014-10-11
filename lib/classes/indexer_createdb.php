@@ -47,7 +47,7 @@ class Postcodify_Indexer_CreateDB
     
     protected $_final_indexes = array(
         'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
-        'postcodify_addresses' => array('road_id'),
+        'postcodify_addresses' => array('road_id', 'postcode6', 'postcode5'),
         'postcodify_keywords' => array('keyword_crc32'),
         'postcodify_english' => array('ko', 'ko_crc32', 'en', 'en_crc32'),
         'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
@@ -249,6 +249,7 @@ class Postcodify_Indexer_CreateDB
                 shmop_close($shmop);
             }
             
+            $db->exec('ANALYZE TABLE ' . $table_name);
             unset($db);
         }
     }
