@@ -219,6 +219,14 @@ class Postcodify_Indexer_Download
         
         // 기준일을 기록한다.
         
-        file_put_contents($download_path . '/도로명코드_기준일.txt', $articles['날짜']);
+        $data_date = $articles['날짜'];
+        $data_year = intval(substr($data_date, 0, 4), 10);
+        $data_month = intval(substr($data_date, 4, 2), 10);
+        $data_day = intval(substr($data_date, 6, 2), 10);
+        $data_day_max = date('t', mktime(12, 0, 0, $data_month, 1, $data_year));
+        $data_day = min($data_day, $data_day_max);
+        $data_date = sprintf('%04d%02d%02d', $data_year, $data_month, $data_day);
+        
+        file_put_contents($download_path . '/도로명코드_기준일.txt', $data_date);
     }
 }
