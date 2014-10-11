@@ -3,7 +3,7 @@
 
 CREATE TABLE postcodify_addresses (
     id INTEGER PRIMARY KEY,
-    address_id NUMERIC(25),
+    address_id CHAR(25),
     postcode5 CHAR(5),
     postcode6 CHAR(6),
     road_id NUMERIC(14),
