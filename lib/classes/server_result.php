@@ -33,6 +33,7 @@ class Postcodify_Server_Result
     public $time = 0;
     public $lang = 'KO';
     public $sort = 'JUSO';
+    public $type = '';
     public $nums = '';
     public $results = array();
 }

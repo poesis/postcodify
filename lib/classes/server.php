@@ -119,6 +119,7 @@ class Postcodify_Server
             {
                 // 도로명 쿼리를 작성한다.
                 
+                $search_type = 'JUSO';
                 $joins[] = 'JOIN postcodify_keywords pk ON pa.id = pk.address_id';
                 if ($q->lang === 'KO')
                 {
@@ -136,6 +137,7 @@ class Postcodify_Server
                 
                 if ($q->numbers[0])
                 {
+                    $search_type .= '+NUMS';
                     $joins[] = 'JOIN postcodify_numbers pn ON pa.id = pn.address_id';
                     $conds[] = 'pn.num_major = ?';
                     $args[] = $q->numbers[0];
@@ -157,6 +159,7 @@ class Postcodify_Server
             {
                 // 동·리 쿼리를 작성한다.
                 
+                $search_type = 'JIBEON';
                 $joins[] = 'JOIN postcodify_keywords pk ON pa.id = pk.address_id';
                 if ($q->lang === 'KO')
                 {
@@ -174,6 +177,7 @@ class Postcodify_Server
                 
                 if ($q->numbers[0])
                 {
+                    $search_type .= '+NUMS';
                     $joins[] = 'JOIN postcodify_numbers pn ON pa.id = pn.address_id';
                     $conds[] = 'pn.num_major = ?';
                     $args[] = $q->numbers[0];
@@ -201,7 +205,11 @@ class Postcodify_Server
                     $args[] = '%' . $q->building . '%';
                     
                     $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
-                    $q->sort = 'JUSO';
+                    if (count($rows))
+                    {
+                        $search_type = 'BUILDING';
+                        $q->sort = 'JUSO';
+                    }
                 }
             }
             
@@ -209,6 +217,7 @@ class Postcodify_Server
             
             elseif ($q->building !== null && $q->dongri === null)
             {
+                $search_type = 'BUILDING';
                 $joins[] = 'JOIN postcodify_buildings pb ON pa.id = pb.address_id';
                 $conds[] = 'pb.keyword LIKE ?';
                 $args[] = '%' . $q->building . '%';
@@ -220,6 +229,7 @@ class Postcodify_Server
             
             elseif ($q->building !== null && $q->dongri !== null)
             {
+                $search_type = 'BUILDING+DONG';
                 $joins[] = 'JOIN postcodify_keywords pk ON pa.id = pk.address_id';
                 $conds[] = 'pk.keyword_crc32 = ?';
                 $args[] = self::crc32_x64($q->dongri);
@@ -235,6 +245,7 @@ class Postcodify_Server
             
             elseif ($q->pobox !== null)
             {
+                $search_type = 'POBOX';
                 $joins[] = 'JOIN postcodify_pobox pp ON pa.id = pp.address_id';
                 $conds[] = 'pp.keyword LIKE ?';
                 $args[] = '%' . $q->pobox . '%';
@@ -277,6 +288,7 @@ class Postcodify_Server
         $result->lang = $q->lang;
         $result->sort = $q->sort;
         $result->nums = $q->numbers[0] . ($q->numbers[1] ? ('-' . $q->numbers[1]) : '');
+        $result->type = $search_type;
         
         // 각 레코드를 추가한다.
         
