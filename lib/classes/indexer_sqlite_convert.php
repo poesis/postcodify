@@ -145,7 +145,16 @@ class Postcodify_Indexer_SQLite_Convert
                 
                 $sqlite->beginTransaction();
                 
-                $query = $mysql->prepare('SELECT * FROM ' . $table_name . ' WHERE ' . $primary_key . ' > ? ORDER BY ' . $primary_key . ' LIMIT ' . $increment);
+                if ($table_name === 'postcodify_settings')
+                {
+                    $cond = ' ORDER BY ' . $primary_key;
+                }
+                else
+                {
+                    $cond = ' WHERE ' . $primary_key . ' > ? ORDER BY ' . $primary_key . ' LIMIT ' . $increment;
+                }
+                
+                $query = $mysql->prepare('SELECT * FROM ' . $table_name . $cond);
                 $query->bindParam(1, $last_primary_key, PDO::PARAM_INT);
                 $query->execute();
                 

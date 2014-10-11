@@ -42,14 +42,25 @@ class Postcodify_Utility
     
     public static function get_db()
     {
-        $dsn = POSTCODIFY_DB_DRIVER . ':host=' . POSTCODIFY_DB_HOST . ';port=' . POSTCODIFY_DB_PORT . ';dbname=' . POSTCODIFY_DB_DBNAME;
-        $dsn .= ';charset=utf8';
-        
-        $pdo_options = array(
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_EMULATE_PREPARES => false,
-            PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
-        );
+        if (POSTCODIFY_DB_DRIVER === 'mysql')
+        {
+            $dsn = POSTCODIFY_DB_DRIVER . ':host=' . POSTCODIFY_DB_HOST . ';port=' . POSTCODIFY_DB_PORT . ';dbname=' . POSTCODIFY_DB_DBNAME;
+            $dsn .= ';charset=utf8';
+            
+            $pdo_options = array(
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',
+            );
+        }
+        else
+        {
+            $dsn = 'sqlite:' . POSTCODIFY_DB_DBNAME;
+            $pdo_options = array(
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            );
+        }
         
         $db = new PDO($dsn, POSTCODIFY_DB_USER, POSTCODIFY_DB_PASS, $pdo_options);
         return $db;
