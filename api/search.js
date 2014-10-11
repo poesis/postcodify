@@ -56,6 +56,7 @@
                 results : this,
                 language : "ko",
                 autoSelect : false,
+                requireExactQuery : false,
                 searchButtonContent : null,
                 mapLinkProvider : false,
                 mapLinkContent : null,
@@ -150,6 +151,21 @@
                     return;
                 }
                 
+                // 정확한 검색어를 필요로 하는 경우 여기서 체크한다.
+                
+                if (settings.requireExactQuery) {
+                    if (!keywords.match(/(사서함|[동리가로길])\s*([0-9]+)(-[0-9]+)?(번지?)?($|,|\s)/) &&
+                        !keywords.match(/^p\.?\s?o\.?\s?box\.?\s*([0-9]+)(-[0-9]+)?($|,|\s)/i) &&
+                        !keywords.match(/^([0-9]+)(-[0-9]+)?,?\s*[a-z0-9-\x20]+?(dong|ri|ga|ro|gil)($|,|\s)/i)) {
+                        if (settings.useAlert) {
+                            alert(info.translations[settings.language].errorExactQuery);
+                        } else {
+                            $('<div class="too_short"></div>').postcodifyAddClass("search_status").html(info.translations[settings.language].errorExactQuery.replace(/\n/g, "<br>")).appendTo(results);
+                        }
+                        return;
+                    }
+                }
+                
                 // 검색전 콜백 함수를 실행한다.
                 
                 if (settings.beforeSearch(keywords) === false) return;
@@ -179,6 +195,7 @@
                 
                 // AJAX 요청 관련 함수들을 선언한다.
                 
+                var err;
                 var ajaxStartTime;
                 var ajaxSuccess;
                 var ajaxErrorInitial;
@@ -247,7 +264,7 @@
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorQuota);
                         } else {
-                            var err = $('<div class="quota"></div>').postcodifyAddClass("search_status");
+                            err = $('<div class="quota"></div>').postcodifyAddClass("search_status");
                             err.html(info.translations[settings.language].errorQuota.replace(/\n/g, "<br>"));
                             err.appendTo(results);
                         }
@@ -259,7 +276,7 @@
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorError);
                         } else {
-                            var err = $('<div class="error"></div>').postcodifyAddClass("search_status");
+                            err = $('<div class="error"></div>').postcodifyAddClass("search_status");
                             err.html(info.translations[settings.language].errorError.replace(/\n/g, "<br>"));
                             err.appendTo(results);
                         }
@@ -268,11 +285,11 @@
                     
                     // 정상 처리되었지만 검색 결과가 없는 경우...
                     
-                    else if (data.count == 0) {
+                    else if (data.count < 1) {
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorEmpty);
                         } else {
-                            var err = $('<div class="empty"></div>').postcodifyAddClass("search_status");
+                            err = $('<div class="empty"></div>').postcodifyAddClass("search_status");
                             err.html(info.translations[settings.language].errorEmpty.replace(/\n/g, "<br>"));
                             err.appendTo(results);
                         }
@@ -284,7 +301,7 @@
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorVersion);
                         } else {
-                            var err = $('<div class="error"></div>').postcodifyAddClass("search_status");
+                            err = $('<div class="error"></div>').postcodifyAddClass("search_status");
                             err.html(info.translations[settings.language].errorVersion.replace(/\n/g, "<br>"));
                             err.appendTo(results);
                         }
@@ -409,7 +426,7 @@
                             if (settings.useAlert) {
                                 alert(info.translations[resultLanguage].errorTooMany);
                             } else {
-                                var err = $('<div class="too_many"></div>').postcodifyAddClass("search_status");
+                                err = $('<div class="too_many"></div>').postcodifyAddClass("search_status");
                                 err.html(info.translations[resultLanguage].errorTooMany.replace(/\n/g, "<br>"));
                                 err.insertBefore(results.find("div.postcodify_search_result").first());
                             }
@@ -585,8 +602,9 @@
     
     info.translations = {
         ko : {
+            errorExactQuery : "정확한 도로명+건물번호 또는 동·리+번지로 검색해 주십시오.\n예: 세종대로 110, 연지동 219-2, 사서함 123-45",
             errorError : "검색 서버와 통신 중 오류가 발생하였습니다.\n잠시 후 다시 시도해 주시기 바랍니다.",
-            errorEmpty : "검색 결과가 없습니다.\n정확한 도로명과 건물번호 또는 동·리와 번지로 검색해 주시고,\n다른 검색어 사용시 띄어쓰기에 유의하십시오.",
+            errorEmpty : "검색 결과가 없습니다.\n정확한 도로명+건물번호 또는 동·리+번지로 검색해 주시고,\n다른 검색어 사용시 띄어쓰기에 유의하십시오.",
             errorQuota : "일일 허용 쿼리수를 초과하였습니다.\n관리자에게 문의해 주시기 바랍니다.",
             errorVersion : "검색 서버의 버전이 낮아 이 검색창과 호환되지 않습니다.",
             errorTooShort : "검색어는 3글자 이상 입력해 주십시오.",
@@ -600,6 +618,7 @@
             msgMap : "지도"
         },
         en : {
+            errorExactQuery : "Please enter the exact name of your street, as well as the number(s).\nExample: 110 Sejong-daero, 219-2 Yeonji-dong, P.O.Box 123-45",
             errorError : "An error occurred while communicating to the search server.\nPlease try again later.",
             errorEmpty : "No addresses matched your search.\nPlease enter the exact legal name of your street, as well as the number(s).",
             errorQuota : "This website and/or your IP address has exceeded its daily search quota.\nPlease contact the administrator.",
