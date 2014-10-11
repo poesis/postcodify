@@ -331,7 +331,8 @@ class Postcodify_Indexer_Update
                     {
                         // 기초구역번호를 구한다.
                         
-                        $postcode5 = $this->find_postcode5($entry->road_id, $entry->road_section, $entry->num_major, $entry->num_minor);
+                        $postcode5 = $this->find_postcode5($entry->road_id, $entry->road_section, $entry->num_major, $entry->num_minor,
+                            $entry->dongri, $entry->jibeon_major, $entry->jibeon_minor, $entry->postcode6);
                         
                         // 영문 동·리를 구한다.
                         
@@ -503,7 +504,7 @@ class Postcodify_Indexer_Update
     
     // 주어진 주소와 가장 근접한 기초구역번호(새우편번호)를 찾는 함수.
     
-    public function find_postcode5($road_id, $road_section, $num_major, $num_minor)
+    public function find_postcode5($road_id, $road_section, $num_major, $num_minor, $dongri, $jibeon_major, $jibeon_minor, $postcode6)
     {
         // 시험구동인 경우 null을 반환한다.
         
@@ -515,44 +516,70 @@ class Postcodify_Indexer_Update
         static $ps1 = null;
         static $ps2 = null;
         static $ps3 = null;
+        static $ps4 = null;
+        static $ps5 = null;
         
         // DB에 연결한다.
         
         if ($db === null)
         {
             $db = Postcodify_Utility::get_db();
-            $ps1 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE road_id = ? ' .
+            
+            $ps1 = $db->prepare('SELECT postcode5 FROM postcodify_addresses pa ' .
+                'JOIN postcodify_keywords pk ON pa.id = pk.address_id ' .
+                'JOIN postcodify_numbers pn ON pa.id = pn.address_id ' .
+                'WHERE pk.keyword_crc32 = ? AND pn.num_major = ? AND pn.num_minor = ? LIMIT 1');
+            $ps2 = $db->prepare('SELECT postcode5 FROM postcodify_addresses pa ' .
+                'JOIN postcodify_keywords pk ON pa.id = pk.address_id ' .
+                'JOIN postcodify_numbers pn ON pa.id = pn.address_id ' .
+                'WHERE pk.keyword_crc32 = ? AND pn.num_major = ? LIMIT 1');
+            $ps3 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE road_id = ? ' .
                 'AND num_major % 2 = ? ORDER BY ABS(? - num_major) DESC LIMIT 1');
-            $ps2 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE road_id >= ? AND road_id <= ? ' . 
+            $ps4 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE road_id >= ? AND road_id <= ? ' . 
                 'AND num_major % 2 = ? ORDER BY ABS(? - num_major) DESC LIMIT 1');
-            $ps3 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE road_id >= ? AND road_id <= ? ' . 
+            $ps5 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE postcode6 = ? ' . 
                 'ORDER BY ABS(? - num_major) DESC LIMIT 1');
         }
         
-        // 같은 도로, 같은 구간, 같은 방향에서 가장 가까운 기초구역번호를 찾아본다.
+        // 같은 지번에 이미 부여된 기초구역번호가 있는지 찾아본다.
         
-        $ps1->execute(array($road_id . $road_section, $num_major % 2, $num_major));
+        $ps1->execute(array(Postcodify_Utility::crc32_x64($dongri), $jibeon_major, $jibeon_minor));
         if ($postcode5 = $ps1->fetchColumn())
         {
             $ps1->closeCursor();
             return $postcode5;
         }
-        
-        // 같은 도로, 구간과 관계없이 같은 방향에서 가장 가까운 기초구역번호를 찾아본다.
-        
-        $ps2->execute(array($road_id . '00', $road_id . '99', $num_major % 2, $num_major));
+        $ps2->execute(array(Postcodify_Utility::crc32_x64($dongri), $jibeon_major));
         if ($postcode5 = $ps2->fetchColumn())
         {
             $ps2->closeCursor();
             return $postcode5;
         }
         
-        // 같은 도로, 구간이나 방향과 관계없이 가장 가까운 기초구역번호를 찾아본다.
+        // 같은 도로, 같은 구간, 같은 방향에서 가장 가까운 기초구역번호를 찾아본다.
         
-        $ps3->execute(array($road_id . '00', $road_id . '99', $num_major));
+        $ps3->execute(array($road_id . $road_section, $num_major % 2, $num_major));
         if ($postcode5 = $ps3->fetchColumn())
         {
             $ps3->closeCursor();
+            return $postcode5;
+        }
+        
+        // 같은 도로, 구간과 관계없이 같은 방향에서 가장 가까운 기초구역번호를 찾아본다.
+        
+        $ps4->execute(array($road_id . '00', $road_id . '99', $num_major % 2, $num_major));
+        if ($postcode5 = $ps4->fetchColumn())
+        {
+            $ps4->closeCursor();
+            return $postcode5;
+        }
+        
+        // 같은 우편번호가 부여된 주소들 중 가장 가까운 기초구역번호를 찾아본다.
+        
+        $ps5->execute(array($postcode6, $num_major));
+        if ($postcode5 = $ps5->fetchColumn())
+        {
+            $ps5->closeCursor();
             return $postcode5;
         }
         
