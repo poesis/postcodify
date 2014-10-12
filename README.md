@@ -33,12 +33,16 @@ Postcodify의 모든 구성요소는 LGPLv3 라이센스 하에 오픈소스로 
 
 ### 기타
 
-무료 API는 과부하를 막기 위해 도메인당 하루 1천 회, 방문자 IP당 하루 1천 회 내외의 쿼리수 제한을 두고 있습니다.
+무료 API는 과부하를 막기 위해 도메인, 방문자 IP당 [일일 쿼리수 제한](http://postcodify.poesis.kr/guide/quota)을 두고 있습니다.
 쿼리수가 많은 사이트라면 매뉴얼을 참조하여 검색서버를 직접 구축하시거나,
-API 운영비를 후원하는 [스폰서가 되어 주시기 바랍니다](http://postcodify.poesis.kr/guide/sponsor).
+API 운영비를 [후원](http://postcodify.poesis.kr/guide/sponsor)해 주시면 감사하겠습니다.
 
 Postcodify는 새주소 전환을 돕고 웹마스터 여러분의 수고를 덜어드리기 위해 만든 프로그램입니다.
 개발자는 Postcodify와 관련하여 저작권료, 사용료, 자문료 등 어떠한 이윤도 추구하지 않으며, 무료 API도 자비와 후원금으로 운영중입니다.
 따라서 불필요한 쿼리가 발생하지 않도록 사용자들에게 검색 요령을 잘 안내해 주시기 바랍니다.
+
+Postcodify는 무료 API를 통해 수집한 주소 정보를 마케팅이나 그 밖의 어떤 목적으로도 제3자에게 공개하지 않습니다.
+
+버전별 변경 내역은 [여기](http://postcodify.poesis.kr/guide/changelog)를 참조하시기 바랍니다.
 
 버그 신고, 그 밖의 문의, 기술지원 상담은 [root@poesis.kr](mailto:root@poesis.kr?subject=Postcodify)로 연락 주시기 바랍니다.
