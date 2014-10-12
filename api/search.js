@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "1.8.5", location : "" };
+    var info = { version : "2.0.0", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -56,6 +56,7 @@
                 results : this,
                 language : "ko",
                 autoSelect : false,
+                requireExactQuery : false,
                 searchButtonContent : null,
                 mapLinkProvider : false,
                 mapLinkContent : null,
@@ -96,7 +97,7 @@
             // 검색 컨트롤을 생성한다.
             
             var results = $(settings.results);
-            var controls = $('<div class="postcode_search_controls"></div>');
+            var controls = $('<div></div>').postcodifyAddClass("search_controls");
             var uniqueId = "postcodify_" + new Date().getTime().toString() + Math.random().toString().substr(2, 4);
             var keywordLabel = $('<label></label>').attr("for", uniqueId).text(info.translations[settings.language].msgKeywords).hide().appendTo(controls);
             var keywordInput = $('<input type="text" class="keyword" value="" />').attr("id", uniqueId).appendTo(controls);
@@ -137,7 +138,7 @@
                 
                 // 검색 결과창의 내용을 비운다.
                 
-                results.find("div.postcode_search_result,div.postcode_search_status").remove();
+                results.find("div.postcodify_search_result,div.postcodify_search_status").remove();
                 
                 // 검색어가 없거나 너무 짧은 경우 네트워크 연결을 하지 않도록 한다.
                 
@@ -145,9 +146,24 @@
                     if (settings.useAlert) {
                         alert(info.translations[settings.language].errorTooShort);
                     } else {
-                        $('<div class="postcode_search_status too_short"></div>').html(info.translations[settings.language].errorTooShort.replace(/\n/g, "<br>")).appendTo(results);
+                        $('<div class="too_short"></div>').postcodifyAddClass("search_status").html(info.translations[settings.language].errorTooShort.replace(/\n/g, "<br>")).appendTo(results);
                     }
                     return;
+                }
+                
+                // 정확한 검색어를 필요로 하는 경우 여기서 체크한다.
+                
+                if (settings.requireExactQuery) {
+                    if (!keywords.match(/(사서함|[동리가로길])\s*([0-9]+)(-[0-9]+)?(번지?)?($|,|\s)/) &&
+                        !keywords.match(/^p\.?\s?o\.?\s?box\.?\s*([0-9]+)(-[0-9]+)?($|,|\s)/i) &&
+                        !keywords.match(/^([0-9]+)(-[0-9]+)?,?\s*[a-z0-9-\x20]+?(dong|ri|ga|ro|gil)($|,|\s)/i)) {
+                        if (settings.useAlert) {
+                            alert(info.translations[settings.language].errorExactQuery);
+                        } else {
+                            $('<div class="too_short"></div>').postcodifyAddClass("search_status").html(info.translations[settings.language].errorExactQuery.replace(/\n/g, "<br>")).appendTo(results);
+                        }
+                        return;
+                    }
                 }
                 
                 // 검색전 콜백 함수를 실행한다.
@@ -179,6 +195,7 @@
                 
                 // AJAX 요청 관련 함수들을 선언한다.
                 
+                var err;
                 var ajaxStartTime;
                 var ajaxSuccess;
                 var ajaxErrorInitial;
@@ -186,7 +203,7 @@
                 var ajaxCall = function(url, timeout, errorCallback) {
                     ajaxStartTime = new Date().getTime();
                     settings.currentRequestUrl = url;
-                    $.ajax({
+                    var ajaxOptions = {
                         url : url,
                         data : {
                             v : info.version,
@@ -194,8 +211,6 @@
                             ref : window.location.hostname,
                             cdn : info.location
                         },
-                        dataType : "jsonp",
-                        jsonpCallback : "postcodify_" + ajaxStartTime.toString() + Math.random().toString().substr(2, 4),
                         processData : true,
                         cache : false,
                         timeout : timeout,
@@ -206,7 +221,14 @@
                             if (searchButtonAnimation !== false) clearTimeout(searchButtonAnimation);
                             searchButton.removeAttr("disabled").html(settings.searchButtonContent);
                         }
-                    });
+                    };
+                    if ("withCredentials" in new XMLHttpRequest()) {
+                        ajaxOptions.dataType = "json";
+                    } else {
+                        ajaxOptions.dataType = "jsonp";
+                        ajaxOptions.jsonpCallback = "postcodify_" + ajaxStartTime.toString() + Math.random().toString().substr(2, 4);
+                    }
+                    $.ajax(ajaxOptions);
                 };
                 
                 // AJAX 요청 성공시 실행할 함수를 정의한다.
@@ -242,7 +264,9 @@
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorQuota);
                         } else {
-                            $('<div class="postcode_search_status quota"></div>').html(info.translations[settings.language].errorQuota.replace(/\n/g, "<br>")).appendTo(results);
+                            err = $('<div class="quota"></div>').postcodifyAddClass("search_status");
+                            err.html(info.translations[settings.language].errorQuota.replace(/\n/g, "<br>"));
+                            err.appendTo(results);
                         }
                     }
                     
@@ -252,18 +276,22 @@
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorError);
                         } else {
-                            $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorError.replace(/\n/g, "<br>")).appendTo(results);
+                            err = $('<div class="error"></div>').postcodifyAddClass("search_status");
+                            err.html(info.translations[settings.language].errorError.replace(/\n/g, "<br>"));
+                            err.appendTo(results);
                         }
                         previousSearch = "";
                     }
                     
                     // 정상 처리되었지만 검색 결과가 없는 경우...
                     
-                    else if (data.count == 0) {
+                    else if (data.count < 1) {
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorEmpty);
                         } else {
-                            $('<div class="postcode_search_status empty"></div>').html(info.translations[settings.language].errorEmpty.replace(/\n/g, "<br>")).appendTo(results);
+                            err = $('<div class="empty"></div>').postcodifyAddClass("search_status");
+                            err.html(info.translations[settings.language].errorEmpty.replace(/\n/g, "<br>"));
+                            err.appendTo(results);
                         }
                     }
                     
@@ -273,7 +301,9 @@
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorVersion);
                         } else {
-                            $('<div class="postcode_search_status error"></div>').html(info.translations[settings.language].errorVersion.replace(/\n/g, "<br>")).appendTo(results);
+                            err = $('<div class="error"></div>').postcodifyAddClass("search_status");
+                            err.html(info.translations[settings.language].errorVersion.replace(/\n/g, "<br>"));
+                            err.appendTo(results);
                         }
                     }
                     
@@ -295,7 +325,7 @@
                             // 검색 결과 항목을 작성한다.
                             
                             var result = data.results[i];
-                            var option = $('<div class="postcode_search_result"></div>');
+                            var option = $('<div></div>').postcodifyAddClass("search_result");
                             option.data("dbid", result.dbid);
                             option.data("code6", result.code6);
                             option.data("code5", result.code5);
@@ -350,7 +380,8 @@
                             }
                             
                             if (result.other["others"] !== "") {
-                                var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>').attr("title", info.translations[resultLanguage].msgShowOthers);
+                                var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>');
+                                oldAddrLink.attr("title", info.translations[resultLanguage].msgShowOthers);
                                 oldAddrLink.appendTo(option.find("div.address"));
                                 var oldAddrDiv = $('<div class="old_addresses"></div>').text(result.other["others"]);
                                 if (settings.hideOldAddresses) oldAddrDiv.css("display", "none");
@@ -379,7 +410,7 @@
                         // 검색 결과 요약을 작성한다.
                         
                         if (!settings.hideSummary) {
-                            var summary = $('<div class="postcode_search_status summary"></div>');
+                            var summary = $('<div class="summary"></div>').postcodifyAddClass("search_status");
                             summary.append('<div class="result_count">' + info.translations[resultLanguage].msgResultCount + ': ' +
                                 '<span>' + data.count + '</span></div>');
                             summary.append('<div class="search_time">' + info.translations[resultLanguage].msgSearchTime + ': ' +
@@ -395,7 +426,9 @@
                             if (settings.useAlert) {
                                 alert(info.translations[resultLanguage].errorTooMany);
                             } else {
-                                $('<div class="postcode_search_status too_many"></div>').html(info.translations[resultLanguage].errorTooMany.replace(/\n/g, "<br>")).insertBefore(results.find("div.postcode_search_result").first());
+                                err = $('<div class="too_many"></div>').postcodifyAddClass("search_status");
+                                err.html(info.translations[resultLanguage].errorTooMany.replace(/\n/g, "<br>"));
+                                err.insertBefore(results.find("div.postcodify_search_result").first());
                             }
                         }
                     }
@@ -408,7 +441,7 @@
                     // 검색 결과가 1개이고 autoSelect가 true인 경우 자동으로 선택한다.
                     
                     if (!data.error && data.count == 1 && data.nums && settings.autoSelect) {
-                        results.find("div.postcode_search_result a.selector").first().trigger("click");
+                        results.find("div.postcodify_search_result a.selector").first().trigger("click");
                     }
                 };
                 
@@ -432,7 +465,7 @@
                     
                     // 오류 메시지를 보여준다.
                     
-                    results.find("div.postcode_search_status.error").show();
+                    results.find("div.postcodify_search_status.error").show();
                     previousSearch = "";
                     
                     // 검색 실패 콜백 함수를 실행한다.
@@ -463,7 +496,7 @@
                 
                 // 클릭한 주소를 구한다.
                 
-                var entry = $(this).parents("div.postcode_search_result");
+                var entry = $(this).parents("div.postcodify_search_result");
                 
                 // 선택전 콜백을 실행한다.
                 
@@ -544,6 +577,12 @@
         });
     };
     
+    // 클래스 추가를 담당하는 메소드.
+    
+    $.fn.postcodifyAddClass = function(class_name) {
+        return this.addClass("postcodify_" + class_name).addClass("postcode_" + class_name);
+    };
+    
     // 무료 API 경로 설정.
     
     info.freeAPI = {
@@ -556,15 +595,16 @@
     info.mapProviders = {
         daum : "http://map.daum.net/?map_type=TYPE_MAP&urlLevel=3&q=$JUSO",
         naver : "http://map.naver.com/?mapMode=0&dlevel=12&query=$JUSO",
-        google : "http://www.google.com/maps/place/대한민국+$JUSO"
+        google : "http://www.google.com/maps/place/" + encodeURIComponent("대한민국") + "+$JUSO"
     };
     
     // 언어 설정.
     
     info.translations = {
         ko : {
+            errorExactQuery : "정확한 도로명+건물번호 또는 동·리+번지로 검색해 주십시오.\n예: 세종대로 110, 연지동 219-2, 사서함 123-45",
             errorError : "검색 서버와 통신 중 오류가 발생하였습니다.\n잠시 후 다시 시도해 주시기 바랍니다.",
-            errorEmpty : "검색 결과가 없습니다.\n정확한 도로명과 건물번호 또는 동·리와 번지로 검색해 주시고,\n다른 검색어 사용시 띄어쓰기에 유의하십시오.",
+            errorEmpty : "검색 결과가 없습니다.\n정확한 도로명+건물번호 또는 동·리+번지로 검색해 주시고,\n다른 검색어 사용시 띄어쓰기에 유의하십시오.",
             errorQuota : "일일 허용 쿼리수를 초과하였습니다.\n관리자에게 문의해 주시기 바랍니다.",
             errorVersion : "검색 서버의 버전이 낮아 이 검색창과 호환되지 않습니다.",
             errorTooShort : "검색어는 3글자 이상 입력해 주십시오.",
@@ -578,6 +618,7 @@
             msgMap : "지도"
         },
         en : {
+            errorExactQuery : "Please enter the exact name of your street, as well as the number(s).\nExample: 110 Sejong-daero, 219-2 Yeonji-dong, P.O.Box 123-45",
             errorError : "An error occurred while communicating to the search server.\nPlease try again later.",
             errorEmpty : "No addresses matched your search.\nPlease enter the exact legal name of your street, as well as the number(s).",
             errorQuota : "This website and/or your IP address has exceeded its daily search quota.\nPlease contact the administrator.",
