@@ -194,7 +194,7 @@ class Postcodify_Server
                 
                 // 검색 결과가 없다면 건물명을 동리로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
                 
-                if ($q->numbers[0] === null && $q->numbers[1] === null && !count($rows) && !$q->lang === 'KO')
+                if ($q->numbers[0] === null && $q->numbers[1] === null && !count($rows) && $q->lang === 'KO')
                 {
                     array_pop($joins);
                     array_pop($conds);
@@ -202,7 +202,7 @@ class Postcodify_Server
                     
                     $joins[] = 'JOIN postcodify_buildings pb ON pa.id = pb.address_id';
                     $conds[] = 'pb.keyword LIKE ?';
-                    $args[] = '%' . $q->building . '%';
+                    $args[] = '%' . $q->dongri . '%';
                     
                     $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
                     if (count($rows))
