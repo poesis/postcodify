@@ -266,6 +266,35 @@ class Postcodify_Server
                 $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
             }
             
+            // 읍면으로 검색하는 경우...
+            
+            elseif ($q->use_area && $q->eupmyeon)
+            {
+                $search_type = 'EUPMYEON';
+                $conds[] = 'pa.postcode5 IS NOT NULL';
+                $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                
+                // 검색 결과가 없다면 건물명을 읍면으로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
+                
+                if (!count($rows) && $q->lang === 'KO')
+                {
+                    array_pop($conds);
+                    array_pop($conds);
+                    array_pop($args);
+                    
+                    $joins[] = 'JOIN postcodify_buildings pb ON pa.id = pb.address_id';
+                    $conds[] = 'pb.keyword LIKE ?';
+                    $args[] = '%' . $q->eupmyeon . '%';
+                    
+                    $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                    if (count($rows))
+                    {
+                        $search_type = 'BUILDING';
+                        $q->sort = 'JUSO';
+                    }
+                }
+            }
+            
             // 그 밖의 경우 검색 결과가 없는 것으로 한다.
             
             else
