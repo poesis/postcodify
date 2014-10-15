@@ -222,7 +222,7 @@
                             searchButton.removeAttr("disabled").html(settings.searchButtonContent);
                         }
                     };
-                    if ("withCredentials" in new XMLHttpRequest()) {
+                    if (typeof XMLHttpRequest !== "undefined" && "withCredentials" in new XMLHttpRequest()) {
                         ajaxOptions.dataType = "json";
                     } else {
                         ajaxOptions.dataType = "jsonp";
