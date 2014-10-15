@@ -1,0 +1,123 @@
+
+/**
+ *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 팝업 API)
+ * 
+ *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  
+ *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
+ *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
+ *  또는 그 이후의 판을 임의로 선택하여, 그 규정에 따라 이 프로그램을
+ *  개작하거나 재배포할 수 있습니다.
+ * 
+ *  이 프로그램은 유용하게 사용될 수 있으리라는 희망에서 배포되고 있지만,
+ *  특정한 목적에 맞는 적합성 여부나 판매용으로 사용할 수 있으리라는 묵시적인
+ *  보증을 포함한 어떠한 형태의 보증도 제공하지 않습니다. 보다 자세한 사항에
+ *  대해서는 GNU 약소 일반 공중 사용 허가서를 참고하시기 바랍니다.
+ * 
+ *  GNU 약소 일반 공중 사용 허가서는 이 프로그램과 함께 제공됩니다.
+ *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
+ */
+
+div.postcodify_popup_background {
+    width: 100%; height: 100%;
+    position: fixed; left: 0; top: 0;
+    background: #000; opacity: 0.7;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
+    filter: alpha(opacity=70);
+}
+
+div.postcodify_popup_layer {
+    width: 640px; height: 640px;
+    position: fixed; left: 50%; top: 50%; margin-left: -320px; margin-top: -320px;
+    font: 13px/160% "Malgun Gothic", "Gulim", sans-serif;
+    background: #fff; overflow-x: none; overflow-y: auto;
+    box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.7);
+    _position: absolute; _top: expression(eval(document.body.scrollTop));
+}
+div.postcodify_popup_layer.fill_horizontally {
+    width: 100%; left: 0; margin-left: 0;
+}
+div.postcodify_popup_layer.fill_vertically {
+    height: 100%; top: 0; margin-top: 0;
+}
+div.postcodify_popup_layer.full_screen {
+    height: auto; position: absolute;
+}
+div.postcodify_popup_layer.ie6fix {
+    top: 0; margin-top: 16px;
+}
+
+div.postcodify_title {
+    width: 100%; margin: 0; padding: 10px 0 12px 0;
+    text-align: center; line-height: 120%; font-weight: bold;
+    background-color: #eaeaf2;
+}
+div.postcodify_title span { white-space: nowrap; }
+
+div.postcodify_controls { clear: both; margin: 0 12px 12px 12px; padding: 0; }
+
+div.postcodify_search_controls {
+    width: 100%; margin: 0 -12px; padding: 0 12px 12px 12px;
+    background-color: #eaeaf2; position: relative;
+    border-bottom: 1px solid #c9c9cf;
+}
+div.postcodify_search_controls .keyword {
+    width: 60%; height: 20px; padding: 4px 8px; font-family: inherit;
+    border: 1px solid #88888c; 
+}
+div.postcodify_search_controls .search_button {
+    width: 60px; height: 30px; font-family: inherit; font-weight: bold;
+    border: 1px solid #44444f; background: #44444f; color: #fff;
+    position: absolute; right: 12px; top: 0;
+}
+div.postcodify_search_controls .search_button:hover,
+div.postcodify_search_controls .search_button:active {
+    border-color: #36f; background: #36f;
+}
+
+div.postcodify_results { clear: both; margin: 0 12px 20px 12px; padding: 0; }
+
+div.postcodify_search_result { clear: both; position: relative; width: 100%; padding: 4px 6px; margin-left: -6px; word-break: keep-all; }
+div.postcodify_search_result:hover { background: #f3f3f6; }
+div.postcodify_search_result:hover div.address a.selector { font-weight: bold; }
+div.postcodify_search_result div.code6 { position: absolute; left: 6px; top: 4px; color: #f36; }
+div.postcodify_search_result div.code5 { display: none; }
+div.postcodify_search_result div.address { clear: both; margin-left: 60px; position: relative; cursor: pointer; }
+div.postcodify_search_result div.address a.selector { text-decoration: none; cursor: pointer; }
+div.postcodify_search_result div.address a.selector span.address_info { color: #000; display: inline-block; margin-right: 8px; }
+div.postcodify_search_result div.address a.selector span.extra_info { color: #444449; display: inline-block; }
+div.postcodify_search_result div.address a.show_old_addresses { display: none; }
+div.postcodify_search_result div.old_addresses { clear: both; color: #88888c; margin: 1px 0 0 60px; font-size: 12px; cursor: pointer; }
+div.postcodify_search_result div.map_link { position: absolute; right: 6px; top: 4px; }
+div.postcodify_search_result div.map_link a { color: #444449; font-size: 11px; text-decoration: none; }
+div.postcodify_search_result div.map_link a:hover { text-decoration: underline; }
+
+div.postcodify_search_status { text-align: center; color: #f36; padding: 32px 0; }
+div.postcodify_search_status.too_many { clear: both; color: #36f; padding-bottom: 6px; margin-top: 8px; }
+div.postcodify_search_status.summary {
+    clear: both; padding: 8px 12px 0 0; margin: 12px -12px -8px -12px;
+    border-top: 1px solid #c9c9cf; text-align: right;
+}
+div.postcodify_search_status.summary div {
+    display: inline-block; margin: 0 0 0 12px;
+    font-size: 11px; line-height: 120%; color: #88888c;
+}
+
+div.postcodify_help {
+    clear: both; margin: 0 12px 20px 12px; color: #444449;
+}
+div.postcodify_help p { margin: 0 0 6px 0; padding: 0; font-weight: bold; }
+div.postcodify_help ul { margin: 0 0 6px 0; padding: 0 0 0 28px; }
+div.postcodify_help ul li { margin: 0; padding: 0; }
+
+div.postcodify_buttons {
+    clear: both; margin: 0 12px 20px 12px; text-align: center;
+}
+div.postcodify_buttons button {
+    width: 60px; height: 30px; font-family: inherit; font-weight: bold;
+    border: 1px solid #44444f; background: #44444f; color: #fff;
+}
+div.postcodify_buttons button:hover,
+div.postcodify_buttons button:active {
+    border: 1px solid #f36; background: #f36;
+}
