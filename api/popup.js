@@ -155,6 +155,12 @@
                 closePopUpLayer();
             });
             
+            // 배경을 클릭하면 팝업 레이어를 감추도록 설정한다.
+            
+            background.click(function() {
+                closePopUpLayer();
+            });
+            
             // ESC 키를 누르면 팝업 레이어를 감추도록 설정한다.
             
             $(window).keyup(function(event) {
