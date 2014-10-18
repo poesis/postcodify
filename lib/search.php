@@ -21,7 +21,7 @@
 
 date_default_timezone_set('Asia/Seoul');
 error_reporting(-1);
-require dirname(__FILE__) . '/autoload.php';
+require_once dirname(__FILE__) . '/autoload.php';
 
 // 검색 키워드, JSONP 콜백 함수명, 클라이언트 버전을 구한다.
 

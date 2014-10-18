@@ -21,7 +21,7 @@
 
 date_default_timezone_set('Asia/Seoul');
 error_reporting(-1);
-require dirname(__FILE__) . '/../autoload.php';
+require_once dirname(__FILE__) . '/../autoload.php';
 
 // GET 또는 터미널 파라미터로부터 검색 키워드를 조합한다.
 

@@ -21,7 +21,7 @@
 
 date_default_timezone_set('Asia/Seoul');
 error_reporting(-1);
-require dirname(__FILE__) . '/../autoload.php';
+require_once dirname(__FILE__) . '/../autoload.php';
 
 // 광역시도 목록 검색인 경우 여기서 결과를 반환한다.
 
