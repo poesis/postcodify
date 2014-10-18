@@ -369,7 +369,13 @@ class Postcodify_Server
                 $record->code5 = strval($row->postcode5);
                 $record->address = array('base' => $address_ko_base, 'new' => $address_ko_new, 'old' => $address_ko_old, 'building' => $row->building_name);
                 $record->english = array('base' => $address_en_base, 'new' => $address_en_new, 'old' => $address_en_old, 'building' => '');
-                $record->other = array('long' => strval($extra_info_long), 'short' => strval($extra_info_short), 'others' => $other_addresses);
+                $record->other = array(
+                    'long' => strval($extra_info_long),
+                    'short' => strval($extra_info_short),
+                    'others' => $other_addresses,
+                    'addrid' => $row->id,
+                    'roadid' => $row->road_id,
+                );
             }
             else
             {
