@@ -23,7 +23,7 @@ date_default_timezone_set('Asia/Seoul');
 error_reporting(-1);
 require dirname(__FILE__) . '/../autoload.php';
 
-// 시도·시군구를 별도로 선택한 경우 검색 키워드에 추가한다.
+// GET 또는 터미널 파라미터로부터 검색 키워드를 조합한다.
 
 if (isset($_GET['gugun']) && strlen($_GET['gugun']) && isset($_GET['q']) && strlen($_GET['q']))
 {
@@ -35,9 +35,10 @@ if (isset($_GET['sido']) && strlen($_GET['sido']) && isset($_GET['q']) && strlen
     $_GET['q'] = $_GET['sido'] . ' ' . $_GET['q'];
 }
 
-// 검색 키워드, JSONP 콜백 함수명, 클라이언트 버전을 구한다.
-
 $keywords = isset($_GET['q']) ? trim($_GET['q']) : (isset($argv[1]) ? trim($argv[1], ' "\'') : '');
+
+// JSONP 콜백 함수명과 클라이언트 버전을 구한다.
+
 $callback = isset($_GET['callback']) ? $_GET['callback'] : null;
 $client_version = isset($_GET['v']) ? trim($_GET['v']) : POSTCODIFY_VERSION;
 if (function_exists('get_magic_quotes_gpc') && @get_magic_quotes_gpc()) $keywords = stripslashes($keywords);
@@ -49,14 +50,17 @@ header('Content-Type: application/javascript; charset=UTF-8');
 header('Cache-Control: private, must-revalidate, post-check=0, pre-check=0');
 header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
 
-$server = new Postcodify_Server;
-$server->db_driver = POSTCODIFY_DB_DRIVER;
-$server->db_dbname = POSTCODIFY_DB_DBNAME;
-$server->db_host = POSTCODIFY_DB_HOST;
-$server->db_port = POSTCODIFY_DB_PORT;
-$server->db_user = POSTCODIFY_DB_USER;
-$server->db_pass = POSTCODIFY_DB_PASS;
-$result = $server->search($keywords, 'UTF-8', $client_version);
+if (!isset($result) || !is_object($result))
+{
+    $server = new Postcodify_Server;
+    $server->db_driver = POSTCODIFY_DB_DRIVER;
+    $server->db_dbname = POSTCODIFY_DB_DBNAME;
+    $server->db_host = POSTCODIFY_DB_HOST;
+    $server->db_port = POSTCODIFY_DB_PORT;
+    $server->db_user = POSTCODIFY_DB_USER;
+    $server->db_pass = POSTCODIFY_DB_PASS;
+    $result = $server->search($keywords, 'UTF-8', $client_version);
+}
 
 // 검색 결과를 juso.sir.co.kr API와 같은 포맷으로 변환한다.
 

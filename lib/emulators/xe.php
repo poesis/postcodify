@@ -66,7 +66,7 @@ else
     $keywords = '';   
 }
 
-// 검색 키워드, JSONP 콜백 함수명, 클라이언트 버전을 구한다.
+// JSONP 콜백 함수명과 클라이언트 버전을 구한다.
 
 $callback = isset($_GET['callback']) ? $_GET['callback'] : null;
 $client_version = isset($_GET['v']) ? trim($_GET['v']) : POSTCODIFY_VERSION;
@@ -79,14 +79,17 @@ header('Content-Type: application/javascript; charset=UTF-8');
 header('Cache-Control: private, must-revalidate, post-check=0, pre-check=0');
 header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
 
-$server = new Postcodify_Server;
-$server->db_driver = POSTCODIFY_DB_DRIVER;
-$server->db_dbname = POSTCODIFY_DB_DBNAME;
-$server->db_host = POSTCODIFY_DB_HOST;
-$server->db_port = POSTCODIFY_DB_PORT;
-$server->db_user = POSTCODIFY_DB_USER;
-$server->db_pass = POSTCODIFY_DB_PASS;
-$result = $server->search($keywords, 'UTF-8', $client_version);
+if (!isset($result) || !is_object($result))
+{
+    $server = new Postcodify_Server;
+    $server->db_driver = POSTCODIFY_DB_DRIVER;
+    $server->db_dbname = POSTCODIFY_DB_DBNAME;
+    $server->db_host = POSTCODIFY_DB_HOST;
+    $server->db_port = POSTCODIFY_DB_PORT;
+    $server->db_user = POSTCODIFY_DB_USER;
+    $server->db_pass = POSTCODIFY_DB_PASS;
+    $result = $server->search($keywords, 'UTF-8', $client_version);
+}
 
 // 검색 결과를 XE KRZIP API와 같은 포맷으로 변환한다.
 
