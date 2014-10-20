@@ -93,6 +93,9 @@
             if (settings.searchButtonContent === null) {
                 settings.searchButtonContent = info.translations[settings.language].msgSearch;
             }
+            if (settings.api === info.freeAPI.defaultUrl && navigator.userAgent.match(/MSIE [4-6]\./)) {
+                settings.api = "http:" + settings.api;
+            }
             
             // 검색 컨트롤을 생성한다.
             
