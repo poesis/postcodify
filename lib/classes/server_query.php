@@ -46,12 +46,15 @@ class Postcodify_Server_Query
         
         // 행정동, 도로명 등의 숫자 앞에 공백에 있는 경우 붙여쓴다.
         
-        $keywords = preg_replace('/\s+([동서남북]?[0-9]+번?[가나다라마바사아자차카타파하동서남북안]?[로길동리가])(?=\s|\d|$)/u', '$1', $keywords);
+        $keywords = preg_replace('/(^|\s)(?:' .
+            '([가-힣]{1,3})\s+([0-9]{1,2}[동리가])|' .
+            '([가-힣]+)\s+([동서남북]?[0-9]+번?[가나다라마바사아자차카타파하동서남북안]?[로길]))' .
+            '(?=\s|\d|$)/u', '$1$2$3$4$5', $keywords, 1);
         
         // 검색어에서 불필요한 문자를 제거한다.
         
         $keywords = str_replace(array('.', ',', '(', '|', ')'), ' ', $keywords);
-        $keywords = preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9-]/u', '', strtolower($keywords));
+        $keywords = preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9@-]/u', '', strtolower($keywords));
         
         // 쿼리 객체를 초기화한다.
         
@@ -120,7 +123,7 @@ class Postcodify_Server_Query
                 $keyword = preg_replace('/[0-9a-z-]+[동층호]?$/u', '', $keyword);
                 if ($keyword !== '' && !in_array($keyword, $q->buildings))
                 {
-                    $q->buildings[] = $keyword;
+                    $q->buildings[] = preg_replace('/(?:아파트|a(?:pt)?|@)$/', '', $keyword);
                     continue;
                 }
                 else
@@ -236,7 +239,7 @@ class Postcodify_Server_Query
             
             if (!preg_match('/[0-9a-z-]+[동층호]?$/u', $keyword))
             {
-                $q->buildings[] = $keyword;
+                $q->buildings[] = preg_replace('/(?:아파트|a(?:pt)?|@)$/', '', $keyword);
                 continue;
             }
             
