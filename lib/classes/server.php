@@ -155,7 +155,7 @@ class Postcodify_Server
             
             // 지번주소로 검색하는 경우...
             
-            elseif ($q->dongri !== null && $q->building === null)
+            elseif ($q->dongri !== null && !count($q->buildings))
             {
                 // 동·리 쿼리를 작성한다.
                 
@@ -215,19 +215,22 @@ class Postcodify_Server
             
             // 건물명만으로 검색하는 경우...
             
-            elseif ($q->building !== null && $q->dongri === null)
+            elseif (count($q->buildings) && $q->dongri === null)
             {
                 $search_type = 'BUILDING';
                 $joins[] = 'JOIN postcodify_buildings pb ON pa.id = pb.address_id';
-                $conds[] = 'pb.keyword LIKE ?';
-                $args[] = '%' . $q->building . '%';
+                foreach ($q->buildings as $building_name)
+                {
+                    $conds[] = 'pb.keyword LIKE ?';
+                    $args[] = '%' . $building_name . '%';
+                }
                 
                 $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
             }
             
             // 동리 + 건물명으로 검색하는 경우...
             
-            elseif ($q->building !== null && $q->dongri !== null)
+            elseif (count($q->buildings) && $q->dongri !== null)
             {
                 $search_type = 'BUILDING+DONG';
                 $joins[] = 'JOIN postcodify_keywords pk ON pa.id = pk.address_id';
@@ -235,8 +238,11 @@ class Postcodify_Server
                 $args[] = self::crc32_x64($q->dongri);
                 
                 $joins[] = 'JOIN postcodify_buildings pb ON pa.id = pb.address_id';
-                $conds[] = 'pb.keyword LIKE ?';
-                $args[] = '%' . $q->building . '%';
+                foreach ($q->buildings as $building_name)
+                {
+                    $conds[] = 'pb.keyword LIKE ?';
+                    $args[] = '%' . $building_name . '%';
+                }
                 
                 $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
             }

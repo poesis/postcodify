@@ -29,10 +29,9 @@ class Postcodify_Server_Query
     public $eupmyeon;
     public $dongri;
     public $road;
-    public $building;
     public $pobox;
     public $numbers;
-    public $extra_keywords;
+    public $buildings = array();
     public $use_area = false;
     public $lang = 'KO';
     public $sort = 'JUSO';
@@ -111,6 +110,22 @@ class Postcodify_Server_Query
                     $q->sido = Postcodify_Server_Areas::$sido[$keyword];
                     $q->use_area = true;
                     continue;
+                }
+            }
+            
+            // 이미 건물명이 나온 경우 건물명만 계속 검색한다.
+            
+            if (count($q->buildings))
+            {
+                $keyword = preg_replace('/[0-9a-z-]+[동층호]?$/u', '', $keyword);
+                if ($keyword !== '' && !in_array($keyword, $q->buildings))
+                {
+                    $q->buildings[] = $keyword;
+                    continue;
+                }
+                else
+                {
+                    break;
                 }
             }
             
@@ -217,9 +232,16 @@ class Postcodify_Server_Query
                 break;
             }
             
-            // 그 밖의 키워드는 건물명으로 취급한다.
+            // 그 밖의 키워드는 건물명으로 취급하되, 동·층·호수는 취급하지 않는다.
             
-            $q->building = $keyword;
+            if (!preg_match('/[0-9a-z-]+[동층호]?$/u', $keyword))
+            {
+                $q->buildings[] = $keyword;
+                continue;
+            }
+            
+            // 그 밖의 키워드가 나오면 그만둔다. 
+            
             break;
         }
         
@@ -251,10 +273,10 @@ class Postcodify_Server_Query
         if ($this->eupmyeon !== null) $result[] = $this->eupmyeon;
         if ($this->dongri !== null) $result[] = $this->dongri;
         if ($this->road !== null) $result[] = $this->road;
-        if ($this->building !== null) $result[] = $this->building;
         if ($this->pobox !== null) $result[] = $this->pobox;
         if (isset($this->numbers[0])) $result[] = $this->numbers[0] .
             (isset($this->numbers[1]) ? ('-' . $this->numbers[1]) : '');
+        if (count($this->buildings)) $result[] = implode(' ', $this->buildings);
         return implode(' ', $result);
     }
 }
