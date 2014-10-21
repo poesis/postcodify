@@ -79,7 +79,7 @@ CREATE TABLE postcodify_numbers (
 CREATE TABLE postcodify_buildings (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     address_id INT UNSIGNED NOT NULL,
-    keyword VARCHAR(40)
+    keyword VARCHAR(120)
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
 
 -- 사서함 검색 키워드 테이블.

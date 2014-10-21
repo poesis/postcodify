@@ -390,42 +390,61 @@ class Postcodify_Utility
         return array_unique($keywords);
     }
     
-    // 건물명의 일반적인 변형들을 구하는 함수.
+    // 건물명 목록을 정리하는 함수.
     
-    public static function get_variations_of_building_name($str)
+    public static function consolidate_building_names($str)
     {
-        // 무의미한 건물명은 무시한다.
+        // 건물명을 분리한다.
         
-        if (self::is_ignorable_building_name($str)) return array();
-        
-        // 그 밖에 불필요한 건물명을 제거한다.
-        
-        if (ctype_digit($str)) return array();
-        if (preg_match('/^(주|주건축물제|제)([0-9a-zA-Z]+|에이|비|씨|디|[가나다라마바사아자차카타파하])(호|동|호동)$/u', $str)) return array();
-        
-        // 반환할 배열을 초기화한다.
-        
-        $keywords = array($str);
-        
-        // 건물명 중간에 붙어 검색을 방해하는 동수, 호수, 차수 등을 제거하여 ○○3차아파트를 ○○아파트로도 검색할 수 있도록 한다.
-        
-        if (preg_match('/^(.+)[0-9]+차(아파트|빌라|오피스텔)$/uU', $str, $matches))
+        if (!is_array($str))
         {
-            $keywords[] = $str = $matches[1] . $matches[2];
-        }
-        elseif (preg_match('/^(.+)(?:[0-9]+|본)동(우체국|경찰서|주민센터)$/uU', $str, $matches))
-        {
-            $keywords[] = $str = $matches[1] . '동' . $matches[2];
-            $keywords[] = $str = $matches[1] . $matches[2];
+           $str = explode(',', $str);
         }
         
-        // 일관성 없는 아파트 명칭의 단순한 형태를 추가한다.
+        // 무의미하거나 불필요한 건물명은 무시한다.
         
-        $keywords[] = str_replace('e-편한세상', 'e편한세상', $str);
+        foreach ($str as $key => $val)
+        {
+            if (trim($val) === '') unset($str[$key]);
+            if (ctype_digit($val)) unset($str[$key]);
+            if (self::is_ignorable_building_name($val)) unset($str[$key]);
+            if (preg_match('/^(주|주건축물제|제)([0-9a-zA-Z]+|에이|비|씨|디|[가나다라마바사아자차카타파하])(호|동|호동)$/u', $val)) unset($str[$key]);
+        }
+        
+        // 건물명 목록을 길이 역순으로 정렬한다.
+        
+        usort($str, 'Postcodify_Utility::sort_building_names');
+        
+        // 중복되는 이름을 제거한다.
+        
+        $output = array();
+        foreach ($str as $val)
+        {
+            $exists = false;
+            foreach ($output as $compare)
+            {
+                if (strpos($compare, $val) !== false)
+                {
+                    $exists = true;
+                    break;
+                }
+            }
+            if (!$exists)
+            {
+                $output[] = $val;
+            }
+        }
         
         // 결과를 반환한다.
         
-        return array_unique($keywords);
+        return implode(',', $output);
+    }
+    
+    // 건물명의 길이를 비교하는 함수.
+    
+    protected static function sort_building_names($a, $b)
+    {
+        return strlen($b) - strlen($a);
     }
     
     // 무시할 건물명인지 확인하는 함수.

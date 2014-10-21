@@ -232,6 +232,7 @@ class Postcodify_Indexer_Update
             $ps_insert_keywords = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
             $ps_insert_numbers = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
             $ps_insert_buildings = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
+            $ps_delete_buildings = $db->prepare('DELETE FROM postcodify_buildings WHERE address_id = ?');
         }
         
         // 데이터 파일 목록을 구한다.
@@ -316,7 +317,7 @@ class Postcodify_Indexer_Update
                     $ps_select_buildings->execute(array($address_info->id));
                     while ($row = $ps_select_buildings->fetchColumn())
                     {
-                        $existing_buildings[$row] = true;
+                        $existing_buildings[] = $row;
                     }
                     $ps_select_buildings->closeCursor();
                 }
@@ -445,16 +446,12 @@ class Postcodify_Indexer_Update
                     
                     // 건물명을 정리하여 저장한다.
                     
-                    $buildings = array();
-                    foreach ($entry->building_names as $building_name)
+                    $building_names = array_merge($existing_buildings, $entry->building_names);
+                    $building_names_consolidated = Postcodify_Utility::consolidate_building_names($building_names);
+                    if ($building_names_consolidated !== '')
                     {
-                        $buildings = array_merge($buildings, Postcodify_Utility::get_variations_of_building_name($building_name));
-                    }
-                    $buildings = array_unique($buildings);
-                    foreach ($buildings as $building)
-                    {
-                        if (isset($existing_buildings[$building])) continue;
-                        $ps_insert_buildings->execute(array($proxy_id, $building));
+                        if (count($existing_buildings)) $ps_delete_buildings->execute(array($proxy_id));
+                        $ps_insert_buildings->execute(array($proxy_id, $building_names_consolidated));
                     }
                 }
                 
@@ -477,7 +474,7 @@ class Postcodify_Indexer_Update
                 unset($existing_buildings);
                 unset($keywords);
                 unset($numbers);
-                unset($buildings);
+                unset($building_names);
                 unset($entry);
             }
             

@@ -68,7 +68,7 @@ CREATE TABLE postcodify_numbers (
 CREATE TABLE postcodify_buildings (
     seq INTEGER PRIMARY KEY,
     address_id INTEGER NOT NULL,
-    keyword VARCHAR(40)
+    keyword VARCHAR(120)
 );
 
 -- 사서함 검색 키워드 테이블.

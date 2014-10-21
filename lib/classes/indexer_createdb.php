@@ -804,18 +804,10 @@ class Postcodify_Indexer_CreateDB
                             }
                         }
                         
-                        $building_names_inserted = array();
-                        foreach ($building_names as $building_name)
+                        $building_names_consolidated = Postcodify_Utility::consolidate_building_names($building_names);
+                        if ($building_names_consolidated !== '')
                         {
-                            $building_name_variations = Postcodify_Utility::get_variations_of_building_name($building_name);
-                            foreach ($building_name_variations as $building_name_variation)
-                            {
-                                if (!isset($building_names_inserted[$building_name_variation]))
-                                {
-                                    $building_names_inserted[$building_name_variation] = true;
-                                    $ps_building_insert->execute(array($proxy_id, $building_name_variation));
-                                }
-                            }
+                            $ps_building_insert->execute(array($proxy_id, $building_names_consolidated));
                         }
                     }
                     
@@ -834,8 +826,6 @@ class Postcodify_Indexer_CreateDB
                     unset($admin_dongri_variations);
                     unset($building_names);
                     unset($extra_building_names);
-                    unset($building_names_inserted);
-                    unset($building_name_variations);
                     unset($existing_keywords_raw);
                     unset($existing_keywords);
                     unset($entry);
