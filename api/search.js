@@ -591,7 +591,7 @@
     
     info.freeAPI = {
         defaultUrl : "//api.poesis.kr/post/search.php",
-        backupUrl : "//backup.api.poesis.kr/post/search.php"
+        backupUrl : "//api.poesis.co.kr/post/search.php"
     };
 
     // 지도 링크 설정.
