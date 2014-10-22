@@ -385,6 +385,7 @@
                             if (result.other["others"] !== "") {
                                 var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>');
                                 oldAddrLink.attr("title", info.translations[resultLanguage].msgShowOthers);
+                                if (!settings.hideOldAddresses) oldAddrLink.css("display", "none");
                                 oldAddrLink.appendTo(option.find("div.address"));
                                 var oldAddrDiv = $('<div class="old_addresses"></div>').text(result.other["others"]);
                                 if (settings.hideOldAddresses) oldAddrDiv.css("display", "none");
