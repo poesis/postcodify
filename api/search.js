@@ -99,7 +99,7 @@
             
             // 검색 컨트롤을 생성한다.
             
-            var results = $(settings.results);
+            var results = $(settings.results).postcodifyAddClass("search_form");
             var controls = $('<div></div>').postcodifyAddClass("search_controls");
             var uniqueId = "postcodify_" + new Date().getTime().toString() + Math.random().toString().substr(2, 4);
             var keywordLabel = $('<label></label>').attr("for", uniqueId).text(info.translations[settings.language].msgKeywords).hide().appendTo(controls);
