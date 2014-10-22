@@ -203,7 +203,7 @@ class Postcodify_Server_Query
             
             if (preg_match('/^(.{1,5}(?:[0-9]가|[동리가]))(산?([0-9]+(?:-[0-9]+)?)(?:번지?)?)?$/u', $keyword, $matches))
             {
-                $q->dongri = preg_replace('/[0-9]/', '', $matches[1]);
+                $q->dongri = preg_replace('/[0-9]([동리])$/u', '$1', $matches[1]);
                 $q->sort = 'JIBEON';
                 if (isset($matches[3]) && $matches[3])
                 {
