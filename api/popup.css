@@ -52,7 +52,7 @@ div.postcodify_popup_layer.ie6fix {
 div.postcodify_title {
     width: 100%; margin: 0; padding: 10px 0 12px 0;
     text-align: center; line-height: 120%; font-weight: bold;
-    background-color: #eaeaf2;
+    background-color: #ebebeb;
 }
 div.postcodify_title span { white-space: nowrap; }
 
@@ -60,16 +60,16 @@ div.postcodify_controls { clear: both; margin: 0 12px 12px 12px; padding: 0; }
 
 div.postcodify_search_controls {
     width: 100%; margin: 0 -12px; padding: 0 12px 12px 12px;
-    background-color: #eaeaf2; position: relative;
-    border-bottom: 1px solid #c9c9cf;
+    background-color: #ebebeb; position: relative;
+    border-bottom: 1px solid #cacaca;
 }
 div.postcodify_search_controls .keyword {
     width: 60%; height: 20px; padding: 4px 8px; font-family: inherit;
-    border: 1px solid #88888c; 
+    border: 1px solid #888; 
 }
 div.postcodify_search_controls .search_button {
     width: 60px; height: 30px; font-family: inherit; font-weight: bold;
-    border: 1px solid #44444f; background: #44444f; color: #fff;
+    border: 1px solid #444; background: #444; color: #fff;
     position: absolute; right: 12px; top: 0;
 }
 div.postcodify_search_controls .search_button:hover,
@@ -87,26 +87,26 @@ div.postcodify_search_result div.code5 { display: none; }
 div.postcodify_search_result div.address { clear: both; margin-left: 60px; position: relative; cursor: pointer; }
 div.postcodify_search_result div.address a.selector { text-decoration: none; cursor: pointer; }
 div.postcodify_search_result div.address a.selector span.address_info { color: #000; display: inline-block; margin-right: 8px; }
-div.postcodify_search_result div.address a.selector span.extra_info { color: #444449; display: inline-block; }
+div.postcodify_search_result div.address a.selector span.extra_info { color: #444; display: inline-block; }
 div.postcodify_search_result div.address a.show_old_addresses { display: none; }
-div.postcodify_search_result div.old_addresses { clear: both; color: #88888c; margin: 1px 0 0 60px; font-size: 12px; cursor: pointer; }
+div.postcodify_search_result div.old_addresses { clear: both; color: #888; margin: 1px 0 0 60px; font-size: 12px; cursor: pointer; }
 div.postcodify_search_result div.map_link { position: absolute; right: 6px; top: 4px; }
-div.postcodify_search_result div.map_link a { color: #444449; font-size: 11px; text-decoration: none; }
+div.postcodify_search_result div.map_link a { color: #444; font-size: 11px; text-decoration: none; }
 div.postcodify_search_result div.map_link a:hover { text-decoration: underline; }
 
 div.postcodify_search_status { text-align: center; color: #f36; padding: 32px 0; }
 div.postcodify_search_status.too_many { clear: both; color: #36f; padding-bottom: 6px; margin-top: 8px; }
 div.postcodify_search_status.summary {
     clear: both; padding: 8px 12px 0 0; margin: 12px -12px -8px -12px;
-    border-top: 1px solid #c9c9cf; text-align: right;
+    border-top: 1px solid #cacaca; text-align: right;
 }
 div.postcodify_search_status.summary div {
     display: inline-block; margin: 0 0 0 12px;
-    font-size: 11px; line-height: 120%; color: #88888c;
+    font-size: 11px; line-height: 120%; color: #888;
 }
 
 div.postcodify_help {
-    clear: both; margin: 0 12px 20px 12px; color: #444449;
+    clear: both; margin: 0 12px 20px 12px; color: #444;
 }
 div.postcodify_help p { margin: 0 0 6px 0; padding: 0; font-weight: bold; }
 div.postcodify_help ul { margin: 0 0 6px 0; padding: 0 0 0 28px; }
@@ -117,7 +117,7 @@ div.postcodify_buttons {
 }
 div.postcodify_buttons button {
     width: 60px; height: 30px; font-family: inherit; font-weight: bold;
-    border: 1px solid #44444f; background: #44444f; color: #fff;
+    border: 1px solid #444; background: #444; color: #fff;
 }
 div.postcodify_buttons button:hover,
 div.postcodify_buttons button:active {
