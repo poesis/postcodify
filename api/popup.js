@@ -24,10 +24,14 @@
     
     if (typeof $.fn.postcodifyPopUp !== "undefined") return;
     
+    // 팝업 스크립트 버전을 선언한다.
+    
+    var info = { version : "2.1.0" };
+    
     // Postcodify 메인 플러그인과 팝업 레이어를 위한 스타일시트를 로딩한다.
     
-    $(document.body).append('<script src="//d1p7wdleee1q2z.cloudfront.net/post/search.min.js"><\/script>');
-    $(document.body).append('<link rel="stylesheet" href="//d1p7wdleee1q2z.cloudfront.net/post/popup.css" />');
+    $(document.body).append('<script src="//cdn.poesis.kr/post/search.min.js"><\/script>');
+    $(document.body).append('<link rel="stylesheet" href="//cdn.poesis.kr/post/popup.css" />');
     
     // 플러그인 함수를 선언한다.
     
