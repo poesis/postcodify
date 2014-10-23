@@ -30,11 +30,7 @@
  *
  *-->
 
-<h1 id="postcodify_title">우편번호 검색</h1>
-
-<!-- 헤더 배경 -->
-
-<div id="postcodify_background"></div>
+<h1>우편번호 검색</h1>
 
 <!-- 검색 기능이 표시되는 <div> -->
 
@@ -79,7 +75,7 @@
 
 <!-- 검색결과 입력란 -->
 
-<div id="entry_box">
+<div>
     <p><label for="entry_postcode6">우편번호</label><input type="text" id="entry_postcode6" /></p>
     <p><label for="entry_address">도로명주소</label><input type="text" id="entry_address" /></p>
     <p><label for="entry_details">상세주소</label><input type="text" id="entry_details" /></p>
@@ -90,17 +86,20 @@
 
 <!-- 검색 도움말 -->
 
-<div id="search_guide">
-    1. 도로명주소로 검색 : 도로명과 건물번호를 함께 입력하세요. 예) 세종대로 110<br />
-    2. 지번 주소로 검색 : "동" 또는 "리" 이름과 번지수를 함께 입력하세요. 예) 연산동 1000<br />
-    3. 건물명으로 검색 : 빌딩 또는 아파트 이름을 입력하세요. 예) 국제빌딩, 방배동 래미안, 주공3차<br />
-    4. 사서함으로 검색 : 사서함명과 번호를 입력하세요. 예) 광화문우체국사서함 123-4<br />
-    5. English : Please enter your exact address. Example) 110 Sejong-daero, 1000 Yeonsan-dong<br />
-    <hr />
-    &nbsp; &nbsp; ※ 시·군·구·읍·면 등은 쓰시지 않아도 되지만, 만약 쓰실 경우에는 반드시 <u>띄어쓰기</u>를 해주세요.<br />
-    <hr />
-    &nbsp; &nbsp; ※ 건물명보다는 도로명주소 또는 지번 주소로 검색하시는 것이 빠르고 정확합니다.<br /> 
-    &nbsp; &nbsp; &#12288; 도로명에 "○○번길" 등의 숫자가 있는 경우에도 잊지 말고 써 주세요.
+<div>
+    <p>검색 요령</p>
+    <ul>
+        <li>도로명주소 검색 : 도로명과 건물번호를 입력하세요. &nbsp; 예: <span>세종대로 110</span></li>
+        <li>지번주소 검색 : "동" 또는 "리" 이름과 번지수를 입력하세요. &nbsp; 예: <span>연산동 1000</span></li>
+        <li>건물명 검색 : 빌딩 또는 아파트 이름을 입력하세요. &nbsp; 예: <span>방배동 래미안</span>, <span>수곡동 주공3차</span></li>
+        <li>사서함 검색 : 사서함 이름과 번호를 입력하세요. &nbsp; 예: <span>광화문우체국사서함 123-4</span></li>
+    </ul>
+    <p>주의사항</p>
+    <ul>
+        <li>시·군·구·읍·면 등은 쓰지 않아도 되지만, 만약 쓰실 경우 반드시 띄어쓰기를 해 주세요.</li>
+        <li>도로명에 "××번길" 등이 포함되어 있는 경우에도 잊지 말고 써 주세요.</li>
+        <li>건물명보다는 도로명주소 또는 지번 주소로 검색하시는 것이 빠르고 정확합니다.</li>
+    </ul>
 </div>    
 
 </body>

@@ -31,9 +31,9 @@
     // Postcodify 메인 플러그인과 팝업 레이어를 위한 스타일시트를 로딩한다.
     
     if (typeof $.fn.postcodify === "undefined") {
-        $(document.body).append('<script src="//cdn.poesis.kr/post/search.min.js"><\/script>');
+        document.write('<script src="//cdn.poesis.kr/post/search.min.js"><\/script>');
     }
-    $(document.body).append('<link rel="stylesheet" href="//cdn.poesis.kr/post/popup.css" />');
+    document.write('<link rel="stylesheet" href="//cdn.poesis.kr/post/popup.css" />');
     
     // 플러그인 함수를 선언한다.
     
