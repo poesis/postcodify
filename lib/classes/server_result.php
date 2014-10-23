@@ -29,6 +29,7 @@ class Postcodify_Server_Result
     
     public $version = '';
     public $error = '';
+    public $msg = '';
     public $count = 0;
     public $time = 0;
     public $lang = 'KO';

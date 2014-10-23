@@ -437,9 +437,26 @@
                         }
                     }
                     
+                    // 그 밖에 서버에서 전달할 메시지가 있는 경우 검색창 맨 위에 표시한다.
+                    
+                    if (typeof data.msg !== "undefined" && data.msg !== "") {
+                        msg = $('<div class="message"></div>').postcodifyAddClass("search_status");
+                        msg.text(data.msg);
+                        if (results.find("div.too_many").size()) {
+                            msg.insertBefore(results.find("div.too_many").first());
+                        } else {
+                            msg.insertBefore(results.find("div.postcodify_search_result").first());
+                        }
+                    }
+                    
                     // 검색 성공 콜백 함수를 실행한다.
                     
-                    settings.onSuccess();
+                    if (!data.error) {
+                        settings.onSuccess();
+                    }
+                    
+                    // 검색 완료 콜백 함수를 실행한다.
+                    
                     settings.onComplete();
                     
                     // 검색 결과가 1개이고 autoSelect가 true인 경우 자동으로 선택한다.
