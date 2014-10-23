@@ -80,7 +80,7 @@ div.postcodify_search_controls .search_button:active {
 div.postcodify_results { clear: both; margin: 0 12px 20px 12px; padding: 0; }
 
 div.postcodify_search_result { clear: both; position: relative; width: 100%; padding: 4px 6px; margin-left: -6px; word-break: keep-all; }
-div.postcodify_search_result:hover { background: #f3f3f6; }
+div.postcodify_search_result:hover { background: #f8f8f8; }
 div.postcodify_search_result:hover div.address a.selector { font-weight: bold; }
 div.postcodify_search_result div.code6 { position: absolute; left: 6px; top: 4px; color: #f36; }
 div.postcodify_search_result div.code5 { display: none; }
@@ -94,11 +94,12 @@ div.postcodify_search_result div.map_link { position: absolute; right: 6px; top:
 div.postcodify_search_result div.map_link a { color: #444; font-size: 11px; text-decoration: none; }
 div.postcodify_search_result div.map_link a:hover { text-decoration: underline; }
 
-div.postcodify_search_status { text-align: center; color: #f36; padding: 32px 0; }
-div.postcodify_search_status.too_many { clear: both; color: #36f; padding-bottom: 6px; margin-top: 8px; }
+div.postcodify_search_status { text-align: center; color: #f36; padding: 16px 8px; border: 1px solid #cacaca; background: #f8f8f8; margin-bottom: 8px; }
+div.postcodify_search_status.message { color: #222; }
+div.postcodify_search_status.too_many { color: #36f; }
 div.postcodify_search_status.summary {
     clear: both; padding: 8px 12px 0 0; margin: 12px -12px -8px -12px;
-    border-top: 1px solid #cacaca; text-align: right;
+    border: 0; background: none; border-top: 1px solid #cacaca; text-align: right;
 }
 div.postcodify_search_status.summary div {
     display: inline-block; margin: 0 0 0 12px;
