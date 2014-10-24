@@ -120,7 +120,7 @@ class Postcodify_Server_Query
             
             if (count($q->buildings))
             {
-                $keyword = preg_replace('/[0-9a-z-]+[동층호]?$/u', '', $keyword);
+                $keyword = preg_replace('/(?:[0-9a-z-]+|[가나다라마바사])[동층호]?$/u', '', $keyword);
                 if ($keyword !== '' && !in_array($keyword, $q->buildings))
                 {
                     $q->buildings[] = preg_replace('/(?:아파트|a(?:pt)?|@)$/', '', $keyword);
@@ -237,7 +237,7 @@ class Postcodify_Server_Query
             
             // 그 밖의 키워드는 건물명으로 취급하되, 동·층·호수는 취급하지 않는다.
             
-            if (!preg_match('/[0-9a-z-]+[동층호]?$/u', $keyword))
+            if (!preg_match('/(?:[0-9a-z-]+|[가나다라마바사])[동층호]?$/u', $keyword))
             {
                 $q->buildings[] = preg_replace('/(?:아파트|a(?:pt)?|@)$/', '', $keyword);
                 continue;
