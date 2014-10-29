@@ -37,6 +37,13 @@ if (isset($_GET['sido']) && strlen($_GET['sido']) && isset($_GET['q']) && strlen
 
 $keywords = isset($_GET['q']) ? trim($_GET['q']) : (isset($argv[1]) ? trim($argv[1], ' "\'') : '');
 
+// 키워드의 한글 인코딩 방식이 EUC-KR인 경우 UTF-8로 변환한다.
+
+if (isset($_GET['charset']) && stripos($_GET['charset'], 'euc') !== false)
+{
+    $keywords = @mb_convert_encoding($keywords, 'UTF-8', 'CP949');
+}
+
 // JSONP 콜백 함수명과 클라이언트 버전을 구한다.
 
 $callback = isset($_GET['callback']) ? $_GET['callback'] : null;
