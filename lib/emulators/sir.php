@@ -39,7 +39,7 @@ $keywords = isset($_GET['q']) ? trim($_GET['q']) : (isset($argv[1]) ? trim($argv
 
 // 키워드의 한글 인코딩 방식이 EUC-KR인 경우 UTF-8로 변환한다.
 
-if (isset($_GET['charset']) && stripos($_GET['charset'], 'euc') !== false)
+if (isset($_GET['charset']) && stripos($_GET['charset'], 'euc') !== false && mb_check_encoding($keywords, 'CP949'))
 {
     $keywords = @mb_convert_encoding($keywords, 'UTF-8', 'CP949');
 }
