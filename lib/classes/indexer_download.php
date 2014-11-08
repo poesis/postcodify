@@ -104,7 +104,7 @@ class Postcodify_Indexer_Download
                     $articles['부가정보'] = self::RELATIVE_DOMAIN . htmlspecialchars_decode($matches[1]);
                 }
             }
-            if (strpos($article_tag[0], '상세건물명') !== false)
+            if (strpos($article_tag[0], '상세건물명') !== false && !isset($articles['상세건물명']))
             {
                 if (preg_match(self::FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
                 {
