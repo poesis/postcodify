@@ -28,7 +28,7 @@ class Postcodify_Indexer_Download
     const POBOX_URL = 'http://www.epost.go.kr/search/zipcode/newaddr_pobox_DB.zip';
     const JIBEON_URL = 'http://www.epost.go.kr/search/zipcode/koreapost_zipcode_DB.zip';
     const ENGLISH_URL = 'http://storage.poesis.kr/downloads/english/english_aliases_DB.zip';
-    const FIND_ENTRIES_REGEXP = '#<td class="subject">(.+)</td>#isU';
+    const FIND_ENTRIES_REGEXP = '#<td class="align-left">(.+)</td>#isU';
     const FIND_LINKS_IN_ENTRY_REGEXP = '#<a href="([^"]+)">#iU';
     const FIND_DATA_DATE_REGEXP = '#\\((20[0-9][0-9])년 ([0-9]+)월 ([0-9]+)일 기준\\)#uU';
     const FIND_DOWNLOAD_REGEXP = '#<a href="(/dn\\.do\\?[^"]+)">([^<]+\\.zip)</a>#iU';
