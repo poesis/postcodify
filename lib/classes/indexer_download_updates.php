@@ -25,9 +25,9 @@ class Postcodify_Indexer_Download_Updates
     
     const RELATIVE_DOMAIN = 'http://www.juso.go.kr';
     const LIST_URL = '/notice/OpenArchivesList.do?currentPage=1&countPerPage=%d&noticeKd=27&type=archives';
-    const FIND_ENTRIES_REGEXP = '#<td class="subject">(.+)</td>#isU';
+    const FIND_ENTRIES_REGEXP = '#<td class="align-left">(.+)</td>#isU';
     const FIND_LINKS_IN_ENTRY_REGEXP = '#<a href="([^"]+)">#iU';
-    const FIND_DOWNLOAD_REGEXP = '#<a href="(/dn\\.do\\?[^"]+)">([^<]+\\.TXT)</a>#iU';
+    const FIND_DOWNLOAD_REGEXP = '#<a href="(/dn\\.do\\?[^"]+)">([^<]+\\.TXT)\s*</a>#iU';
     
     // 엔트리 포인트.
     
@@ -95,7 +95,7 @@ class Postcodify_Indexer_Download_Updates
                         }
                         if ($article_date >= $updated)
                         {
-                            $articles[$article_date] = self::RELATIVE_DOMAIN . $matches[1];
+                            $articles[$article_date] = self::RELATIVE_DOMAIN . htmlspecialchars_decode(trim($matches[1]));
                         }
                     }
                 }
@@ -114,8 +114,8 @@ class Postcodify_Indexer_Download_Updates
         
             foreach ($downloads as $download)
             {
-                $link = self::RELATIVE_DOMAIN . htmlspecialchars_decode($download[1]);
-                $filename = $download[2];
+                $link = self::RELATIVE_DOMAIN . htmlspecialchars_decode(trim($download[1]));
+                $filename = trim($download[2]);
                 
                 if (preg_match('/^(.+)\\.TXT/i', $filename, $matches))
                 {

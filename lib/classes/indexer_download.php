@@ -143,7 +143,7 @@ class Postcodify_Indexer_Download
             foreach ($downloads as $download)
             {
                 $link = self::RELATIVE_DOMAIN . htmlspecialchars_decode(trim($download[1]));
-                $filename = $download[2];
+                $filename = trim($download[2]);
                 $filepath = $download_path . '/' . $filename;
                 
                 if (strpos($filename, $key) !== false)
