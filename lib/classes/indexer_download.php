@@ -31,7 +31,7 @@ class Postcodify_Indexer_Download
     const FIND_ENTRIES_REGEXP = '#<td class="align-left">(.+)</td>#isU';
     const FIND_LINKS_IN_ENTRY_REGEXP = '#<a href="([^"]+)">#iU';
     const FIND_DATA_DATE_REGEXP = '#\\((20[0-9][0-9])년 ([0-9]+)월 ([0-9]+)일 기준\\)#uU';
-    const FIND_DOWNLOAD_REGEXP = '#<a href="(/dn\\.do\\?[^"]+)">([^<]+\\.zip)</a>#iU';
+    const FIND_DOWNLOAD_REGEXP = '#<a href="(/dn\\.do\\?[^"]+)">([^<]+\\.zip)\s*</a>#iU';
     
     // 엔트리 포인트.
     
@@ -70,7 +70,7 @@ class Postcodify_Indexer_Download
             {
                 if (preg_match(self::FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
                 {
-                    $articles['도로명코드_전체분'] = self::RELATIVE_DOMAIN . $matches[1];
+                    $articles['도로명코드_전체분'] = htmlspecialchars_decode(self::RELATIVE_DOMAIN . $matches[1]);
                     $articles['날짜'] = preg_match(self::FIND_DATA_DATE_REGEXP, $article_tag[0], $matches) ? $matches : '';
                     break;
                 }
@@ -104,7 +104,7 @@ class Postcodify_Indexer_Download
                     $articles['부가정보'] = self::RELATIVE_DOMAIN . htmlspecialchars_decode($matches[1]);
                 }
             }
-            if (strpos($article_tag[0], '상세건물명') !== false && !isset($articles['상세건물명']))
+            if (strpos($article_tag[0], '상세건물명') !== false && !$articles['상세건물명'])
             {
                 if (preg_match(self::FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
                 {
@@ -142,7 +142,7 @@ class Postcodify_Indexer_Download
             
             foreach ($downloads as $download)
             {
-                $link = self::RELATIVE_DOMAIN . htmlspecialchars_decode($download[1]);
+                $link = self::RELATIVE_DOMAIN . htmlspecialchars_decode(trim($download[1]));
                 $filename = $download[2];
                 $filepath = $download_path . '/' . $filename;
                 
@@ -164,10 +164,11 @@ class Postcodify_Indexer_Download
             }
         }
         
-        // 우체국 사서함 및 지번우편번호 파일을 다운로드한다.
+        // 우체국 사서함 파일을 다운로드한다.
         
         Postcodify_Utility::print_message('다운로드: ' . basename(self::POBOX_URL));
-        $result = Postcodify_Utility::download(self::POBOX_URL, $download_path . '/' . basename(self::POBOX_URL));
+        $filepath = $download_path . '/' . basename(self::POBOX_URL);
+        $result = Postcodify_Utility::download(self::POBOX_URL, $filepath);
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
             Postcodify_Utility::print_error();
@@ -178,26 +179,12 @@ class Postcodify_Indexer_Download
             Postcodify_Utility::print_ok();
             $downloaded_files++;
         }
-        
-        /*
-        Postcodify_Utility::print_message('다운로드: ' . basename(self::JIBEON_URL));
-        $result = Postcodify_Utility::download(self::JIBEON_URL, $download_path . '/' . basename(self::JIBEON_URL));
-        if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
-        {
-            Postcodify_Utility::print_error();
-            exit(2);
-        }
-        else
-        {
-            Postcodify_Utility::print_ok();
-            $downloaded_files++;
-        }
-        */
         
         // 영문 동 명칭을 다운로드한다.
         
         Postcodify_Utility::print_message('다운로드: ' . basename(self::ENGLISH_URL));
-        $result = Postcodify_Utility::download(self::ENGLISH_URL, $download_path . '/' . basename(self::ENGLISH_URL));
+        $filepath = $download_path . '/' . basename(self::ENGLISH_URL);
+        $result = Postcodify_Utility::download(self::ENGLISH_URL, $filepath);
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
             Postcodify_Utility::print_error();
