@@ -191,6 +191,7 @@ class Postcodify_Server_Query
             if (preg_match('/^(.+[로길])((?:지하)?([0-9]+(?:-[0-9]+)?)(?:번지?)?)?$/u', $keyword, $matches))
             {
                 $q->road = $matches[1];
+                $q->sort = 'JUSO';
                 if (isset($matches[3]) && $matches[3])
                 {
                     $q->numbers = $matches[3];

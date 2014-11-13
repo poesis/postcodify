@@ -115,7 +115,7 @@ class Postcodify_Server
             
             // 도로명주소로 검색하는 경우...
             
-            if ($q->road !== null)
+            if ($q->road !== null && !count($q->buildings))
             {
                 // 도로명 쿼리를 작성한다.
                 
@@ -215,9 +215,28 @@ class Postcodify_Server
             
             // 건물명만으로 검색하는 경우...
             
-            elseif (count($q->buildings) && $q->dongri === null)
+            elseif (count($q->buildings) && $q->road === null && $q->dongri === null)
             {
                 $search_type = 'BUILDING';
+                $joins[] = 'JOIN postcodify_buildings pb ON pa.id = pb.address_id';
+                foreach ($q->buildings as $building_name)
+                {
+                    $conds[] = 'pb.keyword LIKE ?';
+                    $args[] = '%' . $building_name . '%';
+                }
+                
+                $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+            }
+            
+            // 도로명 + 건물명으로 검색하는 경우...
+            
+            elseif (count($q->buildings) && $q->road !== null)
+            {
+                $search_type = 'BUILDING+DONG';
+                $joins[] = 'JOIN postcodify_keywords pk ON pa.id = pk.address_id';
+                $conds[] = 'pk.keyword_crc32 = ?';
+                $args[] = self::crc32_x64($q->road);
+                
                 $joins[] = 'JOIN postcodify_buildings pb ON pa.id = pb.address_id';
                 foreach ($q->buildings as $building_name)
                 {
