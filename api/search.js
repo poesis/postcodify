@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "2.1.0", location : "" };
+    var info = { version : "2.2.0", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -83,7 +83,8 @@
                 hideOldAddresses : true,
                 hideSummary : false,
                 useFullJibeon : false,
-                useAlert : false
+                useAlert : false,
+                useCors : true
             }, options);
             
             settings.language = settings.language.toLowerCase();
@@ -228,7 +229,7 @@
                             searchButton.removeAttr("disabled").html(settings.searchButtonContent);
                         }
                     };
-                    if (typeof XMLHttpRequest !== "undefined" && "withCredentials" in new XMLHttpRequest()) {
+                    if (settings.useCors && typeof XMLHttpRequest !== "undefined" && "withCredentials" in new XMLHttpRequest()) {
                         ajaxOptions.dataType = "json";
                     } else {
                         ajaxOptions.dataType = "jsonp";
