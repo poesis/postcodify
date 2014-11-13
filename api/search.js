@@ -60,6 +60,7 @@
                 searchButtonContent : null,
                 mapLinkProvider : false,
                 mapLinkContent : null,
+                overrideDomain : null,
                 insertDbid : null,
                 insertPostcode5 : null,
                 insertPostcode6 : null,
@@ -215,7 +216,7 @@
                         data : {
                             v : info.version,
                             q : keywords,
-                            ref : window.location.hostname,
+                            ref : settings.overrideDomain ? settings.overrideDomain : window.location.hostname,
                             cdn : info.location
                         },
                         processData : true,
