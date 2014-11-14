@@ -97,6 +97,7 @@ class Postcodify_Server
         
         if ($cache_key !== null)
         {
+            $data_source = 'cache';
             list($rows, $search_type, $search_error) = $this->_ch->get($cache_key);
         }
         
@@ -104,6 +105,7 @@ class Postcodify_Server
         
         if ($rows === null)
         {
+            $data_source = 'db';
             list($rows, $search_type, $search_error) = $this->get_db_rows($q);
         }
         
@@ -116,7 +118,7 @@ class Postcodify_Server
         
         // 검색 결과를 캐시에 저장한다.
         
-        if ($cache_key !== null)
+        if ($cache_key !== null && $data_source === 'db')
         {
             $this->_ch->set($cache_key, $rows, $search_type);
         }
