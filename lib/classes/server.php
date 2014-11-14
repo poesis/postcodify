@@ -31,6 +31,14 @@ class Postcodify_Server
     public $db_dbname = '';
     protected $_dbh;
     
+    // Memcached 설정.
+    
+    public $cache_driver = '';
+    public $cache_host = 'localhost';
+    public $cache_port = 11211;
+    public $cache_ttl = 86400;
+    protected $_ch;
+    
     // 검색을 수행하는 메소드. Postcodify_Server_Result 객체를 반환한다.
     // 인코딩의 경우 EUC-KR을 사용하려면 CP949라고 입력해 주어야 한다.
     // 새주소 중 EUC-KR에서 지원되지 않는 문자가 포함된 것도 있기 때문이다.
@@ -68,7 +76,170 @@ class Postcodify_Server
         
         $q = Postcodify_Server_Query::parse_keywords($keywords);
         
-        // 검색 쿼리를 실행한다.
+        // 캐시에 데이터가 있는지 확인한다.
+        
+        if ($this->cache_driver && !$q->numbers[0])
+        {
+            if ($this->_ch === null)
+            {
+                $this->_ch = new Postcodify_Server_Cache($this->cache_driver, $this->cache_host, $this->cache_port, $this->cache_ttl);
+            }
+            $cache_key = sha1(strval($q));
+            $rows = null;
+        }
+        else
+        {
+            $cache_key = null;
+            $rows = null;
+        }
+        
+        // 캐시에 데이터가 있는지 확인한다.
+        
+        if ($cache_key !== null)
+        {
+            list($rows, $search_type, $search_error) = $this->_ch->get($cache_key);
+        }
+        
+        // 캐시에서 찾지 못한 경우 DB에서 검색 쿼리를 실행한다.
+        
+        if ($rows === null)
+        {
+            list($rows, $search_type, $search_error) = $this->get_db_rows($q);
+        }
+        
+        // 오류가 발생한 경우 처리를 중단한다.
+        
+        if ($search_error !== null)
+        {
+            return new Postcodify_Server_Result('Database Error');
+        }
+        
+        // 검색 결과를 캐시에 저장한다.
+        
+        if ($cache_key !== null)
+        {
+            $this->_ch->set($cache_key, $rows, $search_type);
+        }
+        
+        // 검색 결과 오브젝트를 생성한다.
+        
+        $result = new Postcodify_Server_Result;
+        
+        // 검색 언어, 정렬 방식 등을 기록한다.
+        
+        $result->lang = $q->lang;
+        $result->sort = $q->sort;
+        $result->nums = $q->numbers[0] . ($q->numbers[1] ? ('-' . $q->numbers[1]) : '');
+        $result->type = $search_type;
+        
+        // 각 레코드를 추가한다.
+        
+        foreach ($rows as $row)
+        {
+            // 한글 도로명 및 지번주소를 정리한다.
+            
+            $address_ko_base = trim($row->sido_ko . ' ' . ($row->sigungu_ko ? ($row->sigungu_ko . ' ') : '') .
+                ($row->ilbangu_ko ? ($row->ilbangu_ko . ' ') : '') . ($row->eupmyeon_ko ? ($row->eupmyeon_ko . ' ') : ''));
+            $address_ko_new = trim($row->road_name_ko . ' ' . ($row->is_basement ? '지하 ' : '') .
+                ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : ''));
+            $address_ko_old = trim($row->dongri_ko . ' ' . ($row->is_mountain ? '산' : '') .
+                ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : ''));
+            
+            // 영문 도로명 및 지번주소를 정리한다.
+            
+            $address_en_base = trim(($row->eupmyeon_en ? ($row->eupmyeon_en . ', ') : '') .
+                ($row->ilbangu_en ? ($row->ilbangu_en . ', ') : '') . ($row->sigungu_en ? ($row->sigungu_en . ', ') : '') .
+                $row->sido_en);
+            $address_en_new = trim(($row->is_basement ? 'Jiha ' : '') .
+                ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : '') .
+                ', ' . $row->road_name_en);
+            $address_en_old = trim(($row->is_mountain ? 'San ' : '') .
+                ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : '') .
+                ', ' . $row->dongri_en);
+            
+            // 추가정보를 정리한다.
+            
+            if ($result->sort === 'POBOX')
+            {
+                $address_ko_new = $address_ko_old = $row->dongri_ko . ' ' . $row->other_addresses;
+                $address_en_new = $address_en_old = $row->dongri_en . ' ' . $row->other_addresses;
+                $extra_info_long = $extra_info_short = $other_addresses = '';
+            }
+            else
+            {
+                $extra_info_long = trim($address_ko_old . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+                $extra_info_short = trim($row->dongri_ko . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+                $other_addresses = strval($row->other_addresses);
+            }
+            
+            // 요청받은 버전에 따라 다른 형태로 작성한다.
+            
+            if (version_compare($version, '1.8', '>='))
+            {
+                $record = new Postcodify_Server_Record_v18;
+                $record->dbid = strval($row->address_id);
+                $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
+                $record->code5 = strval($row->postcode5);
+                $record->address = array('base' => $address_ko_base, 'new' => $address_ko_new, 'old' => $address_ko_old, 'building' => $row->building_name);
+                $record->english = array('base' => $address_en_base, 'new' => $address_en_new, 'old' => $address_en_old, 'building' => '');
+                $record->other = array(
+                    'long' => strval($extra_info_long),
+                    'short' => strval($extra_info_short),
+                    'others' => $other_addresses,
+                    'addrid' => $row->id,
+                    'roadid' => $row->road_id,
+                );
+            }
+            else
+            {
+                $record = new Postcodify_Server_Record_v17;
+                $record->dbid = strval($row->address_id);
+                $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
+                $record->code5 = strval($row->postcode5);
+                $record->address = trim($address_ko_base . ' ' . $address_ko_new);
+                $record->canonical = $address_ko_old;
+                $record->extra_info_long = strval($extra_info_long);
+                $record->extra_info_short = strval($extra_info_short);
+                $record->english_address = trim($address_en_new . ', ' . $address_en_base);
+                $record->jibeon_address = trim($address_ko_base . ' ' . $address_ko_old);
+                $record->other = $other_addresses;
+            }
+            
+            // 반환할 인코딩이 UTF-8이 아닌 경우 여기서 변환한다.
+            
+            if ($encoding !== 'UTF-8')
+            {
+                $properties = get_object_vars($record);
+                foreach ($properties as $key => $value)
+                {
+                    $record->$key = mb_convert_encoding($value, $encoding, 'UTF-8');
+                }
+            }
+            
+            // 레코드를 추가하고 레코드 카운터를 조정한다.
+            
+            $result->results[] = $record;
+            $result->count++;
+        }
+        
+        // 검색 소요 시간을 기록한다.
+        
+        $result->time = number_format(microtime(true) - $start_time, 3);
+        
+        // 결과를 반환한다.
+        
+        return $result;
+    }
+    
+    // 주어진 쿼리를 DB에서 실행하는 메소드.
+    
+    protected function get_db_rows($q)
+    {
+        // 반환할 변수들을 초기화한다.
+        
+        $rows = array();
+        $search_type = 'NONE';
+        $search_error = null;
         
         try
         {
@@ -324,123 +495,18 @@ class Postcodify_Server
             
             else
             {
-                return new Postcodify_Server_Result('');
+                $rows = array();
             }
         }
         catch (Exception $e)
         {
             error_log('Postcodify ("' . $q . '"): ' . $e->getMessage());
-            return new Postcodify_Server_Result('Database Error');
+            $search_type = 'ERROR';
+            $search_error = $e->getMessage();
+            $rows = array();
         }
         
-        // 검색 결과 오브젝트를 생성한다.
-        
-        $result = new Postcodify_Server_Result;
-        
-        // 검색 언어, 정렬 방식 등을 기록한다.
-        
-        $result->lang = $q->lang;
-        $result->sort = $q->sort;
-        $result->nums = $q->numbers[0] . ($q->numbers[1] ? ('-' . $q->numbers[1]) : '');
-        $result->type = $search_type;
-        
-        // 각 레코드를 추가한다.
-        
-        foreach ($rows as $row)
-        {
-            // 한글 도로명 및 지번주소를 정리한다.
-            
-            $address_ko_base = trim($row->sido_ko . ' ' . ($row->sigungu_ko ? ($row->sigungu_ko . ' ') : '') .
-                ($row->ilbangu_ko ? ($row->ilbangu_ko . ' ') : '') . ($row->eupmyeon_ko ? ($row->eupmyeon_ko . ' ') : ''));
-            $address_ko_new = trim($row->road_name_ko . ' ' . ($row->is_basement ? '지하 ' : '') .
-                ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : ''));
-            $address_ko_old = trim($row->dongri_ko . ' ' . ($row->is_mountain ? '산' : '') .
-                ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : ''));
-            
-            // 영문 도로명 및 지번주소를 정리한다.
-            
-            $address_en_base = trim(($row->eupmyeon_en ? ($row->eupmyeon_en . ', ') : '') .
-                ($row->ilbangu_en ? ($row->ilbangu_en . ', ') : '') . ($row->sigungu_en ? ($row->sigungu_en . ', ') : '') .
-                $row->sido_en);
-            $address_en_new = trim(($row->is_basement ? 'Jiha ' : '') .
-                ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : '') .
-                ', ' . $row->road_name_en);
-            $address_en_old = trim(($row->is_mountain ? 'San ' : '') .
-                ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : '') .
-                ', ' . $row->dongri_en);
-            
-            // 추가정보를 정리한다.
-            
-            if ($result->sort === 'POBOX')
-            {
-                $address_ko_new = $address_ko_old = $row->dongri_ko . ' ' . $row->other_addresses;
-                $address_en_new = $address_en_old = $row->dongri_en . ' ' . $row->other_addresses;
-                $extra_info_long = $extra_info_short = $other_addresses = '';
-            }
-            else
-            {
-                $extra_info_long = trim($address_ko_old . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
-                $extra_info_short = trim($row->dongri_ko . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
-                $other_addresses = strval($row->other_addresses);
-            }
-            
-            // 요청받은 버전에 따라 다른 형태로 작성한다.
-            
-            if (version_compare($version, '1.8', '>='))
-            {
-                $record = new Postcodify_Server_Record_v18;
-                $record->dbid = strval($row->address_id);
-                $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
-                $record->code5 = strval($row->postcode5);
-                $record->address = array('base' => $address_ko_base, 'new' => $address_ko_new, 'old' => $address_ko_old, 'building' => $row->building_name);
-                $record->english = array('base' => $address_en_base, 'new' => $address_en_new, 'old' => $address_en_old, 'building' => '');
-                $record->other = array(
-                    'long' => strval($extra_info_long),
-                    'short' => strval($extra_info_short),
-                    'others' => $other_addresses,
-                    'addrid' => $row->id,
-                    'roadid' => $row->road_id,
-                );
-            }
-            else
-            {
-                $record = new Postcodify_Server_Record_v17;
-                $record->dbid = strval($row->address_id);
-                $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
-                $record->code5 = strval($row->postcode5);
-                $record->address = trim($address_ko_base . ' ' . $address_ko_new);
-                $record->canonical = $address_ko_old;
-                $record->extra_info_long = strval($extra_info_long);
-                $record->extra_info_short = strval($extra_info_short);
-                $record->english_address = trim($address_en_new . ', ' . $address_en_base);
-                $record->jibeon_address = trim($address_ko_base . ' ' . $address_ko_old);
-                $record->other = $other_addresses;
-            }
-            
-            // 반환할 인코딩이 UTF-8이 아닌 경우 여기서 변환한다.
-            
-            if ($encoding !== 'UTF-8')
-            {
-                $properties = get_object_vars($record);
-                foreach ($properties as $key => $value)
-                {
-                    $record->$key = mb_convert_encoding($value, $encoding, 'UTF-8');
-                }
-            }
-            
-            // 레코드를 추가하고 레코드 카운터를 조정한다.
-            
-            $result->results[] = $record;
-            $result->count++;
-        }
-        
-        // 검색 소요 시간을 기록한다.
-        
-        $result->time = number_format(microtime(true) - $start_time, 3);
-        
-        // 결과를 반환한다.
-        
-        return $result;
+        return array($rows, $search_type, $search_error);
     }
     
     // 항상 64비트식으로 (음수가 나오지 않도록) CRC32를 계산하는 메소드.

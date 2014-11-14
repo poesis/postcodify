@@ -14,3 +14,10 @@ define('POSTCODIFY_DB_HOST', 'localhost');
 define('POSTCODIFY_DB_PORT', 3306);
 define('POSTCODIFY_DB_USER', '');
 define('POSTCODIFY_DB_PASS', '');
+
+// 캐시 접속 정보: 사용할 경우에만 입력, 그 밖의 경우 공백으로 선언할 것
+
+define('POSTCODIFY_CACHE_DRIVER', '');
+define('POSTCODIFY_CACHE_HOST', 'localhost');
+define('POSTCODIFY_CACHE_PORT', 11211);
+define('POSTCODIFY_CACHE_TTL', 86400);
