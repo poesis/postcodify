@@ -49,7 +49,7 @@ class Postcodify_Server_Database
             
             else
             {
-                throw new Exception('Database driver not supported: mysql (No usable extension found)');
+                throw new Exception('Database driver not supported: sqlite (No usable extension found)');
             }
         }
         
