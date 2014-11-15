@@ -26,7 +26,7 @@
     
     // 팝업 스크립트 버전을 선언한다.
     
-    var info = { version : "2.1.0" };
+    var info = { version : "2.2.0" };
     
     // Postcodify 메인 플러그인과 팝업 레이어를 위한 스타일시트를 로딩한다.
     
@@ -113,11 +113,15 @@
                     insertJibeonAddress : ".postcodify_jibeon_address",
                     insertEnglishAddress : ".postcodify_english_address",
                     insertEnglishJibeonAddress : ".postcodify_english_jibeon_address",
+                    overrideDomain : (options.overrideDomain ? options.overrideDomain : null),
                     mapLinkProvider : (options.mapLinkProvider ? options.mapLinkProvider : "daum"),
+                    mapLinkContent : (options.mapLinkContent ? options.mapLinkContent : null),
+                    searchButtonContent : (options.searchButtonContent ? options.searchButtonContent : null),
                     hideOldAddresses : (options.hideOldAddresses === true ? true : false),
                     hideSummary : (options.hideSummary === true ? true : false),
                     requireExactQuery : (options.requireExactQuery === true ? true : false),
                     useFullJibeon : (options.useFullJibeon === true ? true : false),
+                    useCors : (options.useCors === false ? false : true),
                     afterSelect : function(entry) {
                         $(".postcodify_postcode6_1").val(entry.data("code6").substr(0, 3));
                         $(".postcodify_postcode6_2").val(entry.data("code6").substr(4, 3));
