@@ -133,6 +133,7 @@ class Postcodify_Server
         $result->sort = $q->sort;
         $result->nums = $q->numbers[0] . ($q->numbers[1] ? ('-' . $q->numbers[1]) : '');
         $result->type = $search_type;
+        $result->cache = $data_source === 'cache' ? 'hit' : 'miss';
         
         // 각 레코드를 추가한다.
         
@@ -405,7 +406,7 @@ class Postcodify_Server
             
             elseif (count($q->buildings) && $q->road !== null)
             {
-                $search_type = 'BUILDING+DONG';
+                $search_type = 'BUILDING+JUSO';
                 $joins[] = 'JOIN postcodify_keywords pk ON pa.id = pk.address_id';
                 $conds[] = 'pk.keyword_crc32 = ?';
                 $args[] = self::crc32_x64($q->road);
