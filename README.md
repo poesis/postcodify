@@ -23,6 +23,10 @@
   - [검색서버 구축 안내](http://postcodify.poesis.kr/guide/owndb)
   - [API 에뮬레이션 기능 안내](http://postcodify.poesis.kr/guide/emulation)
 
+### 다른 구현물
+
+- Perl - https://github.com/aanoaa/p5-postcodify
+
 ### 라이센스
 
 DB 생성 스크립트와 서버측 검색 API, 클라이언트 API 등
