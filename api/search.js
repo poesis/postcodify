@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "2.2.0", location : "" };
+    var info = { version : "2.3.0", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -79,6 +79,7 @@
                 onBackup : function() { },
                 onError : function() { },
                 onComplete : function() { },
+                forceDisplayPostcode5 : false,
                 focusKeyword : true,
                 focusDetails : true,
                 hideOldAddresses : true,
@@ -376,8 +377,12 @@
                             
                             // 우편번호, 기초구역번호, 주소 등을 항목에 추가한다.
                             
-                            $('<div class="code6"></div>').text(result.code6).appendTo(option);
-                            $('<div class="code5"></div>').text(result.code5).appendTo(option);
+                            if (settings.forceDisplayPostcode5) {
+                                $('<div class="code"></div>').text("[\u2009" + result.code5 + "\u2009]").appendTo(option);
+                            } else {
+                                $('<div class="code6"></div>').text(result.code6).appendTo(option);
+                                $('<div class="code5"></div>').text(result.code5).appendTo(option);
+                            }
                             $('<div class="address"></div>').append(selector).appendTo(option);
                             
                             // 예전 주소 및 검색어 목록을 추가한다.

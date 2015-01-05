@@ -26,7 +26,7 @@
     
     // 팝업 스크립트 버전을 선언한다.
     
-    var info = { version : "2.2.0" };
+    var info = { version : "2.3.0" };
     
     // Postcodify 메인 플러그인과 팝업 레이어를 위한 스타일시트를 로딩한다.
     
@@ -119,6 +119,7 @@
                     searchButtonContent : (options.searchButtonContent ? options.searchButtonContent : null),
                     hideOldAddresses : (options.hideOldAddresses === true ? true : false),
                     hideSummary : (options.hideSummary === true ? true : false),
+                    forceDisplayPostcode5 : (options.forceDisplayPostcode5 ? options.forceDisplayPostcode5 : false),
                     requireExactQuery : (options.requireExactQuery === true ? true : false),
                     useFullJibeon : (options.useFullJibeon === true ? true : false),
                     useCors : (options.useCors === false ? false : true),
