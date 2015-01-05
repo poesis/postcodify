@@ -21,10 +21,6 @@
 
 class Postcodify_Client
 {
-    // 버전 상수.
-    
-    const VERSION = '2.0.0';
-    
     // 무료 API 경로 및 기타 설정 기본값들.
     
     const FREEAPI_MAIN_URL = '//api.poesis.kr/post/search.php';
@@ -109,7 +105,7 @@ class Postcodify_Client
         // 검색 파라미터를 정리한다.
         
         $params = http_build_query(array(
-            'v' => self::VERSION,
+            'v' => POSTCODIFY_VERSION,
             'q' => isset($this->config['charset']) ? iconv($this->config['charset'], 'UTF-8', $keywords) : $keywords,
             'ref' => $this->config['domain'],
             'cdn' => '',
@@ -121,7 +117,7 @@ class Postcodify_Client
             'params' => $params,
             'url' => isset($this->config['main_url']) ? $this->config['main_url'] : ((isset($this->config['use_ssl']) ? 'https:' : 'http:') . self::FREEAPI_MAIN_URL),
             'timeout' => isset($this->config['main_timeout']) ? $this->config['main_timeout'] : self::MAIN_TIMEOUT,
-            'user_agent' => isset($this->config['user_agent']) ? $this->config['user_agent'] : sprintf(self::USER_AGENT, self::VERSION),
+            'user_agent' => isset($this->config['user_agent']) ? $this->config['user_agent'] : sprintf(self::USER_AGENT, POSTCODIFY_VERSION),
         );
         
         // 메인서버에서 검색을 시도한다.
