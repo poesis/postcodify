@@ -450,7 +450,7 @@
                     // 그 밖에 서버에서 전달할 메시지가 있는 경우 검색창 맨 위에 표시한다.
                     
                     if (typeof data.msg !== "undefined" && data.msg !== "") {
-                        msg = $('<div class="message"></div>').postcodifyAddClass("search_status");
+                        var msg = $('<div class="message"></div>').postcodifyAddClass("search_status");
                         msg.text(data.msg);
                         if (results.find("div.too_many").size()) {
                             msg.insertBefore(results.find("div.too_many").first());
