@@ -31,11 +31,7 @@ $client_version = isset($_GET['v']) ? trim($_GET['v']) : POSTCODIFY_VERSION;
 if (function_exists('get_magic_quotes_gpc') && @get_magic_quotes_gpc()) $keywords = stripslashes($keywords);
 if (preg_match('/[^a-zA-Z0-9_.]/', $callback)) $callback = null;
 
-// 검색을 수행하고 결과를 전송한다.
-
-header('Content-Type: application/javascript; charset=UTF-8');
-header('Cache-Control: private, must-revalidate, post-check=0, pre-check=0');
-header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
+// 검색 서버를 설정한다.
 
 $server = new Postcodify_Server;
 $server->db_driver = POSTCODIFY_DB_DRIVER;
@@ -48,6 +44,13 @@ $server->cache_driver = defined('POSTCODIFY_CACHE_DRIVER') ? POSTCODIFY_CACHE_DR
 $server->cache_host = defined('POSTCODIFY_CACHE_HOST') ? POSTCODIFY_CACHE_HOST : 'localhost';
 $server->cache_port = defined('POSTCODIFY_CACHE_PORT') ? POSTCODIFY_CACHE_PORT : 11211;
 $server->cache_ttl = defined('POSTCODIFY_CACHE_TTL') ? POSTCODIFY_CACHE_TTL : 86400;
+
+// 검색을 수행하고 결과를 전송한다.
+
+header('Content-Type: application/javascript; charset=UTF-8');
+header('Cache-Control: private, must-revalidate, post-check=0, pre-check=0');
+header('Expires: Sat, 01 Jan 2000 00:00:00 GMT');
+
 $result = $server->search($keywords, 'UTF-8', $client_version);
 $json_options = (PHP_SAPI === 'cli' && defined('JSON_PRETTY_PRINT')) ? 384 : 0;
 echo ($callback ? ($callback . '(') : '') . json_encode($result, $json_options) . ($callback ? ');' : '') . "\n";
