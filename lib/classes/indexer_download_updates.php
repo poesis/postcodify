@@ -24,10 +24,7 @@ class Postcodify_Indexer_Download_Updates
     // 상수 선언 부분.
     
     const RELATIVE_DOMAIN = 'http://www.juso.go.kr';
-    const LIST_URL = '/notice/OpenArchivesList.do?currentPage=1&countPerPage=%d&noticeKd=27&type=archives';
-    const FIND_ENTRIES_REGEXP = '#<td class="align-left">(.+)</td>#isU';
-    const FIND_LINKS_IN_ENTRY_REGEXP = '#<a href="([^"]+)">#iU';
-    const FIND_DOWNLOAD_REGEXP = '#<a href="(/dn\\.do\\?[^"]+)">([^<]+\\.TXT)\s*</a>#iU';
+    const DOWNLOAD_URL = '/dn.do?reqType=DC&stdde=%s';
     
     // 엔트리 포인트.
     
@@ -55,10 +52,10 @@ class Postcodify_Indexer_Download_Updates
             exit(3);
         }
         
-        $updated_time = mktime(1, 0, 0, substr($updated, 4, 2), substr($updated, 6, 2), substr($updated, 0, 4));
-        if ($updated_time < time() - (86400 * 90))
+        $updated_time = mktime(12, 0, 0, substr($updated, 4, 2), substr($updated, 6, 2), substr($updated, 0, 4));
+        if ($updated_time < time() - (86400 * 60))
         {
-            echo '[ERROR] 마지막 업데이트로부터 90일 이상이 경과하였습니다. DB를 새로 생성하시기 바랍니다.' . PHP_EOL;
+            echo '[ERROR] 마지막 업데이트로부터 60일 이상이 경과하였습니다. DB를 새로 생성하시기 바랍니다.' . PHP_EOL;
             exit(3);
         }
         if ($updated_time >= time())
@@ -67,73 +64,52 @@ class Postcodify_Indexer_Download_Updates
             exit(0);
         }
         
-        // 게시물 목록을 다운로드한다.
+        // 다운로드할 업데이트 목록을 생성한다.
         
-        $count_records = max(10, ceil((time() - $updated_time - 86400) / (86400 * 10)) * 10);
-        $html = Postcodify_Utility::download(self::RELATIVE_DOMAIN . sprintf(self::LIST_URL, $count_records));
-        
-        // 필요한 게시물들을 찾는다.
-        
-        $articles = array();
-        preg_match_all(self::FIND_ENTRIES_REGEXP, $html, $article_tags, PREG_SET_ORDER);
-        
-        foreach ($article_tags as $article_tag)
+        $updates = array();
+        for ($time = $updated_time; $time < time(); $time += 86400)
         {
-            if (strpos($article_tag[0], '도로명주소') !== false && strpos($article_tag[0], '변경분') !== false)
-            {
-                if (preg_match(self::FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
-                {
-                    if (preg_match('/_([0-9]{1,2}).([0-9]{1,2})\\)/', $article_tag[0], $date_matches))
-                    {
-                        if (intval(substr($updated, 4, 2), 10) < 5 && intval($date_matches[1], 10) > 9)
-                        {
-                            $article_date = (substr($updated, 0, 4) - 1) . $date_matches[1] . $date_matches[2];
-                        }
-                        else
-                        {
-                            $article_date = substr($updated, 0, 4) . $date_matches[1] . $date_matches[2];
-                        }
-                        if ($article_date >= $updated)
-                        {
-                            $articles[$article_date] = self::RELATIVE_DOMAIN . htmlspecialchars_decode(trim($matches[1]));
-                        }
-                    }
-                }
-            }
+            $updates[] = date('Ymd', $time);
         }
         
-        $articles = array_reverse($articles, true);
-        $downloaded_files = 0;
+        // 업데이트를 다운로드한다.
         
-        // 모든 파일을 다운로드한다.
-        
-        foreach ($articles as $url)
+        foreach ($updates as $date)
         {
-            $html = Postcodify_Utility::download($url);
-            preg_match_all(self::FIND_DOWNLOAD_REGEXP, $html, $downloads, PREG_SET_ORDER);
-        
-            foreach ($downloads as $download)
+            Postcodify_Utility::print_message('다운로드: ' . $date);
+            
+            $filepath = $download_path . '/' . $date . '.zip';
+            $link = self::RELATIVE_DOMAIN . sprintf(self::DOWNLOAD_URL, $date);
+            $result = Postcodify_Utility::download($link, $filepath);
+            if (!$result || !file_exists($filepath))
             {
-                $link = self::RELATIVE_DOMAIN . htmlspecialchars_decode(trim($download[1]));
-                $filename = trim($download[2]);
-                
-                if (preg_match('/^(.+)\\.TXT/i', $filename, $matches))
-                {
-                    Postcodify_Utility::print_message('다운로드: ' . $matches[1] . '.TXT');
-                    $filepath = $download_path . '/' . $matches[1] . '.TXT';
-                    $result = Postcodify_Utility::download($link, $filepath);
-                    if (!$result || !file_exists($filepath))
-                    {
-                        Postcodify_Utility::print_error();
-                        exit(2);
-                    }
-                    else
-                    {
-                        Postcodify_Utility::print_ok();
-                        $downloaded_files++;
-                    }
-                }
+                Postcodify_Utility::print_error();
+                continue;
             }
+            
+            if (filesize($filepath) < 512 && stripos(file_get_contents($filepath), 'not found') !== false)
+            {
+                Postcodify_Utility::print_error();
+                continue;
+            }
+            
+            $zip = new ZipArchive;
+            $result = $zip->open($filepath);
+            if (!$result)
+            {
+                Postcodify_Utility::print_error();
+                continue;
+            }
+            
+            $result = $zip->extractTo($download_path);
+            if (!$result)
+            {
+                Postcodify_Utility::print_error();
+                continue;
+            }
+            
+            unlink($filepath);
+            Postcodify_Utility::print_ok();
         }
     }
 }
