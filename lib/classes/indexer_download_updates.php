@@ -84,12 +84,14 @@ class Postcodify_Indexer_Download_Updates
             if (!$result || !file_exists($filepath))
             {
                 Postcodify_Utility::print_error();
+                @unlink($filepath);
                 continue;
             }
             
             if (filesize($filepath) < 512 && stripos(file_get_contents($filepath), 'not found') !== false)
             {
                 Postcodify_Utility::print_error();
+                @unlink($filepath);
                 continue;
             }
             
@@ -98,6 +100,7 @@ class Postcodify_Indexer_Download_Updates
             if (!$result)
             {
                 Postcodify_Utility::print_error();
+                @unlink($filepath);
                 continue;
             }
             
@@ -105,10 +108,11 @@ class Postcodify_Indexer_Download_Updates
             if (!$result)
             {
                 Postcodify_Utility::print_error();
+                @unlink($filepath);
                 continue;
             }
             
-            unlink($filepath);
+            @unlink($filepath);
             Postcodify_Utility::print_ok();
         }
     }
