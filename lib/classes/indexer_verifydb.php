@@ -211,6 +211,18 @@ class Postcodify_Indexer_VerifyDB
             }
         }
         
+        if ($pass)
+        {
+            $pc5_query = $db->query("SELECT 1 FROM postcodify_addresses WHERE postcode5 IS NULL LIMIT 1");
+            $pc5_count = $pc5_query->fetchColumn();
+            
+            if ($pc5_count)
+            {
+                echo '[ERROR] 우편번호가 누락된 레코드가 있습니다.' . PHP_EOL;
+                $pass = false;
+            }
+        }
+        
         return $pass;
     }
 }
