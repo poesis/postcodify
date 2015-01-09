@@ -23,7 +23,7 @@ class Postcodify_Parser_Pobox_Newcode extends Postcodify_ZipReader
 {
     // 한 줄을 읽어 반환한다.
     
-    public function read_all($delimiter = '|')
+    public function read_line($delimiter = '|')
     {
         // 데이터를 읽는다.
         
