@@ -858,9 +858,9 @@ class Postcodify_Indexer_CreateDB
             $ps_road_insert = $db->prepare('INSERT INTO postcodify_roads (road_id, ' .
                 'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en) ' .
                 'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (road_id, postcode6, ' .
+            $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (road_id, postcode6, postcode5, ' .
                 'dongri_ko, dongri_en, jibeon_major, jibeon_minor, other_addresses) ' .
-                'VALUES (?, ?, ?, ?, ?, ?, ?)');
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
             $ps_pobox_insert = $db->prepare('INSERT INTO postcodify_pobox (address_id, keyword, ' .
                 'range_start_major, range_start_minor, range_end_major, range_end_minor) ' .
                 'VALUES (?, ?, ?, ?, ?, ?)');
@@ -871,6 +871,17 @@ class Postcodify_Indexer_CreateDB
         $zip = new Postcodify_Parser_Pobox;
         $zip->open_archive($this->_data_dir . '/newaddr_pobox_DB.zip');
         $zip->open_next_file();
+        
+        // 사서함 기초구역번호 데이터를 로딩한다.
+        
+        $newcodes = array();
+        $newcode_zip = new Postcodify_Parser_Pobox_Newcode;
+        $newcode_zip->open_archive($this->_data_dir . '/newcode_pobox_DB.zip');
+        $newcode_zip->open_next_file();
+        while ($entry = $newcode_zip->read_line())
+        {
+            $newcodes[$entry->oldcode] = $entry->newcode;
+        }
         
         // 행정구역 캐시와 카운터를 초기화한다.
         
@@ -927,6 +938,7 @@ class Postcodify_Indexer_CreateDB
                 $ps_addr_insert->execute(array(
                     $road_id,
                     $entry->postcode6,
+                    isset($newcodes[$entry->postcode6]) ? $newcodes[$entry->postcode6] : null,
                     $entry->pobox_name,
                     'P.O.Box',
                     $entry->range_start_major,
