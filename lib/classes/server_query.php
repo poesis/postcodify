@@ -155,8 +155,7 @@ class Postcodify_Server_Query
                     $q->use_area = true;
                     continue;
                 }
-                elseif (isset($q->sigungu) && isset(Postcodify_Server_Areas::$ilbangu[$q->sigungu]) &&
-                    in_array($keyword, Postcodify_Server_Areas::$ilbangu[$q->sigungu]))
+                elseif (in_array($keyword, Postcodify_Server_Areas::$ilbangu))
                 {
                     $q->ilbangu = $keyword;
                     $q->use_area = true;
