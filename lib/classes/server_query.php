@@ -155,15 +155,15 @@ class Postcodify_Server_Query
                     $q->use_area = true;
                     continue;
                 }
-                elseif (in_array($keyword, Postcodify_Server_Areas::$ilbangu))
-                {
-                    $q->ilbangu = $keyword;
-                    $q->use_area = true;
-                    continue;
-                }
                 elseif (in_array($keyword, Postcodify_Server_Areas::$sigungu))
                 {
                     $q->sigungu = $keyword;
+                    $q->use_area = true;
+                    continue;
+                }
+                elseif (in_array($keyword, Postcodify_Server_Areas::$ilbangu))
+                {
+                    $q->ilbangu = $keyword;
                     $q->use_area = true;
                     continue;
                 }
