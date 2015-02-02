@@ -50,6 +50,9 @@
             var initializePostcodify;
             
             options = typeof options !== "undefined" ? options : {};
+            if (typeof options.onSelect === "undefined") options.onSelect = function(){};
+            
+            var inputParent = options.inputParent ? $(options.inputParent) : $(document);
             
             // 팝업 레이어와 배경을 생성한다.
             
@@ -104,15 +107,15 @@
                 layer.data("initialized", "Y");
                 layer.find("div.postcodify_results").postcodify({
                     controls : layer.find("div.postcodify_controls"),
-                    insertDbid : ".postcodify_address_id",
-                    insertPostcode6 : ".postcodify_postcode6",
-                    insertPostcode5 : ".postcodify_postcode5",
-                    insertAddress : ".postcodify_address",
-                    insertDetails : ".postcodify_details",
-                    insertExtraInfo : ".postcodify_extra_info",
-                    insertJibeonAddress : ".postcodify_jibeon_address",
-                    insertEnglishAddress : ".postcodify_english_address",
-                    insertEnglishJibeonAddress : ".postcodify_english_jibeon_address",
+                    insertDbid : inputParent.find(".postcodify_address_id"),
+                    insertPostcode6 : inputParent.find(".postcodify_postcode6"),
+                    insertPostcode5 : inputParent.find(".postcodify_postcode5"),
+                    insertAddress : inputParent.find(".postcodify_address"),
+                    insertDetails : inputParent.find(".postcodify_details"),
+                    insertExtraInfo : inputParent.find(".postcodify_extra_info"),
+                    insertJibeonAddress : inputParent.find(".postcodify_jibeon_address"),
+                    insertEnglishAddress : inputParent.find(".postcodify_english_address"),
+                    insertEnglishJibeonAddress : inputParent.find(".postcodify_english_jibeon_address"),
                     overrideDomain : (options.overrideDomain ? options.overrideDomain : null),
                     mapLinkProvider : (options.mapLinkProvider ? options.mapLinkProvider : "daum"),
                     mapLinkContent : (options.mapLinkContent ? options.mapLinkContent : null),
@@ -124,8 +127,9 @@
                     useFullJibeon : (options.useFullJibeon === true ? true : false),
                     useCors : (options.useCors === false ? false : true),
                     afterSelect : function(entry) {
-                        $(".postcodify_postcode6_1").val(entry.data("code6").substr(0, 3));
-                        $(".postcodify_postcode6_2").val(entry.data("code6").substr(4, 3));
+                        inputParent.find(".postcodify_postcode6_1").val(entry.data("code6").substr(0, 3));
+                        inputParent.find(".postcodify_postcode6_2").val(entry.data("code6").substr(4, 3));
+                        options.onSelect();
                         closePopUpLayer();
                     }
                 });
