@@ -203,10 +203,11 @@ class Postcodify_Server_Query
             
             if (preg_match('/^(.{1,5}(?:[0-9]가|[동리가]))(산?([0-9]+(?:-[0-9]+)?)(?:번지?)?)?$/u', $keyword, $matches))
             {
-                $q->dongri = preg_replace('/[0-9]([동리])$/u', '$1', $matches[1]);
+                $q->dongri = $matches[1];
                 $q->sort = 'JIBEON';
                 if (isset($matches[3]) && $matches[3])
                 {
+                    $q->dongri = preg_replace(array('/[0-9]+동/u', '/[0-9]+가/u'), array('동', ''), $q->dongri);
                     $q->numbers = $matches[3];
                     break;
                 }
@@ -231,6 +232,10 @@ class Postcodify_Server_Query
             
             if (preg_match('/^(?:산|지하)?([0-9]+(?:-[0-9]+)?)(?:번지?)?$/u', $keyword, $matches))
             {
+                if ($q->dongri)
+                {
+                    $q->dongri = preg_replace(array('/[0-9]+동/u', '/[0-9]+가/u'), array('동', ''), $q->dongri);
+                }
                 $q->numbers = $matches[1];
                 break;
             }
