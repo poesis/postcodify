@@ -223,6 +223,7 @@
                         processData : true,
                         cache : false,
                         timeout : timeout,
+                        type : "GET",
                         success : ajaxSuccess,
                         error : errorCallback,
                         complete : function() {
