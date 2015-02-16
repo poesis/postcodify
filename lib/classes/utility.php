@@ -71,7 +71,7 @@ class Postcodify_Utility
     public static function crc32_x64($str)
     {
         $crc32 = crc32($str);
-        return ($crc32 >= 0) ? $crc32 : ($crc32 + 0x100000000);
+        return ($crc32 >= 0) ? $crc32 : ($crc32 + 4294967296);
     }
     
     // 파일 다운로드 함수.
