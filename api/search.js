@@ -361,10 +361,15 @@
                                     extraText = result.english["old"];
                                 }
                             } else {
-                                if (typeof data.sort !== "undefined" && data.sort === "JIBEON") {
+                                if (/BUILDING/.test(data.type)) {
+                                    mainText = result.address["base"] + " " + result.address["old"];
+                                    extraText = result.address["new"] + " " + result.other["others"];
+                                }
+                                else if (typeof data.sort !== "undefined" && data.sort === "JIBEON") {
                                     mainText = result.address["base"] + " " + result.address["old"];
                                     extraText = result.address["new"];
-                                } else {
+                                }
+                                else {
                                     mainText = result.address["base"] + " " + result.address["new"];
                                     extraText = result.other["long"];
                                 }
