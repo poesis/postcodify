@@ -1053,7 +1053,7 @@ class Postcodify_Indexer_CreateDB
                     $entry->eupmyeon,
                     $entry->eupmyeon ? Postcodify_Utility::$english_cache[$entry->eupmyeon] : null,
                     $entry->dongri,
-                    $entry->dongri ? Postcodify_Utility::$english_cache[$entry->dongri] : null,
+                    $entry->dongri ? Postcodify_Utility::$english_cache[Postcodify_Utility::get_canonical($entry->dongri)] : null,
                     $entry->range_start_major,
                     $entry->range_start_minor,
                     $entry->range_end_major,

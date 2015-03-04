@@ -33,9 +33,9 @@ class Postcodify_Parser_OldAddr extends Postcodify_ZipReader
         // 상세 데이터를 읽어들인다.
         
         $sido = trim($line[2]);
-        $sigungu = trim($line[3]);
-        $eupmyeon = trim($line[4]);
-        $dongri = trim($line[5]);
+        $sigungu = trim($line[3]); if ($sigungu === '') $sigungu = null;
+        $eupmyeon = trim($line[4]); if ($eupmyeon === '') $eupmyeon = null;
+        $dongri = trim($line[5]); if ($dongri === '') $dongri = null;
         $island_name = trim($line[6]); if ($island_name === '') $island_name = null;
         $is_mountain = trim($line[7]) === '산' ? 1 : 0;
         $range_start_major = trim($line[8]); if (!$range_start_major) $range_start_major = null;
@@ -56,13 +56,6 @@ class Postcodify_Parser_OldAddr extends Postcodify_ZipReader
         else
         {
             $ilbangu = null;
-        }
-        
-        // 시군구가 없는 경우(세종시)를 처리한다.
-        
-        if ($sigungu === '')
-        {
-            $sigungu = null;
         }
         
         // 읍면과 동을 구분한다.
