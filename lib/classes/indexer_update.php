@@ -233,6 +233,11 @@ class Postcodify_Indexer_Update
             $ps_insert_numbers = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
             $ps_insert_buildings = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
             $ps_delete_buildings = $db->prepare('DELETE FROM postcodify_buildings WHERE address_id = ?');
+            $ps_select_oldaddr = $db->prepare('SELECT postcode6 FROM postcodify_oldaddr WHERE sido_ko = ? AND ' .
+                '(sigungu_ko IS NULL OR sigungu_ko = ?) AND (ilbangu_ko IS NULL OR ilbangu_ko = ?) AND ' .
+                '(eupmyeon_ko IS NULL OR eupmyeon_ko = ?) AND (dongri_ko = ? OR dongri_ko = ?) AND ' .
+                '(range_start_major IS NULL OR (range_start_major <= ? AND range_end_major >= ? AND ' .
+                '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)))) ORDER BY seq LIMIT 1');
         }
         
         // 데이터 파일 목록을 구한다.
@@ -330,6 +335,35 @@ class Postcodify_Indexer_Update
                     
                     if (!$address_info)
                     {
+                        // 우편번호가 누락된 경우 구 주소 우편번호 데이터를 사용하여 찾는다.
+                        
+                        if (trim($entry->postcode6) === '' || $entry->postcode6 === '000000')
+                        {
+                            $ps_select_oldaddr->execute(array(
+                                $road_info->sido_ko,
+                                $road_info->sigungu_ko,
+                                $road_info->ilbangu_ko,
+                                $road_info->eupmyeon_ko,
+                                $entry->dongri,
+                                $entry->admin_dongri,
+                                $entry->jibeon_major,
+                                $entry->jibeon_major,
+                                $entry->jibeon_minor,
+                                $entry->jibeon_minor,
+                            ));
+                            
+                            $postcode6_candidate = $ps_select_oldaddr->fetchColumn();
+                            $ps_select_oldaddr->closeCursor();
+                            if ($postcode6_candidate)
+                            {
+                                $entry->postcode6 = $postcode6_candidate;
+                            }
+                            else
+                            {
+                                $entry->postcode6 = null;
+                            }
+                        }
+                        
                         // 기초구역번호를 구한다.
                         
                         $postcode5 = $this->find_postcode5($entry->road_id, $entry->road_section, $entry->num_major, $entry->num_minor,
@@ -371,6 +405,13 @@ class Postcodify_Indexer_Update
                     
                     else
                     {
+                        // 우편번호가 누락된 경우 기존의 우편번호를 사용한다.
+                        
+                        if (trim($entry->postcode6) === '' || $entry->postcode6 === '000000')
+                        {
+                            $entry->postcode6 = $address_info->postcode6;
+                        }
+                        
                         // 영문 동·리를 구한다.
                         
                         if ($entry->dongri === $address_info->dongri_ko)
