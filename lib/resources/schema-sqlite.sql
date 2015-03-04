@@ -83,6 +83,32 @@ CREATE TABLE postcodify_pobox (
     range_end_minor INTEGER(5)
 );
 
+-- 구 주소 우편번호 검색 테이블.
+
+CREATE TABLE postcodify_oldaddr (
+    seq INTEGER PRIMARY KEY,
+    sido_ko VARCHAR(40),
+    sido_en VARCHAR(40),
+    sigungu_ko VARCHAR(40),
+    sigungu_en VARCHAR(40),
+    ilbangu_ko VARCHAR(40),
+    ilbangu_en VARCHAR(40),
+    eupmyeon_ko VARCHAR(40),
+    eupmyeon_en VARCHAR(40),
+    dongri_ko VARCHAR(80),
+    dongri_en VARCHAR(80),
+    range_start_major INTEGER(5),
+    range_start_minor INTEGER(5),
+    range_end_major INTEGER(5),
+    range_end_minor INTEGER(5),
+    is_mountain INTEGER(1) DEFAULT 0,
+    island_name VARCHAR(80),
+    building_name VARCHAR(80),
+    building_num_start INTEGER(5),
+    building_num_end INTEGER(5),
+    postcode6 CHAR(6)
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
+
 -- 각종 설정을 저장하는 테이블.
 
 CREATE TABLE postcodify_settings (

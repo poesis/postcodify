@@ -53,6 +53,7 @@ class Postcodify_Indexer_CreateDB
         'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
         'postcodify_buildings' => array('address_id'),
         'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
+        'postcodify_oldaddr' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'postcode6'),
     );
     
     // 생성자.
@@ -116,6 +117,10 @@ class Postcodify_Indexer_CreateDB
         
         Postcodify_Utility::print_message('사서함 데이터를 로딩하는 중...');
         $this->load_pobox();
+        Postcodify_Utility::print_ok();
+        
+        Postcodify_Utility::print_message('구 주소 우편번호 데이터를 로딩하는 중...');
+        $this->load_old_addresses();
         Postcodify_Utility::print_ok();
         
         Postcodify_Utility::print_message('영문 검색 키워드를 저장하는 중...');
@@ -1001,6 +1006,13 @@ class Postcodify_Indexer_CreateDB
             $db->commit();
             unset($db);
         }
+    }
+    
+    // 구 주소 우편번호 DB를 로딩한다.
+    
+    public function load_old_addresses()
+    {
+        
     }
     
     // 영문 검색 키워드를 저장한다.

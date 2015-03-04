@@ -31,6 +31,7 @@ class Postcodify_Indexer_VerifyDB
         'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
         'postcodify_buildings' => array('address_id'),
         'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
+        'postcodify_oldaddr' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'postcode6'),
         'postcodify_settings' => array(),
     );
     
@@ -44,6 +45,7 @@ class Postcodify_Indexer_VerifyDB
         'postcodify_numbers' => 8000000,
         'postcodify_buildings' => 600000,
         'postcodify_pobox' => 2000,
+        'postcodify_oldaddr' => 50000,
         'postcodify_settings' => 2,
     );
     
