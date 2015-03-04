@@ -23,12 +23,12 @@ class Postcodify_Parser_OldAddr extends Postcodify_ZipReader
 {
     // 한 줄을 읽어 반환한다.
     
-    public function read_line()
+    public function read_line($delimiter = '|')
     {
         // 데이터를 읽는다.
         
         $line = fgetcsv($this->_fp);
-        if ($line === false || count($line) < 17) return false;
+        if ($line === false || count($line) < 15) return false;
         
         // 상세 데이터를 읽어들인다.
         
@@ -43,8 +43,8 @@ class Postcodify_Parser_OldAddr extends Postcodify_ZipReader
         $range_end_major = trim($line[10]); if (!$range_end_major) $range_end_major = null;
         $range_end_minor = trim($line[11]); if (!$range_end_minor) $range_end_minor = null;
         $building_name = trim($line[12]); if ($building_name === '') $building_name = null;
-        $building_num_start = trim($line[12]); if (!$building_num_start) $building_num_start = null;
-        $building_num_end = trim($line[12]); if (!$building_num_end) $building_num_end = null;
+        $building_num_start = trim($line[13]); if (!$building_num_start) $building_num_start = null;
+        $building_num_end = trim($line[14]); if (!$building_num_end) $building_num_end = null;
         
         // 특별시/광역시 아래의 자치구와 행정시 아래의 일반구를 구분한다.
         
