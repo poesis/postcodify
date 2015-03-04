@@ -36,7 +36,7 @@ class Postcodify_Parser_OldAddr extends Postcodify_ZipReader
         $sigungu = trim($line[3]);
         $eupmyeon = trim($line[4]);
         $dongri = trim($line[5]);
-        $island_name = trim($line[6]);
+        $island_name = trim($line[6]); if ($island_name === '') $island_name = null;
         $is_mountain = trim($line[7]) === '산' ? 1 : 0;
         $range_start_major = trim($line[8]); if (!$range_start_major) $range_start_major = null;
         $range_start_minor = trim($line[9]); if (!$range_start_minor) $range_start_minor = null;

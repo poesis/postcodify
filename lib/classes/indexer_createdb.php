@@ -1012,7 +1012,80 @@ class Postcodify_Indexer_CreateDB
     
     public function load_old_addresses()
     {
+        // DB를 준비한다.
         
+        if (!$this->_dry_run)
+        {
+            $db = Postcodify_Utility::get_db();
+            $db->beginTransaction();
+            $ps_insert = $db->prepare('INSERT INTO postcodify_oldaddr (sido_ko, sido_en, sigungu_ko, sigungu_en, ' .
+                'ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en, dongri_ko, dongri_en, ' .
+                'range_start_major, range_start_minor, range_end_major, range_end_minor, is_mountain, ' .
+                'island_name, building_name, building_num_start, building_num_end, postcode6) ' .
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        }
+        
+        // Zip 파일을 연다.
+        
+        $zip = new Postcodify_Parser_OldAddr;
+        $zip->open_archive($this->_data_dir . '/oldaddr_zipcode_DB.zip');
+        $zip->open_next_file();
+        
+        // 카운터를 초기화한다.
+        
+        $count = 0;
+        
+        // 데이터를 한 줄씩 읽는다.
+        
+        while ($entry = $zip->read_line())
+        {
+            // 레코드를 저장한다.
+            
+            if (!$this->_dry_run)
+            {
+                $ps_insert->execute(array(
+                    $entry->sido,
+                    $entry->sido ? Postcodify_Utility::$english_cache[$entry->sido] : null,
+                    $entry->sigungu,
+                    $entry->sigungu ? Postcodify_Utility::$english_cache[$entry->sigungu] : null,
+                    $entry->ilbangu,
+                    $entry->ilbangu ? Postcodify_Utility::$english_cache[$entry->ilbangu] : null,
+                    $entry->eupmyeon,
+                    $entry->eupmyeon ? Postcodify_Utility::$english_cache[$entry->eupmyeon] : null,
+                    $entry->dongri,
+                    $entry->dongri ? Postcodify_Utility::$english_cache[$entry->dongri] : null,
+                    $entry->range_start_major,
+                    $entry->range_start_minor,
+                    $entry->range_end_major,
+                    $entry->range_end_minor,
+                    $entry->is_mountain,
+                    $entry->island_name,
+                    $entry->building_name,
+                    $entry->building_num_start,
+                    $entry->building_num_end,
+                    $entry->postcode6,
+                ));
+            }
+            
+            // 카운터를 표시한다.
+            
+            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
+            
+            // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
+            
+            unset($entry);
+        }
+        
+        // 뒷정리.
+        
+        $zip->close();
+        unset($zip);
+        
+        if (!$this->_dry_run)
+        {
+            $db->commit();
+            unset($db);
+        }
     }
     
     // 영문 검색 키워드를 저장한다.
