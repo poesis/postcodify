@@ -107,7 +107,7 @@ CREATE TABLE postcodify_oldaddr (
     building_num_start INTEGER(5),
     building_num_end INTEGER(5),
     postcode6 CHAR(6)
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
+);
 
 -- 각종 설정을 저장하는 테이블.
 
