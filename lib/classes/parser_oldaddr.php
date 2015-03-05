@@ -60,7 +60,7 @@ class Postcodify_Parser_OldAddr extends Postcodify_ZipReader
         
         // 읍면과 동을 구분한다.
         
-        if (preg_match('/[동가]$/u', $eupmyeon) && $dongri === '')
+        if (preg_match('/[동가]$/u', $eupmyeon) && $dongri === null)
         {
             $dongri = $eupmyeon;
             $eupmyeon = null;
