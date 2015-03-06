@@ -26,7 +26,7 @@
     
     // 팝업 스크립트 버전을 선언한다.
     
-    var info = { version : "2.3.0" };
+    var info = { version : "2.4.0" };
     
     // Postcodify 메인 플러그인과 팝업 레이어를 위한 스타일시트를 로딩한다.
     
@@ -47,32 +47,45 @@
             // 설정을 초기화한다.
             
             var closePopUpLayer;
+            var container;
             var initializePostcodify;
             
             options = typeof options !== "undefined" ? options : {};
             if (typeof options.onSelect === "undefined") options.onSelect = function(){};
             
-            var inputParent = options.inputParent ? $(options.inputParent) : $(document);
+            // <input>을 검색할 범위를 설정한다.
+            
+            if (options.container) {
+                container = $(options.container);
+            } else if (options.inputParent) {
+                container = $(options.inputParent);
+            } else {
+                container = $(document.body);
+            }
             
             // 팝업 레이어와 배경을 생성한다.
             
             var background = $('<div class="postcodify_popup_background"></div>');
-            var layer = $('<div class="postcodify_popup_layer"></div>');
+            var layer = $('<div class="postcodify_popup_layer" data-version="' + info.version + '"></div>');
             if (navigator.userAgent.match(/MSIE 6\./)) layer.addClass("ie6fix");
             
             // 기본적인 태그들을 입력한다.
             
-            layer.append('<div class="postcodify_title"><span>도로명주소 &amp; 지번주소</span> <span>우편번호 검색</span></div>');
             layer.append('<div class="postcodify_controls"></div>');
             layer.append('<div class="postcodify_results"></div>');
+            
+            // 닫기 버튼과 로고를 생성한다.
+            
+            var close_button = $('<button class="close_button">&times;</button>');
+            var logo = $('<div class="postcodify_logo">Powered by <a href="http://postcodify.poesis.kr/">Postcodify</a></div>');
             
             // 검색 요령 및 주의사항을 입력한다.
             
             var help1 = $('<ul></ul>');
-            help1.append('<li>도로명주소 검색 : 도로명과 건물번호를 입력하세요. 예: 세종대로 110</li>');
-            help1.append('<li>지번주소 검색 : "동" 또는 "리" 이름과 번지수를 입력하세요. 예: 연산동 1000</li>');
-            help1.append('<li>건물명 검색 : 빌딩 또는 아파트 이름을 입력하세요. 예: 방배동 래미안, 수곡동 주공3차</li>');
-            help1.append('<li>사서함 검색 : 사서함 이름과 번호를 입력하세요. 예: 광화문우체국사서함 123-4</li>');
+            help1.append('<li>도로명주소 검색 : 도로명과 건물번호를 입력하세요. 예: <u>세종대로 110</u></li>');
+            help1.append('<li>지번주소 검색 : "동" 또는 "리" 이름과 번지수를 입력하세요. 예: <u>연산동 1000</u></li>');
+            help1.append('<li>건물명 검색 : 빌딩 또는 아파트 이름을 입력하세요. 예: <u>방배동 래미안</u>, <u>수곡동 주공3차</u></li>');
+            help1.append('<li>사서함 검색 : 사서함 이름과 번호를 입력하세요. 예: <u>광화문우체국사서함 123-4</u></li>');
             
             var help2 = $('<ul></ul>');
             help2.append('<li>시·군·구·읍·면 등은 쓰지 않아도 되지만, 만약 쓰실 경우 반드시 띄어쓰기를 해 주세요.</li>');
@@ -80,9 +93,9 @@
             help2.append('<li>건물명보다는 도로명주소 또는 지번 주소로 검색하시는 것이 빠르고 정확합니다.</li>');
             
             var divhelp = $('<div class="postcodify_help"></div>');
-            divhelp.append('<p>검색 요령</p>');
+            divhelp.append('<p>우편번호 검색 요령</p>');
             divhelp.append(help1);
-            divhelp.append('<p>주의사항</p>');
+            divhelp.append('<p>더 정확하게 검색하시려면</p>');
             divhelp.append(help2);
             divhelp.appendTo(layer);
             
@@ -90,11 +103,7 @@
                 divhelp.find("li:contains('건물명')").remove();
             }
             
-            // 닫기 버튼을 생성한다.
-            
-            var buttons = $('<div class="postcodify_buttons"></div>');
-            buttons.append('<button>닫기</button>');
-            buttons.appendTo(layer);
+            logo.appendTo(layer);
             
             // 팝업 레이어와 배경을 DOM에 추가한다.
             
@@ -107,15 +116,15 @@
                 layer.data("initialized", "Y");
                 layer.find("div.postcodify_results").postcodify({
                     controls : layer.find("div.postcodify_controls"),
-                    insertDbid : inputParent.find(".postcodify_address_id"),
-                    insertPostcode6 : inputParent.find(".postcodify_postcode6"),
-                    insertPostcode5 : inputParent.find(".postcodify_postcode5"),
-                    insertAddress : inputParent.find(".postcodify_address"),
-                    insertDetails : inputParent.find(".postcodify_details"),
-                    insertExtraInfo : inputParent.find(".postcodify_extra_info"),
-                    insertJibeonAddress : inputParent.find(".postcodify_jibeon_address"),
-                    insertEnglishAddress : inputParent.find(".postcodify_english_address"),
-                    insertEnglishJibeonAddress : inputParent.find(".postcodify_english_jibeon_address"),
+                    insertDbid : container.find(".postcodify_address_id"),
+                    insertPostcode6 : container.find(".postcodify_postcode6"),
+                    insertPostcode5 : container.find(".postcodify_postcode5"),
+                    insertAddress : container.find(".postcodify_address"),
+                    insertDetails : container.find(".postcodify_details"),
+                    insertExtraInfo : container.find(".postcodify_extra_info"),
+                    insertJibeonAddress : container.find(".postcodify_jibeon_address"),
+                    insertEnglishAddress : container.find(".postcodify_english_address"),
+                    insertEnglishJibeonAddress : container.find(".postcodify_english_jibeon_address"),
                     overrideDomain : (options.overrideDomain ? options.overrideDomain : null),
                     mapLinkProvider : (options.mapLinkProvider ? options.mapLinkProvider : "daum"),
                     mapLinkContent : (options.mapLinkContent ? options.mapLinkContent : null),
@@ -127,12 +136,13 @@
                     useFullJibeon : (options.useFullJibeon === true ? true : false),
                     useCors : (options.useCors === false ? false : true),
                     afterSelect : function(entry) {
-                        inputParent.find(".postcodify_postcode6_1").val(entry.data("code6").substr(0, 3));
-                        inputParent.find(".postcodify_postcode6_2").val(entry.data("code6").substr(4, 3));
+                        container.find(".postcodify_postcode6_1").val(entry.data("code6").substr(0, 3));
+                        container.find(".postcodify_postcode6_2").val(entry.data("code6").substr(4, 3));
                         options.onSelect();
                         closePopUpLayer();
                     }
                 });
+                close_button.appendTo(layer.find("div.postcodify_search_controls"));
             };
             
             // 화면 크기에 따라 팝업 레이어의 크기를 자동으로 조절한다.
@@ -146,7 +156,7 @@
                 if ("ontouchstart" in window && (layer.hasClass("fill_horizontally") || layer.hasClass("fill_vertically"))) {
                     layer.addClass("full_screen");
                 }
-                layer.find("input.keyword").width(layer.width() - 100);
+                layer.find("input.keyword").width(layer.width() - 130);
             }).triggerHandler("resize");
             
             // 검색 단추 클릭시 팝업 레이어를 보여주도록 설정한다.
@@ -155,7 +165,7 @@
                 if (layer.data("initialized") != "Y") initializePostcodify();
                 background.show();
                 layer.show();
-                layer.find("input.keyword").width(layer.width() - 100).focus();
+                layer.find("input.keyword").width(layer.width() - 130).focus();
             });
             
             // 팝업 레이어를 감추는 함수.
@@ -167,7 +177,7 @@
             
             // 닫기 단추를 누르면 팝업 레이어를 감추도록 설정한다.
             
-            layer.find("div.postcodify_buttons button").click(function() {
+            close_button.click(function() {
                 closePopUpLayer();
             });
             

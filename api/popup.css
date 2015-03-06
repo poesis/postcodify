@@ -33,95 +33,116 @@ div.postcodify_popup_layer {
     font: 13px/160% "Malgun Gothic", "Gulim", sans-serif;
     background: #fff; overflow-x: none; overflow-y: auto;
     z-index: 2147483647;
-    box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.7);
+    border-radius: 2px;
+    box-shadow: 0 2px 5px 2px rgba(0, 0, 0, 0.5);
     _position: absolute; _top: expression(eval(document.body.scrollTop));
 }
 div.postcodify_popup_layer.fill_horizontally {
-    width: 100%; left: 0; margin-left: 0;
+    width: 100%; left: 0; margin-left: 0; border-radius: 0;
 }
 div.postcodify_popup_layer.fill_vertically {
-    height: 100%; top: 0; margin-top: 0;
+    height: 100%; top: 0; margin-top: 0; border-radius: 0;
 }
 div.postcodify_popup_layer.full_screen {
-    height: auto; position: absolute;
+    height: auto; position: absolute; border-radius: 0;
 }
 div.postcodify_popup_layer.ie6fix {
     top: 0; margin-top: 16px;
 }
 
-div.postcodify_title {
-    width: 100%; margin: 0; padding: 10px 0 12px 0;
-    text-align: center; line-height: 120%; font-weight: bold;
-    background-color: #ebebeb;
-}
-div.postcodify_title span { white-space: nowrap; }
-
-div.postcodify_controls { clear: both; margin: 0 12px 12px 12px; padding: 0; }
-
-div.postcodify_search_controls {
-    width: 100%; margin: 0 -12px; padding: 0 12px 12px 12px;
-    background-color: #ebebeb; position: relative;
+div.postcodify_popup_layer div.postcodify_controls {
+    clear: both; margin: 0; padding: 14px 12px 12px 12px;
+    background-color: #ebebeb; 
+    position: relative;
     border-bottom: 1px solid #cacaca;
 }
-div.postcodify_search_controls .keyword {
+
+div.postcodify_popup_layer div.postcodify_search_controls {
+    width: 100%; height: 30px; margin: 0;
+    position: relative;
+}
+div.postcodify_popup_layer div.postcodify_search_controls .keyword {
     width: 60%; height: 20px; padding: 4px 8px; font-family: inherit;
     border: 1px solid #888; 
 }
-div.postcodify_search_controls .search_button {
-    width: 60px; height: 30px; font-family: inherit; font-weight: bold;
+div.postcodify_popup_layer div.postcodify_search_controls .search_button {
+    width: 60px; height: 30px;
+    font-family: inherit; font-weight: bold;
     border: 1px solid #444; background: #444; color: #fff;
-    position: absolute; right: 12px; top: 0;
+    position: absolute; right: 31px; top: 0;
 }
-div.postcodify_search_controls .search_button:hover,
-div.postcodify_search_controls .search_button:active {
+div.postcodify_popup_layer div.postcodify_search_controls .search_button:hover,
+div.postcodify_popup_layer div.postcodify_search_controls .search_button:active {
     border-color: #36f; background: #36f;
 }
+div.postcodify_popup_layer div.postcodify_search_controls .close_button {
+    width: 30px; height: 30px;
+    font-family: Tahoma, sans-serif; font-weight: bold; font-size: 16px;
+    border: 1px solid #888; background: #888; color: #fff;
+    position: absolute; right: 0; top: 0;
+}
+div.postcodify_popup_layer div.postcodify_search_controls .close_button:hover,
+div.postcodify_popup_layer div.postcodify_search_controls .close_button:active {
+    border: 1px solid #f33; background: #f33;
+}
 
-div.postcodify_results { clear: both; margin: 0 12px 20px 12px; padding: 0; }
+div.postcodify_popup_layer div.postcodify_results {
+    clear: both; margin: 10px 12px 20px 12px; padding: 0;
+}
 
-div.postcodify_search_result { clear: both; position: relative; width: 100%; padding: 4px 6px; margin-left: -6px; word-break: keep-all; }
-div.postcodify_search_result:hover { background: #f8f8f8; }
-div.postcodify_search_result:hover div.address a.selector { font-weight: bold; }
-div.postcodify_search_result div.code { position: absolute; left: 6px; top: 4px; color: #f36; }
-div.postcodify_search_result div.code6 { position: absolute; left: 6px; top: 4px; color: #f36; }
-div.postcodify_search_result div.code5 { display: none; }
-div.postcodify_search_result div.address { clear: both; margin-left: 60px; position: relative; cursor: pointer; }
-div.postcodify_search_result div.address a.selector { text-decoration: none; cursor: pointer; }
-div.postcodify_search_result div.address a.selector span.address_info { color: #000; display: inline-block; margin-right: 8px; }
-div.postcodify_search_result div.address a.selector span.extra_info { color: #444; display: inline-block; }
-div.postcodify_search_result div.address a.show_old_addresses { display: none; }
-div.postcodify_search_result div.old_addresses { clear: both; color: #888; margin: 1px 0 0 60px; font-size: 12px; cursor: pointer; }
-div.postcodify_search_result div.map_link { position: absolute; right: 6px; top: 4px; }
-div.postcodify_search_result div.map_link a { color: #444; font-size: 11px; text-decoration: none; }
-div.postcodify_search_result div.map_link a:hover { text-decoration: underline; }
+div.postcodify_popup_layer div.postcodify_search_result {
+    clear: both; position: relative; width: 100%;
+    padding: 4px 6px; margin: 0 0 4px -6px;
+    word-break: keep-all;
+}
+div.postcodify_popup_layer div.postcodify_search_result:hover { background: #f8f8f8; }
+div.postcodify_popup_layer div.postcodify_search_result:hover div.address a.selector { font-weight: bold; }
+div.postcodify_popup_layer div.postcodify_search_result div.code { position: absolute; left: 6px; top: 4px; color: #36f; }
+div.postcodify_popup_layer div.postcodify_search_result div.code6 { position: absolute; left: 6px; top: 4px; color: #36f; }
+div.postcodify_popup_layer div.postcodify_search_result div.code5 { display: none; }
+div.postcodify_popup_layer div.postcodify_search_result div.address { clear: both; margin-left: 60px; position: relative; cursor: pointer; }
+div.postcodify_popup_layer div.postcodify_search_result div.address a.selector { text-decoration: none; cursor: pointer; }
+div.postcodify_popup_layer div.postcodify_search_result div.address a.selector span.address_info { color: #000; display: inline-block; margin-right: 8px; }
+div.postcodify_popup_layer div.postcodify_search_result div.address a.selector span.extra_info { color: #444; display: inline-block; }
+div.postcodify_popup_layer div.postcodify_search_result div.address a.show_old_addresses { display: none; }
+div.postcodify_popup_layer div.postcodify_search_result div.old_addresses { clear: both; color: #888; margin: 1px 0 0 60px; font-size: 12px; cursor: pointer; }
+div.postcodify_popup_layer div.postcodify_search_result div.map_link { position: absolute; right: 6px; top: 4px; }
+div.postcodify_popup_layer div.postcodify_search_result div.map_link a { color: #444; font-size: 11px; text-decoration: none; }
+div.postcodify_popup_layer div.postcodify_search_result div.map_link a:hover { text-decoration: underline; }
 
-div.postcodify_search_status { text-align: center; color: #f36; padding: 16px 8px; border: 1px solid #cacaca; background: #f8f8f8; margin-bottom: 8px; }
-div.postcodify_search_status.message { color: #222; }
-div.postcodify_search_status.too_many { color: #36f; }
-div.postcodify_search_status.summary {
+div.postcodify_popup_layer div.postcodify_search_status {
+    margin: 0 0 8px 0;
+    padding: 16px 8px;
+    background: #f8f8f8;
+    border: 1px solid #cacaca;
+    border-radius: 0;
+    color: #222; text-align: center;
+}
+div.postcodify_popup_layer div.postcodify_search_status.message { color: #222; }
+div.postcodify_popup_layer div.postcodify_search_status.too_many { color: #222; }
+div.postcodify_popup_layer div.postcodify_search_status.summary {
     clear: both; padding: 8px 12px 0 0; margin: 12px -12px -8px -12px;
     border: 0; background: none; border-top: 1px solid #cacaca; text-align: right;
 }
-div.postcodify_search_status.summary div {
+div.postcodify_popup_layer div.postcodify_search_status.summary div {
     display: inline-block; margin: 0 0 0 12px;
     font-size: 11px; line-height: 120%; color: #888;
 }
 
-div.postcodify_help {
-    clear: both; margin: 0 12px 20px 12px; color: #444;
+div.postcodify_popup_layer div.postcodify_help {
+    clear: both; margin: 0 12px 20px 12px; color: #222;
 }
-div.postcodify_help p { margin: 0 0 6px 0; padding: 0; font-weight: bold; }
-div.postcodify_help ul { margin: 0 0 6px 0; padding: 0 0 0 28px; }
-div.postcodify_help ul li { margin: 0; padding: 0; }
+div.postcodify_popup_layer div.postcodify_help p { margin: 0 0 8px 0; padding: 0; font-weight: bold; }
+div.postcodify_popup_layer div.postcodify_help ul { margin: 0 0 14px 0; padding: 0 0 0 28px; }
+div.postcodify_popup_layer div.postcodify_help ul li { margin: 0; padding: 0; }
 
-div.postcodify_buttons {
-    clear: both; margin: 0 12px 20px 12px; text-align: center;
+div.postcodify_popup_layer div.postcodify_logo {
+    clear: both; margin: 0 0 20px 0;
+    font-size: 11px; line-height: 120%; color: #666; text-align: center;
 }
-div.postcodify_buttons button {
-    width: 60px; height: 30px; font-family: inherit; font-weight: bold;
-    border: 1px solid #444; background: #444; color: #fff;
+div.postcodify_popup_layer div.postcodify_logo a {
+    color: #666; text-decoration: none;
 }
-div.postcodify_buttons button:hover,
-div.postcodify_buttons button:active {
-    border: 1px solid #f36; background: #f36;
+div.postcodify_popup_layer div.postcodify_logo a:hover {
+    color: #36f; text-decoration: underline;
 }
