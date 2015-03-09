@@ -115,7 +115,8 @@
             
             // 단시간내 중복 검색을 방지하기 위해 직전 검색어를 기억하는 변수.
             
-            var previousSearch;
+            var previousSearch = null;
+            var isSearching = false;
             
             // 키워드 입력란에서 엔터키를 누르거나 검색 단추로 포커스를 이동하면 즉시 검색을 수행한다.
             // 검색 단추를 누를 때까지 기다리는 것보다 검색 속도가 훨씬 빠르게 느껴진다.
@@ -142,7 +143,11 @@
                 // 검색어가 직전과 동일한 경우 중복 검색을 방지한다.
                 
                 var keywords = $.trim(keywordInput.val());
-                if (keywords === previousSearch) return;
+                if (keywords === previousSearch) {
+                    if (isSearching || results.find("div.postcodify_search_result").filter(":visible").size()) {
+                        return;
+                    }
+                }
                 previousSearch = keywords;
                 
                 // 검색 결과창의 내용을 비운다.
@@ -248,6 +253,7 @@
                     // 네트워크 왕복 시간을 포함한 총 소요시간을 계산한다.
                     
                     var searchTotalTime = (new Date().getTime() - ajaxStartTime) / 1000;
+                    isSearching = false;
                     
                     // 백업 API로 검색에 성공했다면 이후에도 백업 API만 사용하도록 설정한다.
                     
@@ -290,7 +296,7 @@
                             err.html(info.translations[settings.language].errorError.replace(/\n/g, "<br>"));
                             err.appendTo(results);
                         }
-                        previousSearch = "";
+                        previousSearch = null;
                     }
                     
                     // 정상 처리되었지만 검색 결과가 없는 경우...
@@ -498,7 +504,8 @@
                     // 오류 메시지를 보여준다.
                     
                     results.find("div.postcodify_search_status.error").show();
-                    previousSearch = "";
+                    previousSearch = null;
+                    isSearching = false;
                     
                     // 검색 실패 콜백 함수를 실행한다.
                     
@@ -508,6 +515,7 @@
                 
                 // 검색 서버로 AJAX 요청을 전송한다.
                 
+                isSearching = true;
                 if (settings.apiBackup && settings.callBackupFirst) {
                     ajaxCall(settings.apiBackup, settings.timeoutBackup, ajaxErrorFinal);
                 } else {
