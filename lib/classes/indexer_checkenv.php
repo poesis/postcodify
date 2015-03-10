@@ -115,9 +115,15 @@ class Postcodify_Indexer_CheckEnv
             exit(2);
         }
         
-        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/newaddr_pobox_DB.zip'))
+        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/areacd_pobox_DB.zip'))
         {
-            echo '[ERROR] 사서함 우편번호 (newaddr_pobox_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
+            echo '[ERROR] 우체국 사서함 (areacd_pobox_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
+            exit(2);
+        }
+        
+        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/areacd_rangeaddr_DB.zip'))
+        {
+            echo '[ERROR] 우편번호 범위 (areacd_rangeaddr_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
             exit(2);
         }
         
