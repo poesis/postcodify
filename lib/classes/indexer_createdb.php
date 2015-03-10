@@ -119,8 +119,12 @@ class Postcodify_Indexer_CreateDB
         $this->load_pobox();
         Postcodify_Utility::print_ok();
         
-        Postcodify_Utility::print_message('구 주소 우편번호 데이터를 로딩하는 중...');
-        $this->load_old_addresses();
+        Postcodify_Utility::print_message('새 우편번호 범위 데이터를 로딩하는 중...');
+        $this->load_new_ranges();
+        Postcodify_Utility::print_ok();
+        
+        Postcodify_Utility::print_message('구 우편번호 범위 데이터를 로딩하는 중...');
+        $this->load_old_ranges();
         Postcodify_Utility::print_ok();
         
         Postcodify_Utility::print_message('영문 검색 키워드를 저장하는 중...');
@@ -1008,9 +1012,16 @@ class Postcodify_Indexer_CreateDB
         }
     }
     
-    // 구 주소 우편번호 DB를 로딩한다.
+    // 새 우편번호 범위 DB를 로딩한다.
     
-    public function load_old_addresses()
+    public function load_new_ranges()
+    {
+        
+    }
+    
+    // 구 우편번호 범위 DB를 로딩한다.
+    
+    public function load_old_ranges()
     {
         // DB를 준비한다.
         
@@ -1018,7 +1029,7 @@ class Postcodify_Indexer_CreateDB
         {
             $db = Postcodify_Utility::get_db();
             $db->beginTransaction();
-            $ps_insert = $db->prepare('INSERT INTO postcodify_oldaddr (sido_ko, sido_en, sigungu_ko, sigungu_en, ' .
+            $ps_insert = $db->prepare('INSERT INTO postcodify_ranges_oldcode (sido_ko, sido_en, sigungu_ko, sigungu_en, ' .
                 'ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en, dongri_ko, dongri_en, ' .
                 'range_start_major, range_start_minor, range_end_major, range_end_minor, is_mountain, ' .
                 'island_name, building_name, building_num_start, building_num_end, postcode6) ' .

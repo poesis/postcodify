@@ -233,7 +233,7 @@ class Postcodify_Indexer_Update
             $ps_insert_numbers = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
             $ps_insert_buildings = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
             $ps_delete_buildings = $db->prepare('DELETE FROM postcodify_buildings WHERE address_id = ?');
-            $ps_select_oldaddr = $db->prepare('SELECT postcode6 FROM postcodify_oldaddr WHERE sido_ko = ? AND ' .
+            $ps_select_oldaddr = $db->prepare('SELECT postcode6 FROM postcodify_ranges_oldcode WHERE sido_ko = ? AND ' .
                 '(sigungu_ko IS NULL OR sigungu_ko = ?) AND (ilbangu_ko IS NULL OR ilbangu_ko = ?) AND ' .
                 '(eupmyeon_ko IS NULL OR eupmyeon_ko = ?) AND (dongri_ko = ? OR dongri_ko = ?) AND ' .
                 '(range_start_major IS NULL OR (range_start_major <= ? AND range_end_major >= ? AND ' .
