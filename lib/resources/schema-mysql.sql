@@ -9,6 +9,9 @@ DROP TABLE IF EXISTS postcodify_numbers;
 DROP TABLE IF EXISTS postcodify_buildings;
 DROP TABLE IF EXISTS postcodify_pobox;
 DROP TABLE IF EXISTS postcodify_oldaddr;
+DROP TABLE IF EXISTS postcodify_ranges_roads;
+DROP TABLE IF EXISTS postcodify_ranges_jibeon;
+DROP TABLE IF EXISTS postcodify_ranges_oldcode;
 DROP TABLE IF EXISTS postcodify_settings;
 
 -- 주소 정보를 저장하는 메인 테이블.
@@ -95,9 +98,55 @@ CREATE TABLE postcodify_pobox (
     range_end_minor SMALLINT(5) UNSIGNED
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
 
--- 구 주소 우편번호 검색 테이블.
+-- 우편번호 범위 테이블 (도로명주소).
 
-CREATE TABLE postcodify_oldaddr (
+CREATE TABLE postcodify_ranges_roads (
+    seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    sido_ko VARCHAR(40),
+    sido_en VARCHAR(40),
+    sigungu_ko VARCHAR(40),
+    sigungu_en VARCHAR(40),
+    ilbangu_ko VARCHAR(40),
+    ilbangu_en VARCHAR(40),
+    eupmyeon_ko VARCHAR(40),
+    eupmyeon_en VARCHAR(40),
+    road_name_ko VARCHAR(80),
+    road_name_en VARCHAR(80),
+    range_start_major SMALLINT(5) UNSIGNED,
+    range_start_minor SMALLINT(5) UNSIGNED,
+    range_end_major SMALLINT(5) UNSIGNED,
+    range_end_minor SMALLINT(5) UNSIGNED,
+    range_type TINYINT(1) DEFAULT 0,
+    is_basement TINYINT(1) DEFAULT 0,
+    postcode5 CHAR(5)
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
+
+-- 우편번호 범위 테이블 (지번주소).
+
+CREATE TABLE postcodify_ranges_jibeon (
+    seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    sido_ko VARCHAR(40),
+    sido_en VARCHAR(40),
+    sigungu_ko VARCHAR(40),
+    sigungu_en VARCHAR(40),
+    ilbangu_ko VARCHAR(40),
+    ilbangu_en VARCHAR(40),
+    eupmyeon_ko VARCHAR(40),
+    eupmyeon_en VARCHAR(40),
+    dongri_ko VARCHAR(80),
+    dongri_en VARCHAR(80),
+    range_start_major SMALLINT(5) UNSIGNED,
+    range_start_minor SMALLINT(5) UNSIGNED,
+    range_end_major SMALLINT(5) UNSIGNED,
+    range_end_minor SMALLINT(5) UNSIGNED,
+    range_type TINYINT(1) DEFAULT 0,
+    is_mountain TINYINT(1) DEFAULT 0,
+    postcode5 CHAR(5)
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
+
+-- 우편번호 범위 테이블 (구 우편번호).
+
+CREATE TABLE postcodify_ranges_oldcode (
     seq INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     sido_ko VARCHAR(40),
     sido_en VARCHAR(40),

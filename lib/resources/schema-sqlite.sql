@@ -83,9 +83,55 @@ CREATE TABLE postcodify_pobox (
     range_end_minor INTEGER(5)
 );
 
--- 구 주소 우편번호 검색 테이블.
+-- 우편번호 범위 테이블 (도로명주소).
 
-CREATE TABLE postcodify_oldaddr (
+CREATE TABLE postcodify_ranges_roads (
+    seq INTEGER PRIMARY KEY,
+    sido_ko VARCHAR(40),
+    sido_en VARCHAR(40),
+    sigungu_ko VARCHAR(40),
+    sigungu_en VARCHAR(40),
+    ilbangu_ko VARCHAR(40),
+    ilbangu_en VARCHAR(40),
+    eupmyeon_ko VARCHAR(40),
+    eupmyeon_en VARCHAR(40),
+    road_name_ko VARCHAR(80),
+    road_name_en VARCHAR(80),
+    range_start_major INTEGER(5),
+    range_start_minor INTEGER(5),
+    range_end_major INTEGER(5),
+    range_end_minor INTEGER(5),
+    range_type INTEGER(1) DEFAULT 0,
+    is_basement INTEGER(1) DEFAULT 0,
+    postcode5 CHAR(5)
+);
+
+-- 우편번호 범위 테이블 (지번주소).
+
+CREATE TABLE postcodify_ranges_jibeon (
+    seq INTEGER PRIMARY KEY,
+    sido_ko VARCHAR(40),
+    sido_en VARCHAR(40),
+    sigungu_ko VARCHAR(40),
+    sigungu_en VARCHAR(40),
+    ilbangu_ko VARCHAR(40),
+    ilbangu_en VARCHAR(40),
+    eupmyeon_ko VARCHAR(40),
+    eupmyeon_en VARCHAR(40),
+    dongri_ko VARCHAR(80),
+    dongri_en VARCHAR(80),
+    range_start_major INTEGER(5),
+    range_start_minor INTEGER(5),
+    range_end_major INTEGER(5),
+    range_end_minor INTEGER(5),
+    range_type INTEGER(1) DEFAULT 0,
+    is_mountain INTEGER(1) DEFAULT 0,
+    postcode5 CHAR(5)
+);
+
+-- 우편번호 범위 테이블 (구 우편번호).
+
+CREATE TABLE postcodify_ranges_oldcode (
     seq INTEGER PRIMARY KEY,
     sido_ko VARCHAR(40),
     sido_en VARCHAR(40),
