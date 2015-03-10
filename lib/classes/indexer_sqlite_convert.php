@@ -31,7 +31,9 @@ class Postcodify_Indexer_SQLite_Convert
         'postcodify_numbers' => array(4, 'seq'),
         'postcodify_buildings' => array(3, 'seq'),
         'postcodify_pobox' => array(7, 'seq'),
-        'postcodify_oldaddr' => array(21, 'seq'),
+        'postcodify_ranges_roads' => array(18, 'seq'),
+        'postcodify_ranges_jibeon' => array(18, 'seq'),
+        'postcodify_ranges_oldcode' => array(21, 'seq'),
         'postcodify_settings' => array(2, 'k'),
     );
     
@@ -45,7 +47,9 @@ class Postcodify_Indexer_SQLite_Convert
         'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
         'postcodify_buildings' => array('address_id'),
         'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
-        'postcodify_oldaddr' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'postcode6'),
+        'postcodify_ranges_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'road_name_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'range_type', 'postcode5'),
+        'postcodify_ranges_jibeon' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'range_type', 'postcode5'),
+        'postcodify_ranges_oldcode' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'postcode6'),
     );
     
     // 엔트리 포인트.
