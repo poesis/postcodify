@@ -151,13 +151,6 @@ class Postcodify_Utility
         return $width;
     }
     
-    // 터미널에 표시할 문자열의 가로 폭을 계산하는 함수.
-    
-    public static function get_printed_width($str)
-    {
-        return strlen($str) - ((strlen($str) - mb_strlen($str, 'UTF-8')) / 2);
-    }
-    
     // 터미널에서 커서를 후퇴시키는 함수.
     
     public static function print_negative_spaces($count)
@@ -169,7 +162,7 @@ class Postcodify_Utility
     
     public static function print_message($str)
     {
-        echo $str . str_repeat(' ', self::get_terminal_width() - self::get_printed_width($str));
+        echo $str . str_repeat(' ', self::get_terminal_width() - mb_strwidth($str, 'UTF-8'));
     }
     
     // 터미널에 진행 상황을 출력한다.
