@@ -25,10 +25,9 @@ class Postcodify_Indexer_Download
     
     const RELATIVE_DOMAIN = 'http://www.juso.go.kr';
     const LIST_URL = '/notice/OpenArchivesList.do?currentPage=1&countPerPage=20&noticeKd=26&type=matching';
-    const POBOX_URL = 'http://www.epost.go.kr/search/zipcode/newaddr_pobox_DB.zip';
+    const POBOX_URL = 'http://www.epost.go.kr/search/areacd/areacd_pobox_DB.zip';
+    const RANGES_URL = 'http://www.epost.go.kr/search/areacd/areacd_rangeaddr_DB.zip';
     const ENGLISH_URL = 'http://cdn.poesis.kr/archives/english_aliases_DB.zip';
-    const OLDADDR_URL = 'http://cdn.poesis.kr/archives/oldaddr_zipcode_DB.zip';
-    const POBOX_NEWCODE_URL = 'http://cdn.poesis.kr/archives/newcode_pobox_DB.zip';
     const FIND_ENTRIES_REGEXP = '#<td class="align-left">(.+)</td>#isU';
     const FIND_LINKS_IN_ENTRY_REGEXP = '#<a href="([^"]+)">#iU';
     const FIND_DATA_DATE_REGEXP = '#\\((20[0-9][0-9])년 ([0-9]+)월 ([0-9]+)일 기준\\)#uU';
@@ -39,6 +38,9 @@ class Postcodify_Indexer_Download
     public function start()
     {
         // 다운로드할 경로가 존재하는지 확인한다.
+        
+        Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
+        Postcodify_Utility::print_newline();
         
         $download_path = dirname(POSTCODIFY_LIB_DIR) . '/data';
         
@@ -116,6 +118,7 @@ class Postcodify_Indexer_Download
         
         // 데이터 기준일을 YYYYMMDD 포맷으로 정리한다.
         
+        Postcodify_Utility::print_message('데이터 기준일은 ' . $articles['날짜'][1] . '년 ' . $articles['날짜'][2] . '월 ' . $articles['날짜'][3] . '일입니다.');
         $articles['날짜'] = sprintf('%04d%02d%02d', $articles['날짜'][1], $articles['날짜'][2], $articles['날짜'][3]);
         
         // 진행하기 전에 데이터를 확인한다.
@@ -181,27 +184,11 @@ class Postcodify_Indexer_Download
             $downloaded_files++;
         }
         
-        // 사서함 새우편번호 (기초구역번호) 데이터를 다운로드한다.
+        // 우편번호 범위 데이터를 다운로드한다.
         
-        Postcodify_Utility::print_message('다운로드: ' . basename(self::POBOX_NEWCODE_URL));
-        $filepath = $download_path . '/' . basename(self::POBOX_NEWCODE_URL);
-        $result = Postcodify_Utility::download(self::POBOX_NEWCODE_URL, $filepath);
-        if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
-        {
-            Postcodify_Utility::print_error();
-            exit(2);
-        }
-        else
-        {
-            Postcodify_Utility::print_ok();
-            $downloaded_files++;
-        }
-        
-        // 지번주소 기준 우편번호 데이터를 다운로드한다.
-        
-        Postcodify_Utility::print_message('다운로드: ' . basename(self::OLDADDR_URL));
-        $filepath = $download_path . '/' . basename(self::OLDADDR_URL);
-        $result = Postcodify_Utility::download(self::OLDADDR_URL, $filepath);
+        Postcodify_Utility::print_message('다운로드: ' . basename(self::RANGES_URL));
+        $filepath = $download_path . '/' . basename(self::RANGES_URL);
+        $result = Postcodify_Utility::download(self::RANGES_URL, $filepath);
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
             Postcodify_Utility::print_error();
@@ -231,7 +218,7 @@ class Postcodify_Indexer_Download
         
         // 파일 수가 맞는지 확인한다.
         
-        if ($downloaded_files < 48)
+        if ($downloaded_files < 47)
         {
             echo '[ERROR] 다운로드한 파일 수가 일치하지 않습니다.' . PHP_EOL;
             exit(2);
