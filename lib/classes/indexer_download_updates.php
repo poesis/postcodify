@@ -32,6 +32,9 @@ class Postcodify_Indexer_Download_Updates
     {
         // 다운로드할 경로가 존재하는지 확인한다.
         
+        Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
+        Postcodify_Utility::print_newline();
+        
         $download_path = dirname(POSTCODIFY_LIB_DIR) . '/data/updates';
         
         if ((!file_exists($download_path) || !is_dir($download_path)) && !@mkdir($download_path, 0755, true))

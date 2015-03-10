@@ -53,6 +53,9 @@ class Postcodify_Indexer_VerifyDB
     
     public function start()
     {
+        Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
+        Postcodify_Utility::print_newline();
+        
         if (!($db = Postcodify_Utility::get_db()))
         {
             echo '[ERROR] MySQL DB에 접속할 수 없습니다.' . PHP_EOL;
@@ -60,8 +63,6 @@ class Postcodify_Indexer_VerifyDB
         }
         
         $pass = true;
-        
-        echo 'Postcodify Indexer ' . POSTCODIFY_VERSION . PHP_EOL;
         
         echo '테이블 확인 중...' . PHP_EOL;
         $pass = $this->check_tables($db) && $pass;
