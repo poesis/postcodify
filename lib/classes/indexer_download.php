@@ -28,6 +28,7 @@ class Postcodify_Indexer_Download
     const POBOX_URL = 'http://www.epost.go.kr/search/areacd/areacd_pobox_DB.zip';
     const RANGES_URL = 'http://www.epost.go.kr/search/areacd/areacd_rangeaddr_DB.zip';
     const ENGLISH_URL = 'http://cdn.poesis.kr/archives/english_aliases_DB.zip';
+    const OLDADDR_URL = 'http://cdn.poesis.kr/archives/oldaddr_zipcode_DB.zip';
     const FIND_ENTRIES_REGEXP = '#<td class="align-left">(.+)</td>#isU';
     const FIND_LINKS_IN_ENTRY_REGEXP = '#<a href="([^"]+)">#iU';
     const FIND_DATA_DATE_REGEXP = '#\\((20[0-9][0-9])년 ([0-9]+)월 ([0-9]+)일 기준\\)#uU';
@@ -216,9 +217,25 @@ class Postcodify_Indexer_Download
             $downloaded_files++;
         }
         
+        // 구 우편번호 범위 데이터를 다운로드한다.
+        
+        Postcodify_Utility::print_message('다운로드: ' . basename(self::OLDADDR_URL));
+        $filepath = $download_path . '/' . basename(self::OLDADDR_URL);
+        $result = Postcodify_Utility::download(self::OLDADDR_URL, $filepath);
+        if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
+        {
+            Postcodify_Utility::print_error();
+            exit(2);
+        }
+        else
+        {
+            Postcodify_Utility::print_ok();
+            $downloaded_files++;
+        }
+        
         // 파일 수가 맞는지 확인한다.
         
-        if ($downloaded_files < 47)
+        if ($downloaded_files < 48)
         {
             echo '[ERROR] 다운로드한 파일 수가 일치하지 않습니다.' . PHP_EOL;
             exit(2);
