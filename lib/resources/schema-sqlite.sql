@@ -16,6 +16,7 @@ CREATE TABLE postcodify_addresses (
     jibeon_minor INTEGER(5),
     is_mountain INTEGER(1) DEFAULT 0,
     building_name VARCHAR(80),
+    building_number VARCHAR(40),
     other_addresses VARCHAR(2000),
     updated NUMERIC(8)
 );

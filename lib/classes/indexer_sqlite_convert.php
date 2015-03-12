@@ -25,7 +25,7 @@ class Postcodify_Indexer_SQLite_Convert
     
     protected $_tables = array(
         'postcodify_roads' => array(11, 'road_id'),
-        'postcodify_addresses' => array(16, 'id'),
+        'postcodify_addresses' => array(17, 'id'),
         'postcodify_keywords' => array(3, 'seq'),
         'postcodify_english' => array(5, 'seq'),
         'postcodify_numbers' => array(4, 'seq'),
