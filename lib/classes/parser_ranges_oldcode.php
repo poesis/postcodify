@@ -19,7 +19,7 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-class Postcodify_Parser_OldAddr extends Postcodify_ZipReader
+class Postcodify_Parser_Ranges_OldCode extends Postcodify_ZipReader
 {
     // 한 줄을 읽어 반환한다.
     
