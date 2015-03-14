@@ -155,13 +155,13 @@ class Postcodify_Server_Query
                     $q->use_area = true;
                     continue;
                 }
-                elseif (in_array($keyword, Postcodify_Server_Areas::$sigungu))
+                elseif (!$q->sigungu && in_array($keyword, Postcodify_Server_Areas::$sigungu))
                 {
                     $q->sigungu = $keyword;
                     $q->use_area = true;
                     continue;
                 }
-                elseif (in_array($keyword, Postcodify_Server_Areas::$ilbangu))
+                elseif (!$q->ilbangu && in_array($keyword, Postcodify_Server_Areas::$ilbangu))
                 {
                     $q->ilbangu = $keyword;
                     $q->use_area = true;
@@ -172,13 +172,13 @@ class Postcodify_Server_Query
                     if (count($keywords) > $id + 1) continue;
                 }
             }
-            elseif (in_array($keyword . '시', Postcodify_Server_Areas::$sigungu))
+            elseif (!$q->sigungu && in_array($keyword . '시', Postcodify_Server_Areas::$sigungu))
             {
                 $q->sigungu = $keyword . '시';
                 $q->use_area = true;
                 continue;
             }
-            elseif (in_array($keyword . '군', Postcodify_Server_Areas::$sigungu))
+            elseif (!$q->sigungu && in_array($keyword . '군', Postcodify_Server_Areas::$sigungu))
             {
                 $q->sigungu = $keyword . '군';
                 $q->use_area = true;
