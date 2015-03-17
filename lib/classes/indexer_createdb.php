@@ -879,20 +879,9 @@ class Postcodify_Indexer_CreateDB
         
         // Zip 파일을 연다.
         
-        $zip = new Postcodify_Parser_Pobox;
-        $zip->open_archive($this->_data_dir . '/newaddr_pobox_DB.zip');
-        $zip->open_next_file();
-        
-        // 사서함 기초구역번호 데이터를 로딩한다.
-        
-        $newcodes = array();
-        $newcode_zip = new Postcodify_Parser_Pobox_Newcode;
-        $newcode_zip->open_archive($this->_data_dir . '/newcode_pobox_DB.zip');
-        $newcode_zip->open_next_file();
-        while ($entry = $newcode_zip->read_line())
-        {
-            $newcodes[$entry->oldcode] = $entry->newcode;
-        }
+        $zip = new Postcodify_Parser_NewPobox;
+        $zip->open_archive($this->_data_dir . '/areacd_pobox_DB.zip');
+        $zip->open_named_file(iconv('UTF-8', 'CP949', '사서함'));
         
         // 행정구역 캐시와 카운터를 초기화한다.
         
@@ -906,7 +895,7 @@ class Postcodify_Indexer_CreateDB
         {
             // 불필요한 줄은 건너뛴다.
             
-            if ($entry->sido === '시도') continue;
+            if ($entry === true) continue;
             
             // 행정구역 정보를 생성한다.
             
@@ -949,7 +938,7 @@ class Postcodify_Indexer_CreateDB
                 $ps_addr_insert->execute(array(
                     $road_id,
                     $entry->postcode6,
-                    isset($newcodes[$entry->postcode6]) ? $newcodes[$entry->postcode6] : null,
+                    $entry->postcode5,
                     $entry->pobox_name,
                     'P.O.Box',
                     $entry->range_start_major,
@@ -1052,6 +1041,10 @@ class Postcodify_Indexer_CreateDB
         
         while ($entry = $zip->read_line())
         {
+            // 불필요한 줄은 건너뛴다.
+            
+            if ($entry === true) continue;
+            
             // 레코드를 저장한다.
             
             if (!$this->_dry_run)
