@@ -140,8 +140,8 @@ CREATE TABLE postcodify_ranges_jibeon (
     range_start_minor SMALLINT(5) UNSIGNED,
     range_end_major SMALLINT(5) UNSIGNED,
     range_end_minor SMALLINT(5) UNSIGNED,
-    range_type TINYINT(1) DEFAULT 0,
     is_mountain TINYINT(1) DEFAULT 0,
+    admin_dongri VARCHAR(80),
     postcode5 CHAR(5)
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci;
 

@@ -94,6 +94,8 @@ class Postcodify_Parser_Ranges_Jibeon extends Postcodify_ZipReader
             'sido_en' => $sido_en,
             'sigungu_ko' => $sigungu_ko,
             'sigungu_en' => $sigungu_en,
+            'ilbangu_ko' => $ilbangu_ko,
+            'ilbangu_en' => $ilbangu_en,
             'eupmyeon_ko' => $eupmyeon_ko,
             'eupmyeon_en' => $eupmyeon_en,
             'dongri_ko' => $dongri_ko,

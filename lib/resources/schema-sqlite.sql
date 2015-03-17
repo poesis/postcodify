@@ -125,8 +125,8 @@ CREATE TABLE postcodify_ranges_jibeon (
     range_start_minor INTEGER(5),
     range_end_major INTEGER(5),
     range_end_minor INTEGER(5),
-    range_type INTEGER(1) DEFAULT 0,
     is_mountain INTEGER(1) DEFAULT 0,
+    admin_dongri VARCHAR(80),
     postcode5 CHAR(5)
 );
 
