@@ -1007,7 +1007,141 @@ class Postcodify_Indexer_CreateDB
     
     public function load_new_ranges()
     {
+        // DB를 준비한다.
         
+        if (!$this->_dry_run)
+        {
+            $db = Postcodify_Utility::get_db();
+            $db->beginTransaction();
+            $ps_insert_roads = $db->prepare('INSERT INTO postcodify_ranges_roads (sido_ko, sido_en, ' .
+                'sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en, ' .
+                'road_name_ko, road_name_en, range_start_major, range_start_minor, range_end_major, range_end_minor, ' .
+                'range_type, is_basement, postcode5) ' .
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            $ps_insert_jibeon = $db->prepare('INSERT INTO postcodify_ranges_jibeon (sido_ko, sido_en, ' .
+                'sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en, ' .
+                'dongri_ko, dongri_en, range_start_major, range_start_minor, range_end_major, range_end_minor, ' .
+                'is_mountain, admin_dongri, postcode5) ' .
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        }
+        
+        // 카운터를 초기화한다.
+        
+        $count = 0;
+        
+        // 도로명주소 범위 파일을 연다.
+        
+        $zip = new Postcodify_Parser_Ranges_Roads;
+        $zip->open_archive($this->_data_dir . '/areacd_rangeaddr_DB.zip');
+        $zip->open_named_file(iconv('UTF-8', 'CP949', '도로명'));
+        
+        // 데이터를 한 줄씩 읽는다.
+        
+        while ($entry = $zip->read_line())
+        {
+            // 불필요한 줄은 건너뛴다.
+            
+            if ($entry === true) continue;
+            
+            // 레코드를 저장한다.
+            
+            if (!$this->_dry_run)
+            {
+                $ps_insert_roads->execute(array(
+                    $entry->sido_ko,
+                    $entry->sido_en,
+                    $entry->sigungu_ko,
+                    $entry->sigungu_en,
+                    $entry->ilbangu_ko,
+                    $entry->ilbangu_en,
+                    $entry->eupmyeon_ko,
+                    $entry->eupmyeon_en,
+                    $entry->road_name_ko,
+                    $entry->road_name_en,
+                    $entry->range_start_major,
+                    $entry->range_start_minor,
+                    $entry->range_end_major,
+                    $entry->range_end_minor,
+                    $entry->range_type,
+                    $entry->is_basement,
+                    $entry->postcode5,
+                ));
+            }
+            
+            // 카운터를 표시한다.
+            
+            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
+            
+            // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
+            
+            unset($entry);
+        }
+        
+        // 도로명주소 범위 파일을 닫는다.
+        
+        $zip->close();
+        unset($zip);
+        
+        // 지번주소 범위 파일을 연다.
+        
+        $zip = new Postcodify_Parser_Ranges_Jibeon;
+        $zip->open_archive($this->_data_dir . '/areacd_rangeaddr_DB.zip');
+        $zip->open_named_file(iconv('UTF-8', 'CP949', '지번'));
+        
+        // 데이터를 한 줄씩 읽는다.
+        
+        while ($entry = $zip->read_line())
+        {
+            // 불필요한 줄은 건너뛴다.
+            
+            if ($entry === true) continue;
+            
+            // 레코드를 저장한다.
+            
+            if (!$this->_dry_run)
+            {
+                $ps_insert_jibeon->execute(array(
+                    $entry->sido_ko,
+                    $entry->sido_en,
+                    $entry->sigungu_ko,
+                    $entry->sigungu_en,
+                    $entry->ilbangu_ko,
+                    $entry->ilbangu_en,
+                    $entry->eupmyeon_ko,
+                    $entry->eupmyeon_en,
+                    $entry->dongri_ko,
+                    $entry->dongri_en,
+                    $entry->range_start_major,
+                    $entry->range_start_minor,
+                    $entry->range_end_major,
+                    $entry->range_end_minor,
+                    $entry->is_mountain,
+                    $entry->admin_dongri,
+                    $entry->postcode5,
+                ));
+            }
+            
+            // 카운터를 표시한다.
+            
+            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
+            
+            // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
+            
+            unset($entry);
+        }
+        
+        // 지번주소 범위 파일을 닫는다.
+        
+        $zip->close();
+        unset($zip);
+        
+        // 뒷정리.
+        
+        if (!$this->_dry_run)
+        {
+            $db->commit();
+            unset($db);
+        }
     }
     
     // 구 우편번호 범위 DB를 로딩한다.
