@@ -29,6 +29,7 @@ class Postcodify_Parser_Ranges_OldCode extends Postcodify_ZipReader
         
         $line = fgetcsv($this->_fp);
         if ($line === false || count($line) < 15) return false;
+        if (!ctype_digit($line[0])) return true;
         
         // 상세 데이터를 읽어들인다.
         

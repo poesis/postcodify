@@ -36,6 +36,7 @@ class Postcodify_Parser_Ranges_Jibeon extends Postcodify_ZipReader
         
         $line = parent::read_line($delimiter);
         if ($line === false || count($line) < 14) return false;
+        if (!ctype_digit($line[0])) return true;
         
         // 상세 데이터를 읽어들인다.
         
