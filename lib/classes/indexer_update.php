@@ -233,11 +233,6 @@ class Postcodify_Indexer_Update
             $ps_insert_numbers = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
             $ps_insert_buildings = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
             $ps_delete_buildings = $db->prepare('DELETE FROM postcodify_buildings WHERE address_id = ?');
-            $ps_select_oldaddr = $db->prepare('SELECT postcode6 FROM postcodify_ranges_oldcode WHERE sido_ko = ? AND ' .
-                '(sigungu_ko IS NULL OR sigungu_ko = ?) AND (ilbangu_ko IS NULL OR ilbangu_ko = ?) AND ' .
-                '(eupmyeon_ko IS NULL OR eupmyeon_ko = ?) AND (dongri_ko = ? OR dongri_ko = ?) AND ' .
-                '(range_start_major IS NULL OR (range_start_major <= ? AND range_end_major >= ? AND ' .
-                '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)))) ORDER BY seq LIMIT 1');
         }
         
         // 데이터 파일 목록을 구한다.
@@ -339,35 +334,12 @@ class Postcodify_Indexer_Update
                         
                         if (trim($entry->postcode6) === '' || $entry->postcode6 === '000000')
                         {
-                            $ps_select_oldaddr->execute(array(
-                                $road_info->sido_ko,
-                                $road_info->sigungu_ko,
-                                $road_info->ilbangu_ko,
-                                $road_info->eupmyeon_ko,
-                                $entry->dongri,
-                                $entry->admin_dongri,
-                                $entry->jibeon_major,
-                                $entry->jibeon_major,
-                                $entry->jibeon_minor,
-                                $entry->jibeon_minor,
-                            ));
-                            
-                            $postcode6_candidate = $ps_select_oldaddr->fetchColumn();
-                            $ps_select_oldaddr->closeCursor();
-                            if ($postcode6_candidate)
-                            {
-                                $entry->postcode6 = $postcode6_candidate;
-                            }
-                            else
-                            {
-                                $entry->postcode6 = null;
-                            }
+                            $entry->postcode6 = $this->find_postcode6($road_info, $entry->dongri, $entry->admin_dongri, $entry->jibeon_major, $entry->jibeon_major, $entry->jibeon_minor);
                         }
                         
                         // 기초구역번호를 구한다.
                         
-                        $postcode5 = $this->find_postcode5($entry->road_id, $entry->road_section, $entry->num_major, $entry->num_minor,
-                            $entry->dongri, $entry->jibeon_major, $entry->jibeon_minor, $entry->postcode6);
+                        $postcode5 = $this->find_postcode5($road_info, $entry->num_major, $entry->num_minor, $entry->dongri, $entry->admin_dongri, $entry->jibeon_major, $entry->jibeon_minor, $entry->postcode6);
                         
                         // 영문 동·리를 구한다.
                         
@@ -540,9 +512,64 @@ class Postcodify_Indexer_Update
         return $last_date;
     }
     
+    // 주어진 주소와 가장 근접한 기존 우편번호를 찾는 함수.
+    
+    public function find_postcode6($road_info, $dongri, $admin_dongri, $jibeon_major, $jibeon_minor)
+    {
+        // 시험구동인 경우 null을 반환한다.
+        
+        if ($this->_dry_run) return null;
+        
+        // DB 관련 객체들을 캐싱해 두는 변수들.
+        
+        static $db = null;
+        static $ps = null;
+        
+        // DB에 연결한다.
+        
+        if ($db === null)
+        {
+            $db = Postcodify_Utility::get_db();
+            $ps = $db->prepare('SELECT postcode6 FROM postcodify_ranges_oldcode WHERE sido_ko = ? AND ' .
+                '(sigungu_ko IS NULL OR sigungu_ko = ?) AND (ilbangu_ko IS NULL OR ilbangu_ko = ?) AND ' .
+                '(eupmyeon_ko IS NULL OR eupmyeon_ko = ?) AND (dongri_ko = ? OR dongri_ko = ?) AND ' .
+                '(range_start_major IS NULL OR (range_start_major <= ? AND range_end_major >= ? AND ' .
+                '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)))) ORDER BY seq LIMIT 1');
+        }
+        
+        // 우편번호를 찾는다.
+        
+        $ps->execute(array(
+            $road_info->sido_ko,
+            $road_info->sigungu_ko,
+            $road_info->ilbangu_ko,
+            $road_info->eupmyeon_ko,
+            $dongri,
+            $admin_dongri,
+            $jibeon_major,
+            $jibeon_major,
+            $jibeon_minor,
+            $jibeon_minor,
+        ));
+        
+        // 검색 결과가 있을 경우 우편번호를 반환하고, 그렇지 않으면 null을 반환한다.
+        
+        $postcode6 = $ps->fetchColumn();
+        $ps->closeCursor();
+        
+        if ($postcode6)
+        {
+            return $postcode6;
+        }
+        else
+        {
+            return null;
+        }
+    }
+    
     // 주어진 주소와 가장 근접한 기초구역번호(새우편번호)를 찾는 함수.
     
-    public function find_postcode5($road_id, $road_section, $num_major, $num_minor, $dongri, $jibeon_major, $jibeon_minor, $postcode6)
+    public function find_postcode5($road_info, $num_major, $num_minor, $dongri, $admin_dongri, $jibeon_major, $jibeon_minor, $postcode6)
     {
         // 시험구동인 경우 null을 반환한다.
         
@@ -556,68 +583,121 @@ class Postcodify_Indexer_Update
         static $ps3 = null;
         static $ps4 = null;
         static $ps5 = null;
+        static $ps6 = null;
+        static $ps7 = null;
         
         // DB에 연결한다.
         
         if ($db === null)
         {
             $db = Postcodify_Utility::get_db();
-            
-            $ps1 = $db->prepare('SELECT postcode5 FROM postcodify_addresses pa ' .
+            $ps1 = $db->prepare('SELECT postcode5 FROM postcodify_ranges_roads WHERE sido_ko = ? AND ' .
+                '(sigungu_ko IS NULL OR sigungu_ko = ?) AND (ilbangu_ko IS NULL OR ilbangu_ko = ?) AND ' .
+                '(eupmyeon_ko IS NULL OR eupmyeon_ko = ?) AND road_name_ko = ? AND ' .
+                'range_start_major <= ? AND range_end_major >= ? AND ' .
+                '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)) AND ' .
+                '(range_type = 0 OR range_type = 3 OR range_type = ?) ORDER BY seq LIMIT 1');
+            $ps2 = $db->prepare('SELECT postcode5 FROM postcodify_ranges_jibeon WHERE sido_ko = ? AND ' .
+                '(sigungu_ko IS NULL OR sigungu_ko = ?) AND (ilbangu_ko IS NULL OR ilbangu_ko = ?) AND ' .
+                '(eupmyeon_ko IS NULL OR eupmyeon_ko = ?) AND (dongri_ko = ? OR admin_dongri = ?) AND ' .
+                'range_start_major <= ? AND range_end_major >= ? AND ' .
+                '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)) ORDER BY seq LIMIT 1');
+            $ps3 = $db->prepare('SELECT postcode5 FROM postcodify_addresses pa ' .
                 'JOIN postcodify_keywords pk ON pa.id = pk.address_id ' .
                 'JOIN postcodify_numbers pn ON pa.id = pn.address_id ' .
                 'WHERE pk.keyword_crc32 = ? AND pn.num_major = ? AND pn.num_minor = ? LIMIT 1');
-            $ps2 = $db->prepare('SELECT postcode5 FROM postcodify_addresses pa ' .
+            $ps4 = $db->prepare('SELECT postcode5 FROM postcodify_addresses pa ' .
                 'JOIN postcodify_keywords pk ON pa.id = pk.address_id ' .
                 'JOIN postcodify_numbers pn ON pa.id = pn.address_id ' .
                 'WHERE pk.keyword_crc32 = ? AND pn.num_major = ? LIMIT 1');
-            $ps3 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE road_id = ? ' .
+            $ps5 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE road_id = ? ' .
                 'AND num_major % 2 = ? ORDER BY ABS(? - num_major) DESC LIMIT 1');
-            $ps4 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE road_id >= ? AND road_id <= ? ' . 
+            $ps6 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE road_id >= ? AND road_id <= ? ' . 
                 'AND num_major % 2 = ? ORDER BY ABS(? - num_major) DESC LIMIT 1');
-            $ps5 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE postcode6 = ? ' . 
+            $ps7 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE postcode6 = ? ' . 
                 'ORDER BY ABS(? - num_major) DESC LIMIT 1');
         }
         
-        // 같은 지번에 이미 부여된 기초구역번호가 있는지 찾아본다.
+        // 도로명주소 범위 데이터를 사용하여 기초구역번호를 찾아본다.
         
-        $ps1->execute(array(Postcodify_Utility::crc32_x64($dongri), $jibeon_major, $jibeon_minor));
+        $ps1->execute(array(
+            $road_info->sido_ko,
+            $road_info->sigungu_ko,
+            $road_info->ilbangu_ko,
+            $road_info->eupmyeon_ko,
+            $road_info->road_name_ko,
+            $num_major,
+            $num_major,
+            $num_minor,
+            $num_minor,
+            $num_major % 2 ? 2 : 1,
+        ));
         if ($postcode5 = $ps1->fetchColumn())
         {
             $ps1->closeCursor();
             return $postcode5;
         }
-        $ps2->execute(array(Postcodify_Utility::crc32_x64($dongri), $jibeon_major));
+        
+        // 지번주소 범위 데이터를 사용하여 기초구역번호를 찾아본다.
+        
+        $ps2->execute(array(
+            $road_info->sido_ko,
+            $road_info->sigungu_ko,
+            $road_info->ilbangu_ko,
+            $road_info->eupmyeon_ko,
+            $dongri,
+            $admin_dongri,
+            $jibeon_major,
+            $jibeon_major,
+            $jibeon_minor,
+            $jibeon_minor,
+        ));
         if ($postcode5 = $ps2->fetchColumn())
         {
             $ps2->closeCursor();
             return $postcode5;
         }
         
-        // 같은 도로, 같은 구간, 같은 방향에서 가장 가까운 기초구역번호를 찾아본다.
+        // 같은 지번에 이미 부여된 기초구역번호가 있는지 찾아본다.
         
-        $ps3->execute(array($road_id . $road_section, $num_major % 2, $num_major));
+        $ps3->execute(array(Postcodify_Utility::crc32_x64($dongri), $jibeon_major, $jibeon_minor));
         if ($postcode5 = $ps3->fetchColumn())
         {
             $ps3->closeCursor();
             return $postcode5;
         }
-        
-        // 같은 도로, 구간과 관계없이 같은 방향에서 가장 가까운 기초구역번호를 찾아본다.
-        
-        $ps4->execute(array($road_id . '00', $road_id . '99', $num_major % 2, $num_major));
+        $ps4->execute(array(Postcodify_Utility::crc32_x64($dongri), $jibeon_major));
         if ($postcode5 = $ps4->fetchColumn())
         {
             $ps4->closeCursor();
             return $postcode5;
         }
         
-        // 같은 우편번호가 부여된 주소들 중 가장 가까운 기초구역번호를 찾아본다.
+        // 같은 도로, 같은 구간, 같은 방향에서 가장 가까운 기초구역번호를 찾아본다.
         
-        $ps5->execute(array($postcode6, $num_major));
+        $ps5->execute(array($road_info->road_id, $num_major % 2, $num_major));
         if ($postcode5 = $ps5->fetchColumn())
         {
             $ps5->closeCursor();
+            return $postcode5;
+        }
+        
+        // 같은 도로, 구간과 관계없이 같은 방향에서 가장 가까운 기초구역번호를 찾아본다.
+        
+        $road_id_short = substr($road_info->road_id, 0, 12);
+        $ps6->execute(array($road_id_short . '00', $road_id_short . '99', $num_major % 2, $num_major));
+        if ($postcode5 = $ps6->fetchColumn())
+        {
+            $ps6->closeCursor();
+            return $postcode5;
+        }
+        
+        // 같은 기존 우편번호가 부여된 주소들 중 가장 가까운 기초구역번호를 찾아본다.
+        
+        $ps7->execute(array($postcode6, $num_major));
+        if ($postcode5 = $ps7->fetchColumn())
+        {
+            $ps7->closeCursor();
             return $postcode5;
         }
         
