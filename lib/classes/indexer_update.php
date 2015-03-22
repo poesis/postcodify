@@ -25,6 +25,7 @@ class Postcodify_Indexer_Update
     
     protected $_data_dir;
     protected $_dry_run = false;
+    protected $_ranges_available = false;
     
     // 생성자.
     
@@ -58,6 +59,14 @@ class Postcodify_Indexer_Update
         {
             echo '[ERROR] 기존 DB의 데이터 기준일을 찾을 수 없습니다.' . PHP_EOL;
             exit(3);
+        }
+        
+        // 범위 데이터를 사용할 수 있는지 확인한다.
+        
+        $tables_query = $db->query("SHOW TABLES LIKE 'postcodify_ranges_roads'");
+        if ($tables_query->fetchColumn())
+        {
+            $this->_ranges_available = true;
         }
         
         // 신설·변경·폐지된 도로 정보를 로딩한다.
@@ -520,6 +529,10 @@ class Postcodify_Indexer_Update
         
         if ($this->_dry_run) return null;
         
+        // 범위 데이터를 사용할 수 없는 경우 null을 반환한다.
+        
+        if (!$this->_ranges_available) return null;
+        
         // Prepared Statement를 생성한다.
         
         static $ps = null;
@@ -569,6 +582,10 @@ class Postcodify_Indexer_Update
         // 시험구동인 경우 null을 반환한다.
         
         if ($this->_dry_run) return null;
+        
+        // 범위 데이터를 사용할 수 없는 경우 null을 반환한다.
+        
+        if (!$this->_ranges_available) return null;
         
         // Prepared Statement를 생성한다.
         
