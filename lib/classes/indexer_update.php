@@ -53,7 +53,6 @@ class Postcodify_Indexer_Update
         $updated = $updated_query->fetchColumn();
         $updated_query->closeCursor();
         unset($updated_query);
-        unset($db);
         
         if (!preg_match('/^20[0-9]{6}$/', $updated))
         {
@@ -68,6 +67,8 @@ class Postcodify_Indexer_Update
         {
             $this->_ranges_available = true;
         }
+        unset($tables_query);
+        unset($db);
         
         // 신설·변경·폐지된 도로 정보를 로딩한다.
         
