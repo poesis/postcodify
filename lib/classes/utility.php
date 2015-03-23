@@ -36,8 +36,9 @@ class Postcodify_Utility
     // 캐시를 위한 변수들.
     
     public static $road_cache = array();
-    public static $english_cache = array();
     public static $building_cache = array();
+    public static $building_number_cache = array();
+    public static $english_cache = array();
     
     // DB에 연결하는 함수.
     

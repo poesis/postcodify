@@ -97,6 +97,10 @@ class Postcodify_Indexer_CreateDB
         $this->load_building_info();
         Postcodify_Utility::print_ok();
         
+        Postcodify_Utility::print_message('아파트 동범위 데이터를 로딩하는 중...');
+        $this->load_building_numbers();
+        Postcodify_Utility::print_ok();
+        
         Postcodify_Utility::print_message('영문 행정구역명을 로딩하는 중...');
         $this->load_english_aliases();
         Postcodify_Utility::print_ok();
@@ -387,6 +391,40 @@ class Postcodify_Indexer_CreateDB
             {
                 Postcodify_Utility::$building_cache[$entry->address_id] = implode('|', $entry->building_names);
             }
+            
+            // 카운터를 표시한다.
+            
+            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
+            unset($entry);
+        }
+        
+        // 뒷정리.
+        
+        $zip->close();
+        unset($zip);
+    }
+    
+    // 아파트 동범위 데이터를 로딩한다.
+    
+    public function load_building_numbers()
+    {
+        // Zip 파일을 연다.
+        
+        $zip = new Postcodify_Parser_Building_Numbers;
+        $zip->open_archive($this->_data_dir . '/building_numbers_DB.zip');
+        $zip->open_next_file();
+        
+        // 카운터를 초기화한다.
+        
+        $count = 0;
+        
+        // 데이터를 한 줄씩 읽는다.
+        
+        while ($entry = $zip->read_line())
+        {
+            // 동범위 정보를 캐시에 저장한다.
+            
+            Postcodify_Utility::$building_number_cache[$entry->address_id] = $entry->building_name . '|' . $entry->building_number;
             
             // 카운터를 표시한다.
             
@@ -705,7 +743,7 @@ class Postcodify_Indexer_CreateDB
             $db->beginTransaction();
             $ps_addr_select = $db->prepare('SELECT id, dongri_ko, other_addresses FROM postcodify_addresses where address_id = ?');
             $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode6 = ?, ' .
-                'building_name = ?, other_addresses = ? WHERE id = ?');
+                'building_name = ?, building_number = ?, other_addresses = ? WHERE id = ?');
             $ps_kwd_select = $db->prepare('SELECT keyword_crc32 FROM postcodify_keywords WHERE address_id = ?');
             $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
             $ps_building_insert = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
@@ -762,6 +800,20 @@ class Postcodify_Indexer_CreateDB
                     $common_residence_name = strval($entry->common_residence_name);
                     if ($common_residence_name === '') $common_residence_name = null;
                     
+                    // 아파트 동범위 정보를 구한다.
+                    
+                    if (isset(Postcodify_Utility::$building_number_cache[$entry->address_id]))
+                    {
+                        $building_numbers = explode('|', Postcodify_Utility::$building_number_cache[$entry->address_id]);
+                        $entry->building_names[] = $common_residence_name = $building_numbers[0];
+                        $building_number = $building_numbers[1];
+                        unset($building_numbers);
+                    }
+                    else
+                    {
+                        $building_number = null;
+                    }
+                    
                     // 기타 주소를 정리한다.
                     
                     $building_names = $entry->building_names;
@@ -784,6 +836,7 @@ class Postcodify_Indexer_CreateDB
                         $ps_addr_update->execute(array(
                             $entry->postcode6,
                             $common_residence_name,
+                            $building_number,
                             $other_addresses,
                             $proxy_id,
                         ));
