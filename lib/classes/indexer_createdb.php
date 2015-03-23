@@ -1216,10 +1216,33 @@ class Postcodify_Indexer_CreateDB
             unset($entry);
         }
         
-        // 뒷정리.
+        // 압축 파일을 닫는다.
         
         $zip->close();
         unset($zip);
+        
+        // 기존에 입력된 데이터 중 우편번호가 누락된 것이 있는지 찾아서, 누락된 우편번호를 입력한다.
+        
+        if (!$this->_dry_run)
+        {
+            $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode6 = ? WHERE id = ?');
+            $update_class = new Postcodify_Indexer_Update;
+            $missing_postcode6_query = $db->query('SELECT * FROM postcodify_addresses pa ' .
+                'JOIN postcodify_roads pr ON pa.road_id = pr.road_id ' .
+                'WHERE pa.postcode6 IS NULL or pa.postcode6 = \'000000\'');
+            $missing_postcode6 = $missing_postcode6_query->fetchAll(PDO::FETCH_OBJ);
+            foreach ($missing_postcode6 as $missing_entry)
+            {
+                $postcode6 = $update_class->find_postcode6($db, $missing_entry,
+                    $missing_entry->dongri_ko, $missing_entry->dongri_ko, $missing_entry->jibeon_major, $missing_entry->ibeon_minor);
+                if ($postcode6 !== null)
+                {
+                    $ps_addr_update->execute(array($postcode6, $missing_entry->id));
+                }
+            }
+        }
+        
+        // 뒷정리.
         
         if (!$this->_dry_run)
         {
