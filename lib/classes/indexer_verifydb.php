@@ -218,10 +218,7 @@ class Postcodify_Indexer_VerifyDB
                 }
                 $pass = false;
             }
-        }
-        
-        if ($pass)
-        {
+            
             $pc5_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode5 IS NULL OR postcode5 = '000000' ORDER BY pa.id LIMIT 100");
             if ($pc5_query->rowCount())
             {
