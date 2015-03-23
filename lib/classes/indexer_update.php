@@ -25,7 +25,7 @@ class Postcodify_Indexer_Update
     
     protected $_data_dir;
     protected $_dry_run = false;
-    protected $_ranges_available = false;
+    protected $_ranges_available = true;
     
     // 생성자.
     
@@ -63,9 +63,9 @@ class Postcodify_Indexer_Update
         // 범위 데이터를 사용할 수 있는지 확인한다.
         
         $tables_query = $db->query("SHOW TABLES LIKE 'postcodify_ranges_roads'");
-        if ($tables_query->fetchColumn())
+        if ($tables_query->fetchColumn() === false)
         {
-            $this->_ranges_available = true;
+            $this->_ranges_available = false;
         }
         unset($tables_query);
         unset($db);
