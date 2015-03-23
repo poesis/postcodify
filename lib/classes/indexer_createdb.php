@@ -824,7 +824,19 @@ class Postcodify_Indexer_CreateDB
                         {
                             $building_names[] = $extra_building_name;
                         }
-                        $building_names = array_unique($building_names);
+                    }
+                    $building_names = array_unique($building_names);
+                    
+                    if ($building_num !== null)
+                    {
+                        $building_names_count = count($building_names);
+                        for ($i = 0; $i < $building_names_count; $i++)
+                        {
+                            if (preg_match('/^[0-9a-z]+동$/iu', $building_names[$i]))
+                            {
+                                unset($building_names[$i]);
+                            }
+                        }
                     }
                     
                     $other_addresses = Postcodify_Utility::organize_other_addresses($other_addresses, $building_names, $entry->admin_dongri);
