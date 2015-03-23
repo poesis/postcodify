@@ -127,7 +127,7 @@ class Postcodify_Indexer_Update
             
             // 파일을 연다.
             
-            Postcodify_Utility::print_message('  - ' . substr(basename($filename), 14));
+            echo '  - ' . substr(basename($filename), 14) . PHP_EOL;
             $file = new Postcodify_Parser_Updated_Road_List;
             $file->open($filename);
             
@@ -200,8 +200,6 @@ class Postcodify_Indexer_Update
             
             $file->close();
             unset($file);
-            
-            Postcodify_Utility::print_ok();
         }
         
         // 뒷정리.
@@ -262,7 +260,7 @@ class Postcodify_Indexer_Update
             
             // 파일을 연다.
             
-            Postcodify_Utility::print_message('  - ' . substr(basename($filename), 14));
+            echo '  - ' . substr(basename($filename), 14) . PHP_EOL;
             $file = new Postcodify_Parser_Updated_Address;
             $file->open($filename);
             
@@ -274,6 +272,12 @@ class Postcodify_Indexer_Update
             
             while ($entry = $file->read_line())
             {
+                // 디버깅을 위한 변수들.
+                
+                $update_type = false;
+                $postcode6_is_guess = false;
+                $postcode5_is_guess = false;
+                
                 // 이미 존재하는 주소인지 확인한다.
                 
                 if (!$this->_dry_run)
@@ -340,16 +344,21 @@ class Postcodify_Indexer_Update
                     
                     if (!$address_info)
                     {
+                        $update_type = 'C';
+                        
                         // 우편번호가 누락된 경우 구 주소 우편번호 데이터를 사용하여 찾는다.
                         
                         if (trim($entry->postcode6) === '' || $entry->postcode6 === '000000')
                         {
                             $entry->postcode6 = $this->find_postcode6($db, $road_info, $entry->dongri, $entry->admin_dongri, $entry->jibeon_major, $entry->jibeon_major, $entry->jibeon_minor);
+                            $postcode6_is_guess = true;
                         }
                         
                         // 기초구역번호를 구한다.
                         
                         $postcode5 = $this->find_postcode5($db, $road_info, $entry->num_major, $entry->num_minor, $entry->dongri, $entry->admin_dongri, $entry->jibeon_major, $entry->jibeon_minor, $entry->postcode6);
+                        $postcode5_is_guess = true;
+                        $address_info = (object)array('postcode5' => $postcode5);
                         
                         // 영문 동·리를 구한다.
                         
@@ -387,6 +396,8 @@ class Postcodify_Indexer_Update
                     
                     else
                     {
+                        $update_type = 'M';
+                        
                         // 우편번호가 누락된 경우 기존의 우편번호를 사용한다.
                         
                         if (trim($entry->postcode6) === '' || $entry->postcode6 === '000000')
@@ -485,11 +496,36 @@ class Postcodify_Indexer_Update
                     // 안행부에서 멀쩡한 주소를 삭제했다가 며칠 후 다시 추가하는 경우가 종종 있다.
                     // 이걸 너무 열심히 따라하면 애꿎은 사용자들이 불편을 겪게 되므로
                     // 주소가 폐지된 것으로 나오더라도 DB에는 그대로 두는 것이 좋다.
+                    
+                    $update_type = 'D';
                 }
                 
-                // 카운터를 표시한다.
+                // 디버깅 정보를 표시한다.
                 
-                if (++$count % 16 === 0) Postcodify_Utility::print_progress($count);
+                if ($update_type !== false)
+                {
+                    $debug_msg = '    - ' . $update_type . ': ';
+                    if ($entry->postcode6 !== null)
+                    {
+                        $debug_msg .= $entry->postcode6 . ($postcode6_is_guess ? '* ' : '  ');
+                    }
+                    else
+                    {
+                        $debug_msg .= '        ';
+                    }
+                    if ($address_info && $address_info->postcode5 !== null)
+                    {
+                        $debug_msg .= $address_info->postcode5 . ($postcode5_is_guess ? '* ' : '  ');
+                    }
+                    else
+                    {
+                        $debug_msg .= '       ';
+                    }
+                    echo $debug_msg . $this->format_address($road_info, $entry) . PHP_EOL;
+                }
+                
+                // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
+                
                 unset($address_info);
                 unset($road_info);
                 unset($existing_keywords);
@@ -505,8 +541,6 @@ class Postcodify_Indexer_Update
             
             $file->close();
             unset($file);
-            
-            Postcodify_Utility::print_ok();
         }
         
         // 뒷정리.
@@ -715,7 +749,7 @@ class Postcodify_Indexer_Update
         return null;
     }
     
-    // 주어진 동·리의 영문 명칭을 찾는 함수.
+    // 주어진 동·리의 영문 명칭을 찾는 메소드.
     
     public function find_dongri_english($dongri)
     {
@@ -748,5 +782,14 @@ class Postcodify_Indexer_Update
         {
             return null;
         }
+    }
+    
+    // 디버깅을 위해 주소를 포맷하는 메소드.
+    
+    public function format_address($road_info, $entry)
+    {
+        $result = $road_info->sido_ko . ' ' . $road_info->sigungu_ko . ' ' . $road_info->ilbangu_ko . ' ' . $road_info->eupmyeon_ko . ' ' .
+            $road_info->road_name_ko . ' ' . $entry->num_major . ($entry->num_minor ? ('-' . $entry->num_minor) : '');
+        return preg_replace('/\s+/', ' ', $result);
     }
 }
