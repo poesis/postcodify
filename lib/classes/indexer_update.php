@@ -189,11 +189,6 @@ class Postcodify_Indexer_Update
                         ));
                     }
                 }
-                
-                // 카운터를 표시한다.
-                
-                if (++$count % 16 === 0) Postcodify_Utility::print_progress($count);
-                unset($entry);
             }
             
             // 파일을 닫는다.
