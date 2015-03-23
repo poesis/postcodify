@@ -47,6 +47,9 @@ class Postcodify_Indexer_VerifyDB
         'postcodify_numbers' => 8000000,
         'postcodify_buildings' => 600000,
         'postcodify_pobox' => 2000,
+        'postcodify_ranges_roads' => 200000,
+        'postcodify_ranges_jibeon' => 400000,
+        'postcodify_ranges_oldcode' => 30000,
         'postcodify_settings' => 2,
     );
     
