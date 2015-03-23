@@ -30,8 +30,8 @@ class Postcodify_Indexer_Set_Postcode
         $valid_options = false;
         if (count($args->args) === 2 && ctype_digit($args->args[0]) && ctype_digit($args->args[1]) && (strlen($args->args[1]) === 5 || strlen($args->args[1]) === 6))
         {
-            $address_id = $args[0];
-            $postcode = $args[1];
+            $address_id = $args->args[0];
+            $postcode = $args->args[1];
         }
         else
         {
