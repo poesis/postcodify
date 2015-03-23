@@ -190,7 +190,7 @@ class Postcodify_Server
                     'short' => strval($extra_info_short),
                     'others' => $other_addresses,
                     'addrid' => $row->id,
-                    'roadid' => $row->road_id,
+                    'roadid' => ($result->sort === 'POBOX') ? '' : $row->road_id,
                 );
             }
             else
