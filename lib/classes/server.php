@@ -85,12 +85,12 @@ class Postcodify_Server
                 $this->_ch = new Postcodify_Server_Cache($this->cache_driver, $this->cache_host, $this->cache_port, $this->cache_ttl);
             }
             $cache_key = sha1(strval($q));
-            $rows = null;
+            $addresses = null;
         }
         else
         {
             $cache_key = null;
-            $rows = null;
+            $addresses = null;
         }
         
         // 캐시에 데이터가 있는지 확인한다.
@@ -98,15 +98,15 @@ class Postcodify_Server
         if ($cache_key !== null)
         {
             $data_source = 'cache';
-            list($rows, $search_type, $search_error) = $this->_ch->get($cache_key);
+            list($addresses, $search_type, $search_error) = $this->_ch->get($cache_key);
         }
         
         // 캐시에서 찾지 못한 경우 DB에서 검색 쿼리를 실행한다.
         
-        if ($rows === null)
+        if ($addresses === null)
         {
             $data_source = 'db';
-            list($rows, $search_type, $search_error) = $this->get_db_rows($q);
+            list($addresses, $search_type, $search_error) = $this->get_addresses($q);
         }
         
         // 오류가 발생한 경우 처리를 중단한다.
@@ -120,7 +120,7 @@ class Postcodify_Server
         
         if ($cache_key !== null && $data_source === 'db')
         {
-            $this->_ch->set($cache_key, $rows, $search_type);
+            $this->_ch->set($cache_key, $addresses, $search_type);
         }
         
         // 검색 결과 오브젝트를 생성한다.
@@ -137,7 +137,7 @@ class Postcodify_Server
         
         // 각 레코드를 추가한다.
         
-        foreach ($rows as $row)
+        foreach ($addresses as $row)
         {
             // 한글 도로명 및 지번주소를 정리한다.
             
@@ -236,11 +236,11 @@ class Postcodify_Server
     
     // 주어진 쿼리를 DB에서 실행하는 메소드.
     
-    protected function get_db_rows($q)
+    protected function get_addresses($q)
     {
         // 반환할 변수들을 초기화한다.
         
-        $rows = array();
+        $addresses = array();
         $search_type = 'NONE';
         $search_error = null;
         
@@ -324,7 +324,7 @@ class Postcodify_Server
                 
                 // 검색을 수행한다.
                 
-                $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                $addresses = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
             }
             
             // 지번주소로 검색하는 경우...
@@ -364,11 +364,11 @@ class Postcodify_Server
                 
                 // 일단 검색해 본다.
                 
-                $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                $addresses = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
                 
                 // 검색 결과가 없다면 건물명을 동리로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
                 
-                if ($q->numbers[0] === null && $q->numbers[1] === null && !count($rows) && $q->lang === 'KO')
+                if ($q->numbers[0] === null && $q->numbers[1] === null && !count($addresses) && $q->lang === 'KO')
                 {
                     array_pop($joins);
                     array_pop($conds);
@@ -378,8 +378,8 @@ class Postcodify_Server
                     $conds[] = 'pb.keyword LIKE ?';
                     $args[] = '%' . $q->dongri . '%';
                     
-                    $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
-                    if (count($rows))
+                    $addresses = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                    if (count($addresses))
                     {
                         $search_type = 'BUILDING';
                         $q->sort = 'JUSO';
@@ -399,7 +399,7 @@ class Postcodify_Server
                     $args[] = '%' . $building_name . '%';
                 }
                 
-                $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                $addresses = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
             }
             
             // 도로명 + 건물명으로 검색하는 경우...
@@ -418,7 +418,7 @@ class Postcodify_Server
                     $args[] = '%' . $building_name . '%';
                 }
                 
-                $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                $addresses = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
             }
             
             // 동리 + 건물명으로 검색하는 경우...
@@ -437,7 +437,7 @@ class Postcodify_Server
                     $args[] = '%' . $building_name . '%';
                 }
                 
-                $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                $addresses = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
             }
             
             // 사서함으로 검색하는 경우...
@@ -462,7 +462,7 @@ class Postcodify_Server
                     }
                 }
                 
-                $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                $addresses = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
             }
             
             // 읍면으로 검색하는 경우...
@@ -471,11 +471,11 @@ class Postcodify_Server
             {
                 $search_type = 'EUPMYEON';
                 $conds[] = 'pa.postcode5 IS NOT NULL';
-                $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                $addresses = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
                 
                 // 검색 결과가 없다면 건물명을 읍면으로 잘못 해석했을 수도 있으므로 건물명 검색을 다시 시도해 본다.
                 
-                if (!count($rows) && $q->lang === 'KO')
+                if (!count($addresses) && $q->lang === 'KO')
                 {
                     array_pop($conds);
                     array_pop($conds);
@@ -485,8 +485,8 @@ class Postcodify_Server
                     $conds[] = 'pb.keyword LIKE ?';
                     $args[] = '%' . $q->eupmyeon . '%';
                     
-                    $rows = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
-                    if (count($rows))
+                    $addresses = $this->_dbh->query($query, $joins, $conds, $args, $q->lang, $q->sort);
+                    if (count($addresses))
                     {
                         $search_type = 'BUILDING';
                         $q->sort = 'JUSO';
@@ -498,7 +498,7 @@ class Postcodify_Server
             
             else
             {
-                $rows = array();
+                $addresses = array();
             }
         }
         catch (Exception $e)
@@ -506,10 +506,10 @@ class Postcodify_Server
             error_log('Postcodify ("' . $q . '"): ' . $e->getMessage());
             $search_type = 'ERROR';
             $search_error = $e->getMessage();
-            $rows = array();
+            $addresses = array();
         }
         
-        return array($rows, $search_type, $search_error);
+        return array($addresses, $search_type, $search_error);
     }
     
     // 항상 64비트식으로 (음수가 나오지 않도록) CRC32를 계산하는 메소드.
