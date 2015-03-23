@@ -71,7 +71,8 @@ class Postcodify_Indexer_Set_Postcode
         
         // 변경 내역을 표시한다.
         
-        echo '  #' . $entry->id . ' ' . str_pad($entry->postcode6, 6, ' ') . ' ' . str_pad($entry->postcode5, 5, ' ') . ' ' . $this->format_address($entry);
+        echo '  #' . $entry->id . ' ' . str_pad($entry->postcode6, 6, ' ') . ' ' . str_pad($entry->postcode5, 5, ' ') . ' ' .
+            $this->format_address($entry) . PHP_EOL;
     }
     
     // 디버깅을 위해 주소를 포맷하는 메소드.
