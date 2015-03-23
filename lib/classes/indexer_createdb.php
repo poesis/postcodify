@@ -824,8 +824,8 @@ class Postcodify_Indexer_CreateDB
                         {
                             $building_names[] = $extra_building_name;
                         }
+                        $building_names = array_unique($building_names);
                     }
-                    $building_names = array_unique($building_names);
                     
                     if ($building_num !== null)
                     {
