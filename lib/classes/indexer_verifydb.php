@@ -205,28 +205,41 @@ class Postcodify_Indexer_VerifyDB
         
         if ($pass)
         {
-            $pc6_query = $db->query("SELECT 1 FROM postcodify_addresses WHERE postcode6 IS NULL LIMIT 1");
-            $pc6_count = $pc6_query->fetchColumn();
-            
-            if ($pc6_count)
+            $pc6_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode6 IS NULL OR postcode6 = '000000' ORDER BY pa.id LIMIT 100");
+            if ($pc6_query->rowCount())
             {
-                echo '[ERROR] 우편번호가 누락된 레코드가 있습니다.' . PHP_EOL;
+                echo '[ERROR] 우편번호(기존번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
+                while ($entry = $pc6_query->fetch(PDO::FETCH_OBJ))
+                {
+                    echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
+                }
                 $pass = false;
             }
         }
         
         if ($pass)
         {
-            $pc5_query = $db->query("SELECT 1 FROM postcodify_addresses WHERE postcode5 IS NULL LIMIT 1");
-            $pc5_count = $pc5_query->fetchColumn();
-            
-            if ($pc5_count)
+            $pc5_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode5 IS NULL OR postcode5 = '000000' ORDER BY pa.id LIMIT 100");
+            if ($pc5_query->rowCount())
             {
-                echo '[ERROR] 우편번호가 누락된 레코드가 있습니다.' . PHP_EOL;
+                echo '[ERROR] 우편번호(기초구역번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
+                while ($entry = $pc5_query->fetch(PDO::FETCH_OBJ))
+                {
+                    echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
+                }
                 $pass = false;
             }
         }
         
         return $pass;
+    }
+    
+    // 디버깅을 위해 주소를 포맷하는 메소드.
+    
+    public function format_address($entry)
+    {
+        $result = $entry->sido_ko . ' ' . $entry->sigungu_ko . ' ' . $entry->ilbangu_ko . ' ' . $entry->eupmyeon_ko . ' ' .
+            $entry->road_name_ko . ' ' . $entry->num_major . ($entry->num_minor ? ('-' . $entry->num_minor) : '');
+        return preg_replace('/\s+/', ' ', $result);
     }
 }
