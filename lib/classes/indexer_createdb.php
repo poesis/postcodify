@@ -827,6 +827,12 @@ class Postcodify_Indexer_CreateDB
                         $building_names = array_unique($building_names);
                     }
                     
+                    if ($common_residence_name !== null)
+                    {
+                        $key = array_search($common_residence_name, $building_names);
+                        if ($key !== false) unset($building_names[$key]);
+                    }
+                    
                     if ($building_num !== null)
                     {
                         $building_names_count = count($building_names);
