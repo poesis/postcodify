@@ -743,7 +743,7 @@ class Postcodify_Indexer_CreateDB
             $db->beginTransaction();
             $ps_addr_select = $db->prepare('SELECT id, dongri_ko, other_addresses FROM postcodify_addresses where address_id = ?');
             $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode6 = ?, ' .
-                'building_name = ?, building_number = ?, other_addresses = ? WHERE id = ?');
+                'building_name = ?, building_num = ?, other_addresses = ? WHERE id = ?');
             $ps_kwd_select = $db->prepare('SELECT keyword_crc32 FROM postcodify_keywords WHERE address_id = ?');
             $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
             $ps_building_insert = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
@@ -804,14 +804,14 @@ class Postcodify_Indexer_CreateDB
                     
                     if (isset(Postcodify_Utility::$building_number_cache[$entry->address_id]))
                     {
-                        $building_numbers = explode('|', Postcodify_Utility::$building_number_cache[$entry->address_id]);
-                        $entry->building_names[] = $common_residence_name = $building_numbers[0];
-                        $building_number = $building_numbers[1];
-                        unset($building_numbers);
+                        $building_num_split = explode('|', Postcodify_Utility::$building_number_cache[$entry->address_id]);
+                        $entry->building_names[] = $common_residence_name = $building_num_split[0];
+                        $building_num = $building_num_split[1];
+                        unset($building_num_split);
                     }
                     else
                     {
-                        $building_number = null;
+                        $building_num = null;
                     }
                     
                     // 기타 주소를 정리한다.
@@ -836,7 +836,7 @@ class Postcodify_Indexer_CreateDB
                         $ps_addr_update->execute(array(
                             $entry->postcode6,
                             $common_residence_name,
-                            $building_number,
+                            $building_num,
                             $other_addresses,
                             $proxy_id,
                         ));
