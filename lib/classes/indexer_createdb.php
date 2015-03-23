@@ -1234,7 +1234,7 @@ class Postcodify_Indexer_CreateDB
             foreach ($missing_postcode6 as $missing_entry)
             {
                 $postcode6 = $update_class->find_postcode6($db, $missing_entry,
-                    $missing_entry->dongri_ko, $missing_entry->dongri_ko, $missing_entry->jibeon_major, $missing_entry->ibeon_minor);
+                    $missing_entry->dongri_ko, $missing_entry->dongri_ko, $missing_entry->jibeon_major, $missing_entry->jibeon_minor);
                 if ($postcode6 !== null)
                 {
                     $ps_addr_update->execute(array($postcode6, $missing_entry->id));
