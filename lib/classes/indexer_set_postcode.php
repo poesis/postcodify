@@ -66,7 +66,7 @@ class Postcodify_Indexer_Set_Postcode
         
         $column_name = strlen($postcode) === 6 ? 'postcode6' : 'postcode5';
         $ps_update = $db->prepare('UPDATE postcodify_addresses SET ' . $column_name . ' = ? WHERE id = ?');
-        $ps_update->execute($postcode, $entry->id);
+        $ps_update->execute(array($postcode, $entry->id));
         $entry->$column_name = $postcode;
         
         // 변경 내역을 표시한다.
