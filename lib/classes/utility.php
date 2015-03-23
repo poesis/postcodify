@@ -30,6 +30,7 @@ class Postcodify_Utility
         'sqlite-convert',
         'download-updates',
         'update',
+        'set-postcode',
     );
     
     // 캐시를 위한 변수들.
