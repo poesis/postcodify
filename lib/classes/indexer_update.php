@@ -507,7 +507,7 @@ class Postcodify_Indexer_Update
                     $debug_msg = '    - ' . $update_type . ': ';
                     if ($entry->postcode6 !== null)
                     {
-                        $debug_msg .= $entry->postcode6 . ($postcode6_is_guess ? '* ' : '  ');
+                        $debug_msg .= str_pad($entry->postcode6, 6, ' ') . ($postcode6_is_guess ? '* ' : '  ');
                     }
                     else
                     {
@@ -515,7 +515,7 @@ class Postcodify_Indexer_Update
                     }
                     if ($address_info && $address_info->postcode5 !== null)
                     {
-                        $debug_msg .= $address_info->postcode5 . ($postcode5_is_guess ? '* ' : '  ');
+                        $debug_msg .= str_pad($address_info->postcode5, 5, ' ') . ($postcode5_is_guess ? '* ' : '  ');
                     }
                     else
                     {
