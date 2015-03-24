@@ -104,7 +104,6 @@ div.postcodify_popup_layer div.postcodify_search_result div.address { clear: bot
 div.postcodify_popup_layer div.postcodify_search_result div.address a.selector { text-decoration: none; cursor: pointer; }
 div.postcodify_popup_layer div.postcodify_search_result div.address a.selector span.address_info { color: #000; display: inline-block; margin-right: 8px; }
 div.postcodify_popup_layer div.postcodify_search_result div.address a.selector span.extra_info { color: #444; display: inline-block; }
-div.postcodify_popup_layer div.postcodify_search_result div.address a.selector span.building_num { color: #f63; display: inline-block; }
 div.postcodify_popup_layer div.postcodify_search_result div.address a.show_old_addresses { display: none; }
 div.postcodify_popup_layer div.postcodify_search_result div.old_addresses { clear: both; color: #888; margin: 1px 0 0 60px; font-size: 12px; cursor: pointer; }
 div.postcodify_popup_layer div.postcodify_search_result div.map_link { position: absolute; right: 6px; top: 4px; }

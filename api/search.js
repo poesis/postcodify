@@ -374,7 +374,13 @@
                                     extraText = result.address["new"];
                                 } else {
                                     mainText = result.address["base"] + " " + result.address["new"];
-                                    extraText = result.other["long"];
+                                    extraText = result.address["old"];
+                                }
+                                if (result.address["building"] !== "" && result.address["building"] !== null) {
+                                    extraText += ", " + result.address["building"];
+                                    if (!settings.hideBuildingNums && result.other["bldnum"]) {
+                                        extraText += " " + result.other["bldnum"];
+                                    }
                                 }
                             }
                             
@@ -382,9 +388,6 @@
                             selector.append($('<span class="address_info"></span>').text(mainText));
                             if (extraText !== null && extraText !== "") {
                                 selector.append($('<span class="extra_info"></span>').append("(" + extraText + ")"));
-                            }
-                            if (typeof result.other["bldnum"] !== "undefined" && !settings.hideBuildingNums) {
-                                selector.append($('<span class="building_num"></span>').append(result.other["bldnum"]));
                             }
                             
                             // 우편번호, 기초구역번호, 주소 등을 항목에 추가한다.
