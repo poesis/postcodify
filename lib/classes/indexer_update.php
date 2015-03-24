@@ -675,6 +675,10 @@ class Postcodify_Indexer_Update
             $ps1->closeCursor();
             return $postcode5;
         }
+        else
+        {
+            $ps1->closeCursor();
+        }
         
         // 지번주소 범위 데이터를 사용하여 기초구역번호를 찾아본다.
         
@@ -695,6 +699,10 @@ class Postcodify_Indexer_Update
             $ps2->closeCursor();
             return $postcode5;
         }
+        else
+        {
+            $ps2->closeCursor();
+        }
         
         // 같은 지번에 이미 부여된 기초구역번호가 있는지 찾아본다.
         
@@ -704,11 +712,20 @@ class Postcodify_Indexer_Update
             $ps3->closeCursor();
             return $postcode5;
         }
+        else
+        {
+            $ps3->closeCursor();
+        }
+        
         $ps4->execute(array(Postcodify_Utility::crc32_x64($dongri), $jibeon_major));
         if ($postcode5 = $ps4->fetchColumn())
         {
             $ps4->closeCursor();
             return $postcode5;
+        }
+        else
+        {
+            $ps4->closeCursor();
         }
         
         // 같은 도로, 같은 구간, 같은 방향에서 가장 가까운 기초구역번호를 찾아본다.
@@ -718,6 +735,10 @@ class Postcodify_Indexer_Update
         {
             $ps5->closeCursor();
             return $postcode5;
+        }
+        else
+        {
+            $ps5->closeCursor();
         }
         
         // 같은 도로, 구간과 관계없이 같은 방향에서 가장 가까운 기초구역번호를 찾아본다.
@@ -729,6 +750,10 @@ class Postcodify_Indexer_Update
             $ps6->closeCursor();
             return $postcode5;
         }
+        else
+        {
+            $ps6->closeCursor();
+        }
         
         // 같은 기존 우편번호가 부여된 주소들 중 가장 가까운 기초구역번호를 찾아본다.
         
@@ -737,6 +762,10 @@ class Postcodify_Indexer_Update
         {
             $ps7->closeCursor();
             return $postcode5;
+        }
+        else
+        {
+            $ps7->closeCursor();
         }
         
         // 아직도 못 찾았으면 null을 반환한다.
@@ -775,6 +804,7 @@ class Postcodify_Indexer_Update
         }
         else
         {
+            $ps->closeCursor();
             return null;
         }
     }
