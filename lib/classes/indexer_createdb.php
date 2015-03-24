@@ -835,6 +835,7 @@ class Postcodify_Indexer_CreateDB
                     
                     if ($building_num !== null)
                     {
+                        $building_names = array_values($building_names);
                         $building_names_count = count($building_names);
                         for ($i = 0; $i < $building_names_count; $i++)
                         {
