@@ -191,6 +191,7 @@ class Postcodify_Server
                     'others' => $other_addresses,
                     'addrid' => $row->id,
                     'roadid' => ($result->sort === 'POBOX') ? '' : $row->road_id,
+                    'bldnum' => isset($row->building_num) ? strval($row->building_num) : '',
                 );
             }
             else
