@@ -833,6 +833,7 @@ class Postcodify_Indexer_CreateDB
                         $building_names_count = count($building_names);
                         for ($i = 0; $i < $building_names_count; $i++)
                         {
+                            if ($building_names[$i] === '') continue;
                             if (strpos($common_residence_name, $building_names[$i]) !== false)
                             {
                                 unset($building_names[$i]);
