@@ -829,8 +829,15 @@ class Postcodify_Indexer_CreateDB
                     
                     if ($common_residence_name !== null)
                     {
-                        $key = array_search($common_residence_name, $building_names);
-                        if ($key !== false) unset($building_names[$key]);
+                        $building_names = array_values($building_names);
+                        $building_names_count = count($building_names);
+                        for ($i = 0; $i < $building_names_count; $i++)
+                        {
+                            if (strpos($common_residence_name, $building_names[$i]) !== false)
+                            {
+                                unset($building_names[$i]);
+                            }
+                        }
                     }
                     
                     if ($building_num !== null)
@@ -887,6 +894,7 @@ class Postcodify_Indexer_CreateDB
                             }
                         }
                         
+                        if ($common_residence_name !== null) $building_names[] = $common_residence_name;
                         $building_names_consolidated = Postcodify_Utility::consolidate_building_names($building_names);
                         if ($building_names_consolidated !== '')
                         {
