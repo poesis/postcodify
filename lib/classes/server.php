@@ -183,13 +183,13 @@ class Postcodify_Server
                 $record->dbid = strval($row->address_id);
                 $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
                 $record->code5 = strval($row->postcode5);
-                $record->address = array('base' => $address_ko_base, 'new' => $address_ko_new, 'old' => $address_ko_old, 'building' => $row->building_name);
+                $record->address = array('base' => $address_ko_base, 'new' => $address_ko_new, 'old' => $address_ko_old, 'building' => strval($row->building_name));
                 $record->english = array('base' => $address_en_base, 'new' => $address_en_new, 'old' => $address_en_old, 'building' => '');
                 $record->other = array(
                     'long' => strval($extra_info_long),
                     'short' => strval($extra_info_short),
-                    'others' => $other_addresses,
-                    'addrid' => $row->id,
+                    'others' => strval($other_addresses),
+                    'addrid' => strval($row->id),
                     'roadid' => ($result->sort === 'POBOX') ? '' : $row->road_id,
                     'bldnum' => isset($row->building_num) ? strval($row->building_num) : '',
                 );
@@ -201,12 +201,12 @@ class Postcodify_Server
                 $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
                 $record->code5 = strval($row->postcode5);
                 $record->address = trim($address_ko_base . ' ' . $address_ko_new);
-                $record->canonical = $address_ko_old;
+                $record->canonical = strval($address_ko_old);
                 $record->extra_info_long = strval($extra_info_long);
                 $record->extra_info_short = strval($extra_info_short);
                 $record->english_address = trim($address_en_new . ', ' . $address_en_base);
                 $record->jibeon_address = trim($address_ko_base . ' ' . $address_ko_old);
-                $record->other = $other_addresses;
+                $record->other = strval($other_addresses);
             }
             
             // 반환할 인코딩이 UTF-8이 아닌 경우 여기서 변환한다.
