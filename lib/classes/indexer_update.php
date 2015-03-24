@@ -357,7 +357,7 @@ class Postcodify_Indexer_Update
                         
                         // 영문 동·리를 구한다.
                         
-                        $dongri_en = $this->find_dongri_english($entry->dongri);
+                        $dongri_en = $this->find_dongri_english($db, $entry->dongri);
                         
                         // 기타 주소 목록을 생성한다.
                         
@@ -408,7 +408,7 @@ class Postcodify_Indexer_Update
                         }
                         else
                         {
-                            $dongri_en = $this->find_dongri_english($entry->dongri);
+                            $dongri_en = $this->find_dongri_english($db, $entry->dongri);
                         }
                         
                         // 기타 주소 목록을 생성한다.
@@ -775,22 +775,17 @@ class Postcodify_Indexer_Update
     
     // 주어진 동·리의 영문 명칭을 찾는 메소드.
     
-    public function find_dongri_english($dongri)
+    public function find_dongri_english($db, $dongri)
     {
         // 시험구동인 경우 null을 반환한다.
         
         if ($this->_dry_run) return null;
         
-        // DB 관련 객체들을 캐싱해 두는 변수들.
+        // Prepared Statement를 생성한다.
         
-        static $db = null;
         static $ps = null;
-        
-        // DB에 연결한다.
-        
-        if ($db === null)
+        if ($ps === null)
         {
-            $db = Postcodify_Utility::get_db();
             $ps = $db->prepare('SELECT en FROM postcodify_english WHERE ko = ?');
         }
         
