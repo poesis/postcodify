@@ -35,11 +35,11 @@ class Postcodify_Parser_Building_Numbers extends Postcodify_ZipReader
         // 데이터를 읽어 반환한다.
         
         $line = parent::read_line($delimiter);
-        if ($line === false || count($line) < 3) return false;
+        if ($line === false || count($line) < 10) return false;
         return (object)array(
             'address_id' => trim($line[0]),
-            'building_name' => trim($line[1]),
-            'building_number' => trim($line[2]),
+            'building_name' => trim($line[8]),
+            'building_number' => trim($line[9]),
         );
     }
 }
