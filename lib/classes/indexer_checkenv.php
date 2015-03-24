@@ -109,12 +109,6 @@ class Postcodify_Indexer_CheckEnv
             exit(2);
         }
         
-        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/english_aliases_DB.zip'))
-        {
-            echo '[ERROR] 영문 번역 (english_aliases_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
-            exit(2);
-        }
-        
         if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/areacd_pobox_DB.zip'))
         {
             echo '[ERROR] 우체국 사서함 (areacd_pobox_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
@@ -124,6 +118,24 @@ class Postcodify_Indexer_CheckEnv
         if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/areacd_rangeaddr_DB.zip'))
         {
             echo '[ERROR] 우편번호 범위 (areacd_rangeaddr_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
+            exit(2);
+        }
+        
+        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/building_numbers_DB.zip'))
+        {
+            echo '[ERROR] 아파트 동수 범위 (building_numbers_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
+            exit(2);
+        }
+        
+        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/english_aliases_DB.zip'))
+        {
+            echo '[ERROR] 영문 번역 (english_aliases_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
+            exit(2);
+        }
+        
+        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/oldaddr_zipcode_DB.zip'))
+        {
+            echo '[ERROR] 구 우편번호 범위 (oldaddr_zipcode_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
             exit(2);
         }
         
@@ -142,9 +154,9 @@ class Postcodify_Indexer_CheckEnv
         $version_query = $db->query('SELECT VERSION()');
         $version = $version_query->fetchColumn();
         
-        if (!version_compare($version, '5.1', '>='))
+        if (!version_compare($version, '5.0', '>='))
         {
-            echo '[ERROR] MySQL DB의 버전은 5.1 이상이어야 합니다. 현재 사용중인 DB의 버전은 ' . $version . '입니다.' . PHP_EOL;
+            echo '[ERROR] MySQL DB의 버전은 5.0 이상이어야 합니다. 현재 사용중인 DB의 버전은 ' . $version . '입니다.' . PHP_EOL;
             exit(2);
         }
         
