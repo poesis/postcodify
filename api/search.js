@@ -82,6 +82,7 @@
                 forceDisplayPostcode5 : false,
                 focusKeyword : true,
                 focusDetails : true,
+                hideBuildingNums : false,
                 hideOldAddresses : true,
                 hideSummary : false,
                 useFullJibeon : false,
@@ -352,6 +353,7 @@
                             option.data("extra_info_long", result.other["long"]);
                             option.data("extra_info_short", result.other["short"]);
                             option.data("extra_info_nums", data.nums);
+                            option.data("building_nums", typeof result.other["bldnum"] === "undefined" ? "" : result.other["bldnum"]);
                             
                             // 반환된 데이터의 언어, 정렬 방법에 따라 클릭할 링크를 생성한다.
                             
@@ -380,6 +382,9 @@
                             selector.append($('<span class="address_info"></span>').text(mainText));
                             if (extraText !== null && extraText !== "") {
                                 selector.append($('<span class="extra_info"></span>').append("(" + extraText + ")"));
+                            }
+                            if (typeof result.other["bldnum"] !== "undefined" && !settings.hideBuildingNums) {
+                                selector.append($('<span class="building_num"></span>').append(result.other["bldnum"]));
                             }
                             
                             // 우편번호, 기초구역번호, 주소 등을 항목에 추가한다.
