@@ -26,7 +26,7 @@
     
     // 팝업 스크립트 버전을 선언한다.
     
-    var info = { version : "2.4.0" };
+    var info = { version : "2.5.0" };
     
     // Postcodify 메인 플러그인과 팝업 레이어를 위한 스타일시트를 로딩한다.
     

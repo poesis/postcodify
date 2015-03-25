@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "2.4.0", location : "" };
+    var info = { version : "2.5.0", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     

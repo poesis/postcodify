@@ -2,7 +2,7 @@
 
 // 버전 선언.
 
-define('POSTCODIFY_VERSION', '2.4.0');
+define('POSTCODIFY_VERSION', '2.5.0');
 define('POSTCODIFY_LIB_DIR', dirname(__FILE__));
 
 // 설정을 불러온다.
