@@ -859,16 +859,16 @@ class Postcodify_Indexer_CreateDB
                         $building_names_count = count($building_names);
                         for ($i = 0; $i < $building_names_count; $i++)
                         {
-                            if (preg_match('/^([0-9]{1,2})0([12])동$/iu', $building_names[$i], $building_name_matches))
+                            if (preg_match('/^([0-9]{1,2})0([123])동$/iu', $building_names[$i], $building_name_matches))
                             {
                                 if ($building_name_matches[2] === '1')
                                 {
-                                    $building_num = $building_names_matches[1] . '01동~';
+                                    $building_num = $building_name_matches[1] . '01동~';
                                     unset($building_names[$i]);
                                 }
                                 elseif (preg_match('/' . $building_name_matches[1] . '(?:차|단지)/', $common_residence_name))
                                 {
-                                    $building_num = $building_names_matches[1] . '01동~';
+                                    $building_num = $building_name_matches[1] . '01동~';
                                     unset($building_names[$i]);
                                 }
                             }
