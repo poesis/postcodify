@@ -94,10 +94,10 @@
             if (settings.api === info.freeAPI.defaultUrl && settings.apiBackup === null) {
                 settings.apiBackup = info.freeAPI.backupUrl;
             }
-            if (settings.api === info.freeAPI.defaultUrl && navigator.userAgent.match(/MSIE [5-7]\./)) {
+            if (settings.api === info.freeAPI.defaultUrl && navigator.userAgent.match(/MSIE [5-6]\./)) {
                 settings.api = "http:" + settings.api;
             }
-            if (settings.apiBackup === info.freeAPI.backupUrl && navigator.userAgent.match(/MSIE [5-7]\./)) {
+            if (settings.apiBackup === info.freeAPI.backupUrl && navigator.userAgent.match(/MSIE [5-6]\./)) {
                 settings.apiBackup = "http:" + settings.apiBackup;
             }
             if (settings.searchButtonContent === null) {

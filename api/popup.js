@@ -30,7 +30,7 @@
     
     // Postcodify 메인 플러그인과 팝업 레이어를 위한 스타일시트를 로딩한다.
     
-    var cdnPrefix = navigator.userAgent.match(/MSIE [5-7]\./) ? "http://cdn.poesis.kr" : "//cdn.poesis.kr";
+    var cdnPrefix = navigator.userAgent.match(/MSIE [5-6]\./) ? "http://cdn.poesis.kr" : "//cdn.poesis.kr";
     document.write('<link rel="stylesheet" type="text/css" href="' + cdnPrefix + '/post/popup.css" />');
     if (typeof $.fn.postcodify === "undefined") {
         document.write('<script type="text/javascript" src="' + cdnPrefix + '/post/search.min.js"></script>');
