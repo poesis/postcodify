@@ -853,6 +853,27 @@ class Postcodify_Indexer_CreateDB
                             }
                         }
                     }
+                    elseif ($common_residence_name !== null)
+                    {
+                        $building_names = array_values($building_names);
+                        $building_names_count = count($building_names);
+                        for ($i = 0; $i < $building_names_count; $i++)
+                        {
+                            if (preg_match('/^([0-9]{1,2})0([12])동$/iu', $building_names[$i], $building_name_matches))
+                            {
+                                if ($building_name_matches[2] === '1')
+                                {
+                                    $building_num = $building_names_matches[1] . '01동~';
+                                    unset($building_names[$i]);
+                                }
+                                elseif (preg_match('/' . $building_name_matches[1] . '(?:차|단지)/', $common_residence_name))
+                                {
+                                    $building_num = $building_names_matches[1] . '01동~';
+                                    unset($building_names[$i]);
+                                }
+                            }
+                        }
+                    }
                     
                     $other_addresses = Postcodify_Utility::organize_other_addresses($other_addresses, $building_names, $entry->admin_dongri);
                     
@@ -917,6 +938,7 @@ class Postcodify_Indexer_CreateDB
                     
                     unset($admin_dongri_variations);
                     unset($building_names);
+                    unset($building_name_matches);
                     unset($extra_building_names);
                     unset($existing_keywords_raw);
                     unset($existing_keywords);
