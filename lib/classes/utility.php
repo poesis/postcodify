@@ -234,55 +234,6 @@ class Postcodify_Utility
         return preg_replace('/[^ㄱ-ㅎ가-힣a-z0-9-]/uU', '', strtolower($str));
     }
     
-    // 기타 주소를 정리하는 함수.
-    
-    public static function organize_other_addresses($other_addresses, $building_names, $admin_dongri)
-    {
-        // 지번주소 목록을 분리한다.
-        
-        if (!is_array($other_addresses))
-        {
-            $other_addresses = explode("\n", $other_addresses);
-        }
-        
-        // 동별로 묶어서 재구성한다.
-        
-        $numeric_addresses = array();
-        foreach ($other_addresses as $address)
-        {
-            $address = explode(' ', $address);
-            if (count($address) < 2) continue;
-            $numeric_addresses[$address[0]][] = $address[1];
-        }
-        
-        $other_addresses = array();
-        foreach ($numeric_addresses as $dongri => $numbers)
-        {
-            natsort($numbers);
-            $other_addresses[] = $dongri . ' ' . implode(', ', $numbers);
-        }
-        
-        // 행정동명을 추가한다.
-        
-        $admin_dongri = strval($admin_dongri);
-        if ($admin_dongri !== '' && !isset($numeric_addresses[$admin_dongri]))
-        {
-            $other_addresses[] = $admin_dongri;
-        }
-        
-        // 건물 이름들을 추가한다.
-        
-        natsort($building_names);
-        foreach ($building_names as $building_name)
-        {
-            $other_addresses[] = str_replace(';', ':', $building_name);
-        }
-        
-        // 정리하여 반환한다.
-        
-        return implode('; ', $other_addresses);
-    }
-    
     // 도로명의 일반적인 변형들을 구하는 함수.
     
     public static function get_variations_of_road_name($str)
@@ -385,7 +336,57 @@ class Postcodify_Utility
         return array_unique($keywords);
     }
     
-    // 건물명 목록을 정리하는 함수.
+    // 기타 주소들을 정리하고 문자열로 포맷하여 반환하는 메소드.
+    
+    public static function format_other_addresses($other_addresses, $building_names, $admin_dongri)
+    {
+        // 지번주소 목록을 분리한다.
+        
+        if (!is_array($other_addresses))
+        {
+            $other_addresses = explode("\n", $other_addresses);
+        }
+        
+        // 동별로 묶어서 재구성한다.
+        
+        $numeric_addresses = array();
+        foreach ($other_addresses as $address)
+        {
+            $address = explode(' ', $address);
+            if (count($address) < 2) continue;
+            $numeric_addresses[$address[0]][] = $address[1];
+        }
+        
+        $other_addresses = array();
+        foreach ($numeric_addresses as $dongri => $numbers)
+        {
+            natsort($numbers);
+            $other_addresses[] = $dongri . ' ' . implode(', ', $numbers);
+        }
+        
+        // 행정동명을 추가한다.
+        
+        $admin_dongri = strval($admin_dongri);
+        if ($admin_dongri !== '' && !isset($numeric_addresses[$admin_dongri]))
+        {
+            $other_addresses[] = $admin_dongri;
+        }
+        
+        // 건물 이름들을 추가한다.
+        
+        $building_names = self::remove_duplicate_building_names($building_names);
+        natsort($building_names);
+        foreach ($building_names as $building_name)
+        {
+            $other_addresses[] = str_replace(';', ':', $building_name);
+        }
+        
+        // 정리하여 반환한다.
+        
+        return implode('; ', $other_addresses);
+    }
+    
+    // 건물명 목록을 정리하여 문자열로 반환하는 메소드. 건물명 검색 테이블을 생성할 때 사용한다.
     
     public static function consolidate_building_names($str)
     {
@@ -406,14 +407,20 @@ class Postcodify_Utility
             if (preg_match('/^(주|주건축물제|제)([0-9a-zA-Z]+|에이|비|씨|디|[가나다라마바사아자차카타파하])(호|동|호동)$/u', $val)) unset($str[$key]);
         }
         
-        // 건물명 목록을 길이 역순으로 정렬한다.
+        // 중복되는 이름을 제거하고 반환한다.
         
-        usort($str, 'Postcodify_Utility::sort_building_names');
-        
-        // 중복되는 이름을 제거한다.
+        $str = self::remove_duplicate_building_names($str);
+        return implode(',', $str);
+    }
+    
+    // 부분적으로 중복되는 건물명을 제거하는 메소드.
+    
+    public static function remove_duplicate_building_names($building_names)
+    {
+        usort($building_names, 'Postcodify_Utility::sort_building_names');
         
         $output = array();
-        foreach ($str as $val)
+        foreach ($building_names as $val)
         {
             $exists = false;
             foreach ($output as $compare)
@@ -430,19 +437,17 @@ class Postcodify_Utility
             }
         }
         
-        // 결과를 반환한다.
-        
-        return implode(',', $output);
+        return $output;
     }
     
-    // 건물명의 길이를 비교하는 함수.
+    // 건물명의 길이를 비교하는 메소드. 중복 건물명 제거를 위한 콜백 메소드이다.
     
     protected static function sort_building_names($a, $b)
     {
         return strlen($b) - strlen($a);
     }
     
-    // 무시할 건물명인지 확인하는 함수.
+    // 무시할 건물명인지 확인하는 메소드.
     
     protected static function is_ignorable_building_name($str)
     {
