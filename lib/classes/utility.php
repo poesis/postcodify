@@ -422,6 +422,7 @@ class Postcodify_Utility
         $output = array();
         foreach ($building_names as $val)
         {
+            if ($val === '') continue;
             $exists = false;
             foreach ($output as $compare)
             {
