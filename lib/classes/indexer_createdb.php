@@ -875,7 +875,7 @@ class Postcodify_Indexer_CreateDB
                         }
                     }
                     
-                    $other_addresses = Postcodify_Utility::organize_other_addresses($other_addresses, $building_names, $entry->admin_dongri);
+                    $other_addresses = Postcodify_Utility::format_other_addresses($other_addresses, $building_names, $entry->admin_dongri);
                     
                     // 우편번호와 공동주택명 등의 정보를 저장한다.
                     
