@@ -1328,19 +1328,26 @@ class Postcodify_Indexer_CreateDB
         
         if (!$this->_dry_run)
         {
-            $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode6 = ? WHERE id = ?');
             $update_class = new Postcodify_Indexer_Update;
-            $missing_postcode6_query = $db->query('SELECT * FROM postcodify_addresses pa ' .
+            $ps_missing_postcode6 = $db->prepare('SELECT * FROM postcodify_addresses pa ' .
                 'JOIN postcodify_roads pr ON pa.road_id = pr.road_id ' .
-                'WHERE pa.postcode6 IS NULL or pa.postcode6 = \'000000\'');
-            $missing_postcode6 = $missing_postcode6_query->fetchAll(PDO::FETCH_OBJ);
-            foreach ($missing_postcode6 as $missing_entry)
+                'WHERE pa.postcode6 IS NULL or pa.postcode6 = \'000000\' LIMIT 20');
+            $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode6 = ? WHERE id = ?');
+            
+            while (true)
             {
-                $postcode6 = $update_class->find_postcode6($db, $missing_entry,
-                    $missing_entry->dongri_ko, $missing_entry->dongri_ko, $missing_entry->jibeon_major, $missing_entry->jibeon_minor);
-                if ($postcode6 !== null)
+                $ps_missing_postcode6->execute();
+                $missing_entries = $ps_missing_postcode6->fetchAll(PDO::FETCH_OBJ);
+                if (!count($missing_entries)) break;
+                foreach ($missing_entries as $missing_entry)
                 {
-                    $ps_addr_update->execute(array($postcode6, $missing_entry->id));
+                    $postcode6 = $update_class->find_postcode6($db, $missing_entry,
+                        $missing_entry->dongri_ko, $missing_entry->dongri_ko,
+                        $missing_entry->jibeon_major, $missing_entry->jibeon_minor);
+                    if ($postcode6 !== null)
+                    {
+                        $ps_addr_update->execute(array($postcode6, $missing_entry->id));
+                    }
                 }
             }
         }
