@@ -49,16 +49,15 @@
             var closePopUpLayer;
             var container;
             var initializePostcodify;
+            var onSelect;
             
             options = typeof options !== "undefined" ? options : {};
-            if (typeof options.onSelect === "undefined") options.onSelect = function(){};
+            onSelect = typeof options.onSelect !== "undefined" ? options.onSelect : function(){};
             
             // <input>을 검색할 범위를 설정한다.
             
-            if (options.container) {
-                container = $(options.container);
-            } else if (options.inputParent) {
-                container = $(options.inputParent);
+            if (options.container || options.inputParent) {
+                container = $(options.container ? options.container : options.inputParent);
             } else {
                 container = $(document.body);
             }
@@ -114,7 +113,7 @@
             
             initializePostcodify = function() {
                 layer.data("initialized", "Y");
-                layer.find("div.postcodify_results").postcodify({
+                layer.find("div.postcodify_results").postcodify($.extend({
                     controls : layer.find("div.postcodify_controls"),
                     insertDbid : container.find(".postcodify_address_id"),
                     insertPostcode6 : container.find(".postcodify_postcode6"),
@@ -125,23 +124,15 @@
                     insertJibeonAddress : container.find(".postcodify_jibeon_address"),
                     insertEnglishAddress : container.find(".postcodify_english_address"),
                     insertEnglishJibeonAddress : container.find(".postcodify_english_jibeon_address"),
-                    overrideDomain : (options.overrideDomain ? options.overrideDomain : null),
-                    mapLinkProvider : (options.mapLinkProvider ? options.mapLinkProvider : "daum"),
-                    mapLinkContent : (options.mapLinkContent ? options.mapLinkContent : null),
-                    searchButtonContent : (options.searchButtonContent ? options.searchButtonContent : null),
-                    hideOldAddresses : (options.hideOldAddresses === true ? true : false),
-                    hideSummary : (options.hideSummary === true ? true : false),
-                    forceDisplayPostcode5 : (options.forceDisplayPostcode5 ? options.forceDisplayPostcode5 : false),
-                    requireExactQuery : (options.requireExactQuery === true ? true : false),
-                    useFullJibeon : (options.useFullJibeon === true ? true : false),
-                    useCors : (options.useCors === false ? false : true),
+                    mapLinkProvider : "daum",
+                    hideOldAddresses : false,
                     afterSelect : function(entry) {
                         container.find(".postcodify_postcode6_1").val(entry.data("code6").substr(0, 3));
                         container.find(".postcodify_postcode6_2").val(entry.data("code6").substr(4, 3));
-                        options.onSelect();
+                        onSelect();
                         closePopUpLayer();
                     }
-                });
+                }, options));
                 close_button.appendTo(layer.find("div.postcodify_search_controls"));
             };
             
