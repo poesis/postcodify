@@ -80,6 +80,7 @@
                 onError : function() { },
                 onComplete : function() { },
                 forceDisplayPostcode5 : false,
+                forceUseSSL : false,
                 focusKeyword : true,
                 focusDetails : true,
                 hideBuildingNums : false,
@@ -94,11 +95,19 @@
             if (settings.api === info.freeAPI.defaultUrl && settings.apiBackup === null) {
                 settings.apiBackup = info.freeAPI.backupUrl;
             }
-            if (settings.api === info.freeAPI.defaultUrl && navigator.userAgent.match(/MSIE [5-6]\./)) {
-                settings.api = "http:" + settings.api;
+            if (settings.api.substr(0, 2) === "//") {
+                if (navigator.userAgent.match(/MSIE [56]\./)) {
+                    settings.api = "http:" + settings.api;
+                } else if (settings.forceUseSSL) {
+                    settings.api = "https:" + settings.api;
+                }
             }
-            if (settings.apiBackup === info.freeAPI.backupUrl && navigator.userAgent.match(/MSIE [5-6]\./)) {
-                settings.apiBackup = "http:" + settings.apiBackup;
+            if (settings.apiBackup.substr(0, 2) === "//") {
+                if (navigator.userAgent.match(/MSIE [56]\./)) {
+                    settings.apiBackup = "http:" + settings.apiBackup;
+                } else if (settings.forceUseSSL) {
+                    settings.apiBackup = "https:" + settings.apiBackup;
+                }
             }
             if (settings.searchButtonContent === null) {
                 settings.searchButtonContent = info.translations[settings.language].msgSearch;
