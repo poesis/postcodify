@@ -26,6 +26,9 @@ div.postcodify_popup_background {
     -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=70)";
     filter: alpha(opacity=70);
 }
+div.postcodify_popup_background.ie6fix {
+    display: none;
+}
 
 div.postcodify_popup_layer {
     width: 640px; height: 640px;
@@ -48,6 +51,7 @@ div.postcodify_popup_layer.full_screen {
 }
 div.postcodify_popup_layer.ie6fix {
     top: 0; margin-top: 16px;
+    border: 1px solid #aaa;
 }
 
 div.postcodify_popup_layer div.postcodify_controls {

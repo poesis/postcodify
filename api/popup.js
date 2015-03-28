@@ -75,7 +75,10 @@
             
             var background = $('<div class="postcodify_popup_background"></div>');
             var layer = $('<div class="postcodify_popup_layer" data-version="' + info.version + '"></div>');
-            if (navigator.userAgent.match(/MSIE 6\./)) layer.addClass("ie6fix");
+            if (navigator.userAgent.match(/MSIE 6\./)) {
+                background.addClass("ie6fix");
+                layer.addClass("ie6fix");
+            }
             
             // 기본적인 태그들을 입력한다.
             
