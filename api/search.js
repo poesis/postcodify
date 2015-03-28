@@ -95,14 +95,14 @@
             if (settings.api === info.freeAPI.defaultUrl && settings.apiBackup === null) {
                 settings.apiBackup = info.freeAPI.backupUrl;
             }
-            if (settings.api.substr(0, 2) === "//") {
+            if (settings.api && settings.api.substr(0, 2) === "//") {
                 if (navigator.userAgent.match(/MSIE [56]\./)) {
                     settings.api = "http:" + settings.api;
                 } else if (settings.forceUseSSL) {
                     settings.api = "https:" + settings.api;
                 }
             }
-            if (settings.apiBackup.substr(0, 2) === "//") {
+            if (settings.apiBackup && settings.apiBackup.substr(0, 2) === "//") {
                 if (navigator.userAgent.match(/MSIE [56]\./)) {
                     settings.apiBackup = "http:" + settings.apiBackup;
                 } else if (settings.forceUseSSL) {
