@@ -70,7 +70,7 @@ class Postcodify_Indexer_Download_Updates
         // 다운로드할 업데이트 목록을 생성한다.
         
         $updates = array();
-        for ($time = $updated_time + 86400; $time < time() - 86400; $time += 86400)
+        for ($time = $updated_time; $time < time() - 86400; $time += 86400)
         {
             $updates[] = date('Ymd', $time);
         }
