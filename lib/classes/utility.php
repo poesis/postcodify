@@ -252,7 +252,7 @@ class Postcodify_Utility
                 $keywords[] = $matches[1] . $matches[2] . $matches[3];
             }
         }
-        elseif (preg_match('/^(.+)([동서남북]?)([0-9-]+)번?([가나라다마바사아자차카타파하동서남북안]?)길$/uU', $str, $matches))
+        elseif (preg_match('/^(.+)([동서남북]?)([0-9-]+)번?([가나라다마바사아자차카타파하동서남북안밖좌우옆갓상하샛윗아래]?)길$/uU', $str, $matches))
         {
             if (preg_match('/[로길]$/uU', $matches[1]))
             {
