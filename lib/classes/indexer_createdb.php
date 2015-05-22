@@ -1341,19 +1341,22 @@ class Postcodify_Indexer_CreateDB
         
         if (!$this->_dry_run)
         {
+            $last_id = 0;
             $update_class = new Postcodify_Indexer_Update;
             $ps_missing_postcode6 = $db->prepare('SELECT * FROM postcodify_addresses pa ' .
                 'JOIN postcodify_roads pr ON pa.road_id = pr.road_id ' .
-                'WHERE pa.postcode6 IS NULL or pa.postcode6 = \'000000\' LIMIT 20');
+                'WHERE (pa.postcode6 IS NULL or pa.postcode6 = \'000000\') AND id > ? ' .
+                'ORDER BY id LIMIT 20');
             $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode6 = ? WHERE id = ?');
             
             while (true)
             {
-                $ps_missing_postcode6->execute();
+                $ps_missing_postcode6->execute(array($last_id));
                 $missing_entries = $ps_missing_postcode6->fetchAll(PDO::FETCH_OBJ);
                 if (!count($missing_entries)) break;
                 foreach ($missing_entries as $missing_entry)
                 {
+                    $last_id = $missing_entry->id;
                     $postcode6 = $update_class->find_postcode6($db, $missing_entry,
                         $missing_entry->dongri_ko, $missing_entry->dongri_ko,
                         $missing_entry->jibeon_major, $missing_entry->jibeon_minor);
