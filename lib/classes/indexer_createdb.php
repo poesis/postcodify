@@ -984,7 +984,11 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Parser_NewPobox;
         $zip->open_archive($this->_data_dir . '/areacd_pobox_DB.zip');
-        $zip->open_named_file(iconv('UTF-8', 'CP949', '사서함'));
+        $openfile = $zip->open_named_file(iconv('UTF-8', 'CP949', '사서함'));
+        if ($openfile === false)
+        {
+            $zip->open_named_file('.txt');
+        }
         
         // 행정구역 캐시와 카운터를 초기화한다.
         
@@ -1136,7 +1140,11 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Parser_Ranges_Roads;
         $zip->open_archive($this->_data_dir . '/areacd_rangeaddr_DB.zip');
-        $zip->open_named_file(iconv('UTF-8', 'CP949', '도로명'));
+        $openfile = $zip->open_named_file(iconv('UTF-8', 'CP949', '도로명'));
+        if ($openfile === false)
+        {
+            $zip->open_next_file();
+        }
         
         // 데이터를 한 줄씩 읽는다.
         
@@ -1189,7 +1197,12 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Parser_Ranges_Jibeon;
         $zip->open_archive($this->_data_dir . '/areacd_rangeaddr_DB.zip');
-        $zip->open_named_file(iconv('UTF-8', 'CP949', '지번'));
+        $openfile = $zip->open_named_file(iconv('UTF-8', 'CP949', '지번'));
+        if ($openfile === false)
+        {
+            $zip->open_next_file();
+            $zip->open_next_file();
+        }
         
         // 데이터를 한 줄씩 읽는다.
         
