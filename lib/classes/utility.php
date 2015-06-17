@@ -190,7 +190,7 @@ class Postcodify_Utility
         self::print_negative_spaces(25);
         if ($count)
         {
-            echo str_pad(number_format($num), 17, ' ', STR_PAD_LEFT) . '  ' . '[ OK ]';
+            echo str_pad(number_format($count), 17, ' ', STR_PAD_LEFT) . '  ' . '[ OK ]';
         }
         else
         {

@@ -63,6 +63,7 @@ class Postcodify_Indexer_CreateDB
         $this->load_basic_info();
         $this->load_road_list();
         $this->load_english_aliases();
+        exit;
         
         $this->start_threaded_workers('load_juso', '주소 데이터를 로딩하는 중...');
         $this->start_threaded_workers('interim_indexes', '작업용 인덱스를 생성하는 중...');
@@ -352,7 +353,7 @@ class Postcodify_Indexer_CreateDB
         // Zip 파일을 연다.
         
         $zip = new Postcodify_Parser_Road_List;
-        $zip->open_archive($this->_data_dir . substr($this->_data_date, 0, 6) . 'RDNMCODE.zip');
+        $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'RDNMCODE.zip');
         $zip->open_named_file(iconv('UTF-8', 'CP949', '도로명코드_전체분'));
         
         // 카운터를 초기화한다.
