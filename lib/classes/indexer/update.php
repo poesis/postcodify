@@ -38,12 +38,7 @@ class Postcodify_Indexer_Update
     
     public function start($args)
     {
-        if (in_array('--dry-run', $args->options))
-        {
-            $this->_dry_run = true;
-        }
-        
-        Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION . ($this->_dry_run ? ' (시험구동)' : ''));
+        Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
         Postcodify_Utility::print_newline();
         
         // 어디까지 업데이트했는지 찾아본다.

@@ -23,7 +23,7 @@ class Postcodify_Indexer_CheckEnv
 {
     // 구동 환경을 점검한다.
     
-    public function check($dry_run)
+    public function check()
     {
         // 기본적인 환경을 확인한다.
         
@@ -139,10 +139,6 @@ class Postcodify_Indexer_CheckEnv
             echo '[ERROR] 구 우편번호 범위 (oldaddr_zipcode_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
             exit(2);
         }
-        
-        // 시험구동인 경우 여기서 종료한다.
-        
-        if ($dry_run) return;
         
         // DB의 사양을 점검한다.
         

@@ -41,6 +41,10 @@ if ($args->command === null)
 {
     Postcodify_Utility::print_usage_instructions();
 }
+if (in_array('--dry-run', $args->options))
+{
+    Postcodify_Utility::print_usage_instructions();
+}
 
 // 필요한 클래스를 호출한다.
 
