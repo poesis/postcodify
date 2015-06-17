@@ -69,20 +69,12 @@ class Postcodify_Indexer_CreateDB
         $this->create_tables();
         Postcodify_Utility::print_ok();
         
-        Postcodify_Utility::print_message('데이터 기준일 정보를 저장하는 중...');
-        $this->load_data_date();
+        Postcodify_Utility::print_message('기본 정보를 로딩하는 중...');
+        $this->load_basic_info();
         Postcodify_Utility::print_ok();
         
         Postcodify_Utility::print_message('도로명코드 목록을 로딩하는 중...');
-        $this->load_road_info();
-        Postcodify_Utility::print_ok();
-        
-        Postcodify_Utility::print_message('상세건물명을 로딩하는 중...');
-        $this->load_building_info();
-        Postcodify_Utility::print_ok();
-        
-        Postcodify_Utility::print_message('아파트 동범위 데이터를 로딩하는 중...');
-        $this->load_building_numbers();
+        $this->load_road_list();
         Postcodify_Utility::print_ok();
         
         Postcodify_Utility::print_message('영문 행정구역명을 로딩하는 중...');
@@ -109,6 +101,7 @@ class Postcodify_Indexer_CreateDB
         $this->load_pobox();
         Postcodify_Utility::print_ok();
         
+        /*
         Postcodify_Utility::print_message('새 우편번호 범위 데이터를 로딩하는 중...');
         $this->load_new_ranges();
         Postcodify_Utility::print_ok();
@@ -116,6 +109,7 @@ class Postcodify_Indexer_CreateDB
         Postcodify_Utility::print_message('구 우편번호 범위 데이터를 로딩하는 중...');
         $this->load_old_ranges();
         Postcodify_Utility::print_ok();
+        */
         
         Postcodify_Utility::print_message('영문 검색 키워드를 저장하는 중...');
         $this->save_english_keywords();
@@ -336,14 +330,34 @@ class Postcodify_Indexer_CreateDB
         }
     }
     
-    // 데이터 기준일 정보를 로딩한다.
+    // 기본 정보를 로딩한다.
     
-    public function load_data_date()
+    public function load_basic_info()
     {
-        // 파일에서 데이터 기준일을 읽는다.
+        // 데이터 기준일을 파악한다.
         
-        $date = trim(file_get_contents($this->_data_dir . '/도로명코드_기준일.txt'));
-        $this->_data_date = $date;
+        $year = $month = $day = null;
+        
+        $data_files = scandir(dirname(POSTCODIFY_LIB_DIR) . '/data');
+        foreach ($data_files as $filename)
+        {
+            if (preg_match('/^(20[0-9]{2})([0-9]{2})RDNM(ADR|CODE)\.zip$/', $filename, $matches))
+            {
+                $year = intval($matches[1], 10);
+                $month = intval($matches[2], 10);
+                $day = intval(date('t', mktime(12, 0, 0, $month, 1, $year)));
+            }
+        }
+        
+        if (!$year || !$month || !$day)
+        {
+            echo '[ERROR] 데이터 기준일을 파악할 수 없습니다.' . PHP_EOL;
+            exit(2);
+        }
+        else
+        {
+            $this->_data_date = sprintf('%04d%02d%02d', $year, $month, $day);
+        }
         
         // DB에 저장한다.
         
@@ -358,7 +372,7 @@ class Postcodify_Indexer_CreateDB
     
     // 도로명코드 목록을 로딩한다.
     
-    public function load_road_info()
+    public function load_road_list()
     {
         // DB를 준비한다.
         
@@ -367,15 +381,15 @@ class Postcodify_Indexer_CreateDB
             $db = Postcodify_Utility::get_db();
             $db->beginTransaction();
             $ps = $db->prepare('INSERT INTO postcodify_roads (road_id, road_name_ko, road_name_en, ' .
-                'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en) ' .
-                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en, updated) ' .
+                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         }
         
         // Zip 파일을 연다.
         
         $zip = new Postcodify_Parser_Road_List;
-        $zip->open_archive($this->_data_dir . '/도로명코드_전체분.zip');
-        $zip->open_next_file();
+        $zip->open_archive($this->_data_dir . substr($this->_data_date, 0, 6) . 'RDNMCODE.zip');
+        $zip->open_named_file(iconv('UTF-8', 'CP949', '도로명코드_전체분'));
         
         // 카운터를 초기화한다.
         
@@ -387,15 +401,15 @@ class Postcodify_Indexer_CreateDB
         {
             // 도로명을 캐시에 저장한다.
             
-            Postcodify_Utility::$road_cache[$entry->road_id] = $entry->road_name;
+            Postcodify_Utility::$road_cache[$entry->road_id] = $entry->road_name_ko;
             
             // 영문 행정구역명을 캐시에 저장한다.
             
-            Postcodify_Utility::$english_cache[$entry->road_name] = $entry->road_name_english;
-            Postcodify_Utility::$english_cache[$entry->sido] = $entry->sido_english;
-            if ($entry->sigungu) Postcodify_Utility::$english_cache[$entry->sigungu] = $entry->sigungu_english;
-            if ($entry->ilbangu) Postcodify_Utility::$english_cache[$entry->ilbangu] = $entry->ilbangu_english;
-            if ($entry->eupmyeon) Postcodify_Utility::$english_cache[$entry->eupmyeon] = $entry->eupmyeon_english;
+            Postcodify_Utility::$english_cache[$entry->road_name_ko] = $entry->road_name_en;
+            Postcodify_Utility::$english_cache[$entry->sido_ko] = $entry->sido_en;
+            if ($entry->sigungu_ko) Postcodify_Utility::$english_cache[$entry->sigungu_ko] = $entry->sigungu_en;
+            if ($entry->ilbangu_ko) Postcodify_Utility::$english_cache[$entry->ilbangu_ko] = $entry->ilbangu_en;
+            if ($entry->eupmyeon_ko) Postcodify_Utility::$english_cache[$entry->eupmyeon_ko] = $entry->eupmyeon_en;
             
             // 도로명 및 소속 행정구역 정보를 DB에 저장한다.
             
@@ -403,16 +417,17 @@ class Postcodify_Indexer_CreateDB
             {
                 $ps->execute(array(
                     $entry->road_id . $entry->road_section,
-                    $entry->road_name,
-                    $entry->road_name_english,
-                    $entry->sido,
-                    $entry->sido_english,
-                    $entry->sigungu,
-                    $entry->sigungu_english,
-                    $entry->ilbangu,
-                    $entry->ilbangu_english,
-                    $entry->eupmyeon,
-                    $entry->eupmyeon_english,
+                    $entry->road_name_ko,
+                    $entry->road_name_en,
+                    $entry->sido_ko,
+                    $entry->sido_en,
+                    $entry->sigungu_ko,
+                    $entry->sigungu_en,
+                    $entry->ilbangu_ko,
+                    $entry->ilbangu_en,
+                    $entry->eupmyeon_ko,
+                    $entry->eupmyeon_en,
+                    $entry->updated,
                 ));
             }
             
@@ -432,77 +447,6 @@ class Postcodify_Indexer_CreateDB
             $db->commit();
             unset($db);
         }
-    }
-    
-    // 상세건물명을 로딩한다.
-    
-    public function load_building_info()
-    {
-        // Zip 파일을 연다.
-        
-        $zip = new Postcodify_Parser_Building_Info;
-        $zip->open_archive($this->_data_dir . '/상세건물명.zip');
-        $zip->open_next_file();
-        
-        // 카운터를 초기화한다.
-        
-        $count = 0;
-        
-        // 데이터를 한 줄씩 읽는다.
-        
-        while ($entry = $zip->read_line())
-        {
-            // 건물명을 캐시에 저장한다.
-            
-            if (count($entry->building_names))
-            {
-                Postcodify_Utility::$building_cache[$entry->address_id] = implode('|', $entry->building_names);
-            }
-            
-            // 카운터를 표시한다.
-            
-            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
-            unset($entry);
-        }
-        
-        // 뒷정리.
-        
-        $zip->close();
-        unset($zip);
-    }
-    
-    // 아파트 동범위 데이터를 로딩한다.
-    
-    public function load_building_numbers()
-    {
-        // Zip 파일을 연다.
-        
-        $zip = new Postcodify_Parser_Building_Numbers;
-        $zip->open_archive($this->_data_dir . '/building_numbers_DB.zip');
-        $zip->open_next_file();
-        
-        // 카운터를 초기화한다.
-        
-        $count = 0;
-        
-        // 데이터를 한 줄씩 읽는다.
-        
-        while ($entry = $zip->read_line())
-        {
-            // 동범위 정보를 캐시에 저장한다.
-            
-            Postcodify_Utility::$building_number_cache[$entry->address_id] = $entry->building_name . '|' . $entry->building_number;
-            
-            // 카운터를 표시한다.
-            
-            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
-            unset($entry);
-        }
-        
-        // 뒷정리.
-        
-        $zip->close();
-        unset($zip);
     }
     
     // 영문 행정구역명을 로딩한다.

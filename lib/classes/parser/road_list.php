@@ -35,35 +35,31 @@ class Postcodify_Parser_Road_List extends Postcodify_ZipReader
         // 데이터를 읽는다.
         
         $line = parent::read_line($delimiter);
-        if ($line === false || count($line) < 17) return false;
-        
-        // 새 형식으로 제공되는 데이터인 경우 앞의 지역코드를 제거한다.
-        
-        if (count($line) > 17)
-        {
-            array_shift($line);
-            array_shift($line);
-        }
+        if ($line === false || count($line) < 20) return false;
         
         // 주소의 각 구성요소를 파악한다.
         
-        $road_id = trim($line[0]);
-        $road_section = str_pad(trim($line[3]), 2, '0', STR_PAD_LEFT);
-        $road_name = trim($line[1]);
-        $road_name_english = trim($line[2]);
-        $sido = trim($line[4]);
-        $sido_english = str_replace('-si', '', trim($line[5]));
+        $road_id = trim($line[0]) . trim($line[1]);
+        $road_section = str_pad(trim($line[4]), 2, '0', STR_PAD_LEFT);
+        $road_name = trim($line[2]);
+        $road_name_en = trim($line[3]);
+        $sido = trim($line[5]);
+        $sido_en = str_replace('-si', '', trim($line[15]));
         $sigungu = trim($line[6]);
-        $sigungu_english = trim($line[7]);
-        $eupmyeon = trim($line[8]);
-        $eupmyeon_english = trim($line[9]);
+        $sigungu_en = trim($line[16]);
+        $eupmyeon = trim($line[9]);
+        $eupmyeon_en = trim($line[17]);
+        $parent_road_id = $line[10] === '' ? null : (trim($line[0]) . trim($line[10]));
+        $previous_road_id = $line[14] === '' ? null : trim($line[14]);
+        $change_reason = $line[13] === '' ? null : intval($line[13]);
+        $updated = trim($line[18]);
         
         // 동 정보는 여기서 기억할 필요가 없다.
         
         if ($eupmyeon === '' || !preg_match('/[읍면]$/u', $eupmyeon))
         {
             $eupmyeon = null;
-            $eupmyeon_english = null;
+            $eupmyeon_en = null;
         }
         
         // 특별시/광역시 아래의 자치구와 행정시 아래의 일반구를 구분한다.
@@ -72,20 +68,20 @@ class Postcodify_Parser_Road_List extends Postcodify_ZipReader
         {
             $ilbangu = substr($sigungu, $pos + 1);
             $sigungu = substr($sigungu, 0, $pos);
-            if (($engpos = strpos($sigungu_english, ',')) !== false)
+            if (($engpos = strpos($sigungu_en, ',')) !== false)
             {
-                $ilbangu_english = trim(substr($sigungu_english, 0, $engpos));
-                $sigungu_english = trim(substr($sigungu_english, $engpos + 1));
+                $ilbangu_en = trim(substr($sigungu_en, 0, $engpos));
+                $sigungu_en = trim(substr($sigungu_en, $engpos + 1));
             }
             else
             {
-                $ilbangu_english = null;
+                $ilbangu_en = null;
             }
         }
         else
         {
             $ilbangu = null;
-            $ilbangu_english = null;
+            $ilbangu_en = null;
         }
         
         // 시군구가 없는 경우(세종시)를 처리한다.
@@ -93,7 +89,7 @@ class Postcodify_Parser_Road_List extends Postcodify_ZipReader
         if ($sigungu === '')
         {
             $sigungu = null;
-            $sigungu_english = null;
+            $sigungu_en = null;
         }
         
         // 데이터를 정리하여 반환한다.
@@ -101,16 +97,20 @@ class Postcodify_Parser_Road_List extends Postcodify_ZipReader
         return (object)array(
             'road_id' => $road_id,
             'road_section' => $road_section,
-            'road_name' => $road_name,
-            'road_name_english' => $road_name_english,
-            'sido' => $sido,
-            'sido_english' => $sido_english,
-            'sigungu' => $sigungu,
-            'sigungu_english' => $sigungu_english,
-            'ilbangu' => $ilbangu,
-            'ilbangu_english' => $ilbangu_english,
-            'eupmyeon' => $eupmyeon,
-            'eupmyeon_english' => $eupmyeon_english,
+            'road_name_ko' => $road_name,
+            'road_name_en' => $road_name_en,
+            'sido_ko' => $sido,
+            'sido_en' => $sido_en,
+            'sigungu_ko' => $sigungu,
+            'sigungu_en' => $sigungu_en,
+            'ilbangu_ko' => $ilbangu,
+            'ilbangu_en' => $ilbangu_en,
+            'eupmyeon_ko' => $eupmyeon,
+            'eupmyeon_en' => $eupmyeon_en,
+            'parent_road_id' => $parent_road_id,
+            'previous_road_id' => $previous_road_id,
+            'change_reason' => $change_reason,
+            'updated' => $updated,
         );
     }
 }
