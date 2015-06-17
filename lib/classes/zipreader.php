@@ -26,6 +26,20 @@ class Postcodify_ZipReader
     protected $_zip;
     protected $_fp;
     
+    // 새로운 Zip 아카이브를 열거나, 이미 열린 Zip 아카이브를 삽입할 수 있다.
+    
+    public function __construct($zip = null)
+    {
+        if ($zip instanceof ZipArchive || $zip === null)
+        {
+            $this->_zip = $zip;
+        }
+        elseif (file_exists($zip) && is_readable($zip))
+        {
+            $this->open_archive($zip);
+        }
+    }
+    
     // Zip 아카이브를 연다.
     
     public function open_archive($filename)
@@ -103,11 +117,25 @@ class Postcodify_ZipReader
         return explode($delimiter, $line);
     }
     
-    // 파일을 닫는다.
+    // 열린 파일을 닫는다.
+    
+    public function close_file()
+    {
+        if ($this->_fp) fclose($this->_fp);
+    }
+    
+    // Zip 아카이브를 닫는다.
     
     public function close()
     {
         if ($this->_fp) fclose($this->_fp);
         if ($this->_zip) $this->_zip->close();
+    }
+    
+    // Zip 아카이브를 반환한다.
+    
+    public function get_zip()
+    {
+        return $this->_zip;
     }
 }

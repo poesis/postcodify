@@ -24,6 +24,20 @@ class Postcodify_TextFileReader
     protected $_charset;
     protected $_fp;
     
+    // 새로운 텍스트 파일을 열거나, 이미 열린 파일 포인터를 삽입할 수 있다.
+    
+    public function __construct($fp = null)
+    {
+        if (is_resource($fp) || $fp === null)
+        {
+            $this->_fp = $fp;
+        }
+        elseif (file_exists($fp) && is_readable($fp))
+        {
+            $this->open($fp);
+        }
+    }
+    
     // 텍스트 파일을 연다.
     
     public function open($filename)
@@ -74,5 +88,12 @@ class Postcodify_TextFileReader
     public function close()
     {
         if ($this->_fp) fclose($this->_fp);
+    }
+    
+    // 파일 포인터를 반환한다.
+    
+    public function get_fp()
+    {
+        return $this->_fp;
     }
 }
