@@ -29,33 +29,17 @@ class Postcodify_Indexer_CreateDB
     protected $_dry_run = false;
     
     // 쓰레드별로 작업을 분할하는 데 사용하는 시도 목록.
+    // 건물정보 파일 기준으로 각각 200MB 내외가 되도록 나누었다.
     
     protected $_thread_groups = array(
-        '경기도', '경상남북도', '전라남북도', '충청남북도',
-        '서울특별시|부산광역시|세종특별자치시|제주특별자치도',
-        '강원도|광주광역시|대구광역시|대전광역시|울산광역시|인천광역시',
-    );
-    
-    // 작업용 인덱스 목록.
-    
-    protected $_interim_indexes = array(
-        'postcodify_addresses' => array('address_id'),
-        'postcodify_keywords' => array('address_id'),
-    );
-    
-    // 최종 인덱스 목록.
-    
-    protected $_final_indexes = array(
-        'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
-        'postcodify_addresses' => array('road_id', 'postcode6', 'postcode5'),
-        'postcodify_keywords' => array('keyword_crc32'),
-        'postcodify_english' => array('ko', 'ko_crc32', 'en', 'en_crc32'),
-        'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
-        'postcodify_buildings' => array('address_id'),
-        'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
-        'postcodify_ranges_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'road_name_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'range_type', 'postcode5'),
-        'postcodify_ranges_jibeon' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'admin_dongri', 'postcode5'),
-        'postcodify_ranges_oldcode' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'postcode6'),
+        '경기도',
+        '경상북도',
+        '경상남도',
+        '전라남도|광주광역시',
+        '전라북도|충청북도',
+        '서울특별시|부산광역시|울산광역시',
+        '충청남도|대전광역시|인천광역시',
+        '강원도|대구광역시|세종특별자치시|제주특별자치도',
     );
     
     // 생성자.

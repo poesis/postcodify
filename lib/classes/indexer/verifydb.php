@@ -21,22 +21,6 @@
 
 class Postcodify_Indexer_VerifyDB
 {
-    // 확인할 인덱스 목록.
-    
-    protected $_indexes = array(
-        'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
-        'postcodify_addresses' => array('address_id', 'road_id', 'postcode6', 'postcode5'),
-        'postcodify_keywords' => array('address_id', 'keyword_crc32'),
-        'postcodify_english' => array('ko', 'ko_crc32', 'en', 'en_crc32'),
-        'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
-        'postcodify_buildings' => array('address_id'),
-        'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
-        'postcodify_ranges_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'road_name_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'range_type', 'postcode5'),
-        'postcodify_ranges_jibeon' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'admin_dongri', 'postcode5'),
-        'postcodify_ranges_oldcode' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'postcode6'),
-        'postcodify_settings' => array(),
-    );
-    
     // 확인할 데이터 갯수.
     
     protected $_data_counts = array(
