@@ -19,7 +19,7 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-class Postcodify_Parser_Juso extends Postcodify_ZipReader
+class Postcodify_Parser_NewJibeon extends Postcodify_ZipReader
 {
     // 생성자에서 문자셋을 지정한다.
     
@@ -35,18 +35,41 @@ class Postcodify_Parser_Juso extends Postcodify_ZipReader
         // 데이터를 읽는다.
         
         $line = parent::read_line($delimiter);
-        if ($line === false || count($line) < 11) return false;
+        if ($line === false || count($line) < 14) return false;
+        
+        // 도로명주소를 정리한다.
+        
+        $road_id = trim($line[8]);
+        $num_major = intval($line[10]);
+        $num_minor = intval($line[11]); if (!$num_minor) $num_minor = null;
+        $is_basement = intval($line[9]);
+        
+        // 지번주소를 정리한다.
+        
+        $dongri = trim($line[4]);
+        if ($dongri === '') $dongri = trim($line[3]);
+        $dongri = preg_replace('/\\(.+\\)/', '', $dongri);
+        
+        $jibeon_major = intval($line[6]);
+        $jibeon_minor = intval($line[7]); if (!$jibeon_minor) $jibeon_minor = null;
+        $is_mountain = intval($line[5]);
+        
+        // 변경내역을 정리한다.
+        
+        $change_reason = $line[13] === '' ? null : intval($line[13]);
         
         // 데이터를 정리하여 반환한다.
         
         return (object)array(
-            'address_id' => trim($line[0]),
-            'postcode5' => trim($line[6]),
-            'road_id' => trim($line[1]),
-            'road_section' => str_pad(trim($line[2]), 2, '0', STR_PAD_LEFT),
-            'num_major' => $line[4] ? (int)$line[4] : null,
-            'num_minor' => $line[5] ? (int)$line[5] : null,
-            'is_basement' => (int)$line[3],
+            'road_id' => $road_id,
+            'num_major' => $num_major,
+            'num_minor' => $num_minor,
+            'is_basement' => $is_basement,
+            'dongri' => $dongri,
+            'jibeon_major' => $jibeon_major,
+            'jibeon_minor' => $jibeon_minor,
+            'is_mountain' => $is_mountain,
+            'change_reason' => $change_reason,
         );
     }
 }
