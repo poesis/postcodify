@@ -144,11 +144,13 @@ class Postcodify_Indexer_CreateDB
         switch ($task_name)
         {
             case 'interim_indexes':
-                $tasks = $this->_interim_indexes;
+                $schema = $this->load_schema();
+                $tasks = $schema->interim_indexes;
                 $task_name = 'create_indexes';
                 break;
             case 'final_indexes':
-                $tasks = $this->_final_indexes;
+                $schema = $this->load_schema();
+                $tasks = $schema->final_indexes;
                 $task_name = 'create_indexes';
                 break;
             default:
@@ -204,6 +206,57 @@ class Postcodify_Indexer_CreateDB
         shmop_close($shmop);
     }
     
+    // DB 스키마를 로딩한다.
+    
+    public function load_schema()
+    {
+        $create_tables = array();
+        $interim_indexes = array();
+        $final_indexes = array();
+        
+        $schema = (include POSTCODIFY_LIB_DIR . '/resources/schema.php');
+        
+        foreach ($schema as $table_name => $table_definition)
+        {
+            $table_query = 'CREATE TABLE ' . $table_name;
+            $columns = array();
+            foreach ($table_definition as $column_name => $column_definition)
+            {
+                switch ($column_name)
+                {
+                    case '_interim':
+                        $interim_indexes[$table_name] = $column_definition;
+                        break;
+                    case '_indexes':
+                        $final_indexes[$table_name] = $column_definition;
+                        break;
+                    default:
+                        if (POSTCODIFY_DB_DRIVER !== 'mysql')
+                        {
+                            $column_definition = preg_replace('/(SMALL|TINY)INT\b/', 'INT', $column_definition);
+                            $column_definition = str_replace('INT PRIMARY KEY AUTO_INCREMENT', 'INTEGER PRIMARY KEY', $column_definition);
+                        }
+                        if ($column_name[0] !== '_')
+                        {
+                            $columns[] = $column_name . ' ' . $column_definition;
+                        }
+                }
+            }
+            $table_query .= ' (' . implode(', ', $columns) . ')';
+            if (POSTCODIFY_DB_DRIVER === 'mysql')
+            {
+                $table_query .= ' ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_unicode_ci';
+            }
+            $create_tables[] = $table_query;
+        }
+        
+        return (object)array(
+            'create_tables' => $create_tables,
+            'interim_indexes' => $interim_indexes,
+            'final_indexes' => $final_indexes,
+        );
+    }
+    
     // 테이블을 생성한다.
     
     public function create_tables()
@@ -211,7 +264,37 @@ class Postcodify_Indexer_CreateDB
         if (!$this->_dry_run)
         {
             $db = Postcodify_Utility::get_db();
-            $db->exec(file_get_contents(POSTCODIFY_LIB_DIR . '/resources/schema-mysql.sql'));
+            
+            // 이미 있는 postcodify_* 테이블을 삭제한다.
+            
+            $existing_tables = array();
+            if (POSTCODIFY_DB_DRIVER === 'mysql')
+            {
+                $existing_tables_query = $db->query("SHOW TABLES LIKE 'postcodify_%'");
+            }
+            else
+            {
+                $existing_tables_query = $db->query("SELECT name FROM sqlite_master WHERE type = 'table' and name LIKE 'postcodify_%'");
+            }
+            
+            while ($table_name = $existing_tables_query->fetchColumn())
+            {
+                $existing_tables[] = $table_name;
+            }
+            
+            foreach ($existing_tables as $table_name)
+            {
+                $db->exec("DROP TABLE $table_name");
+            }
+            
+            // 새 테이블을 생성한다.
+            
+            $schema = $this->load_schema();
+            foreach ($schema->create_tables as $table_query)
+            {
+                $db->exec($table_query);
+            }
+            
             unset($db);
         }
     }
