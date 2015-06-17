@@ -65,65 +65,35 @@ class Postcodify_Indexer_CreateDB
         $checkenv = new Postcodify_Indexer_CheckEnv;
         $checkenv->check($this->_dry_run);
         
-        Postcodify_Utility::print_message('테이블을 생성하는 중...');
         $this->create_tables();
-        Postcodify_Utility::print_ok();
-        
-        Postcodify_Utility::print_message('기본 정보를 로딩하는 중...');
         $this->load_basic_info();
-        Postcodify_Utility::print_ok();
-        
-        Postcodify_Utility::print_message('도로명코드 목록을 로딩하는 중...');
         $this->load_road_list();
-        Postcodify_Utility::print_ok();
-        
-        Postcodify_Utility::print_message('영문 행정구역명을 로딩하는 중...');
         $this->load_english_aliases();
-        Postcodify_Utility::print_ok();
         
-        Postcodify_Utility::print_message('주소 데이터를 로딩하는 중...');
-        $this->start_threaded_workers('load_juso');
-        Postcodify_Utility::print_ok();
+        $this->start_threaded_workers('load_juso', '주소 데이터를 로딩하는 중...');
+        $this->start_threaded_workers('interim_indexes', '작업용 인덱스를 생성하는 중...');
+        $this->start_threaded_workers('load_jibeon', '지번 데이터를 로딩하는 중...');
+        $this->start_threaded_workers('load_extra_info', '부가정보 데이터를 로딩하는 중...');
         
-        Postcodify_Utility::print_message('작업용 인덱스를 생성하는 중...');
-        $this->start_threaded_workers('interim_indexes');
-        Postcodify_Utility::print_ok();
-        
-        Postcodify_Utility::print_message('지번 데이터를 로딩하는 중...');
-        $this->start_threaded_workers('load_jibeon');
-        Postcodify_Utility::print_ok();
-        
-        Postcodify_Utility::print_message('부가정보 데이터를 로딩하는 중...');
-        $this->start_threaded_workers('load_extra_info');
-        Postcodify_Utility::print_ok();
-        
-        Postcodify_Utility::print_message('사서함 데이터를 로딩하는 중...');
         $this->load_pobox();
-        Postcodify_Utility::print_ok();
         
         /*
-        Postcodify_Utility::print_message('새 우편번호 범위 데이터를 로딩하는 중...');
         $this->load_new_ranges();
-        Postcodify_Utility::print_ok();
-        
-        Postcodify_Utility::print_message('구 우편번호 범위 데이터를 로딩하는 중...');
         $this->load_old_ranges();
-        Postcodify_Utility::print_ok();
         */
         
-        Postcodify_Utility::print_message('영문 검색 키워드를 저장하는 중...');
         $this->save_english_keywords();
-        Postcodify_Utility::print_ok();
-        
-        Postcodify_Utility::print_message('최종 인덱스를 생성하는 중...');
-        $this->start_threaded_workers('final_indexes');
-        Postcodify_Utility::print_ok();
+        $this->start_threaded_workers('final_indexes', '최종 인덱스를 생성하는 중...');
     }
     
     // 작업 쓰레드를 생성한다.
     
-    public function start_threaded_workers($task_name)
+    public function start_threaded_workers($task_name, $display_title)
     {
+        // 작업 이름을 화면에 표시한다.
+        
+        Postcodify_Utility::print_message($display_title);
+        
         // 카운터로 사용하는 공유 메모리를 초기화한다.
         
         $shmop = shmop_open($this->_shmop_key, 'c', 0644, 4);
@@ -197,7 +167,12 @@ class Postcodify_Indexer_CreateDB
         
         // 공유 메모리를 닫는다.
         
+        $count = current(unpack('L', shmop_read($shmop, 0, 4)));
         shmop_close($shmop);
+        
+        // 작업 완료 메시지를 화면에 표시한다.
+        
+        Postcodify_Utility::print_ok($count);
     }
     
     // DB 스키마를 로딩한다.
@@ -255,6 +230,8 @@ class Postcodify_Indexer_CreateDB
     
     public function create_tables()
     {
+        Postcodify_Utility::print_message('테이블을 생성하는 중...');
+        
         if (!$this->_dry_run)
         {
             $db = Postcodify_Utility::get_db();
@@ -291,6 +268,8 @@ class Postcodify_Indexer_CreateDB
             
             unset($db);
         }
+        
+        Postcodify_Utility::print_ok();
     }
     
     // 인덱스를 생성한다. (쓰레드 사용)
@@ -334,6 +313,8 @@ class Postcodify_Indexer_CreateDB
     
     public function load_basic_info()
     {
+        Postcodify_Utility::print_message('기본 정보를 로딩하는 중...');
+        
         // 데이터 기준일을 파악한다.
         
         $year = $month = $day = null;
@@ -368,12 +349,16 @@ class Postcodify_Indexer_CreateDB
             $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('updated', '" . $this->_data_date . "')");
             unset($db);
         }
+        
+        Postcodify_Utility::print_ok();
     }
     
     // 도로명코드 목록을 로딩한다.
     
     public function load_road_list()
     {
+        Postcodify_Utility::print_message('도로명코드 목록을 로딩하는 중...');
+        
         // DB를 준비한다.
         
         if (!$this->_dry_run)
@@ -447,12 +432,16 @@ class Postcodify_Indexer_CreateDB
             $db->commit();
             unset($db);
         }
+        
+        Postcodify_Utility::print_ok($count);
     }
     
     // 영문 행정구역명을 로딩한다.
     
     public function load_english_aliases()
     {
+        Postcodify_Utility::print_message('영문 행정구역명을 로딩하는 중...');
+        
         // Zip 파일을 연다.
         
         $zip = new Postcodify_Parser_English_Aliases;
@@ -481,6 +470,8 @@ class Postcodify_Indexer_CreateDB
         
         $zip->close();
         unset($zip);
+        
+        Postcodify_Utility::print_ok($count);
     }
     
     // 주소 데이터를 로딩한다. (쓰레드 사용)
@@ -974,6 +965,8 @@ class Postcodify_Indexer_CreateDB
     
     public function load_pobox()
     {
+        Postcodify_Utility::print_message('사서함 데이터를 로딩하는 중...');
+        
         // DB를 준비한다.
         
         if (!$this->_dry_run)
@@ -1119,12 +1112,16 @@ class Postcodify_Indexer_CreateDB
             $db->commit();
             unset($db);
         }
+        
+        Postcodify_Utility::print_ok();
     }
     
     // 새 우편번호 범위 DB를 로딩한다.
     
     public function load_new_ranges()
     {
+        Postcodify_Utility::print_message('새 우편번호 범위 데이터를 로딩하는 중...');
+        
         // DB를 준비한다.
         
         if (!$this->_dry_run)
@@ -1269,12 +1266,16 @@ class Postcodify_Indexer_CreateDB
             $db->commit();
             unset($db);
         }
+        
+        Postcodify_Utility::print_ok($count);
     }
     
     // 구 우편번호 범위 DB를 로딩한다.
     
     public function load_old_ranges()
     {
+        Postcodify_Utility::print_message('구 우편번호 범위 데이터를 로딩하는 중...');
+        
         // DB를 준비한다.
         
         if (!$this->_dry_run)
@@ -1348,7 +1349,12 @@ class Postcodify_Indexer_CreateDB
         $zip->close();
         unset($zip);
         
+        Postcodify_Utility::print_ok($count);
+        
         // 기존에 입력된 데이터 중 우편번호가 누락된 것이 있는지 찾아서, 누락된 우편번호를 입력한다.
+        
+        Postcodify_Utility::print_message('구 우편번호가 누락된 데이터를 확인하는 중...');
+        $count = 0;
         
         if (!$this->_dry_run)
         {
@@ -1386,12 +1392,16 @@ class Postcodify_Indexer_CreateDB
             $db->commit();
             unset($db);
         }
+        
+        Postcodify_Utility::print_ok($count);
     }
     
     // 영문 검색 키워드를 저장한다.
     
     public function save_english_keywords()
     {
+        Postcodify_Utility::print_message('영문 검색 키워드를 저장하는 중...');
+        
         // 시험구동인 경우 이 과정은 건너뛰어도 된다.
         
         if (!$this->_dry_run)
@@ -1433,5 +1443,7 @@ class Postcodify_Indexer_CreateDB
             $db->commit();
             unset($db);
         }
+        
+        Postcodify_Utility::print_ok($count);
     }
 }
