@@ -45,7 +45,7 @@ return array(
     
     // 행자부 건물관리번호 테이블.
     
-    'postcodify_building_codes' => array(
+    'postcodify_codes' => array(
         'seq' => 'INT PRIMARY KEY AUTO_INCREMENT',
         'address_id' => 'INT NOT NULL',
         'building_code' => 'NUMERIC(25)',
