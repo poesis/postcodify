@@ -614,20 +614,23 @@ class Postcodify_Indexer_CreateDB
                     
                     // 방금 읽어온 줄을 새로운 이전 주소로 설정한다.
                     
-                    $last_entry = $entry;
-                    $last_codes = array($entry->building_code => $entry->building_detail);
-                    if ($entry->has_detail && preg_match('/동$/u', $entry->building_detail))
+                    if ($entry !== false)
                     {
-                        $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
-                    }
-                    elseif ($entry->building_detail)
-                    {
-                        $last_entry->building_names[] = $last_entry->building_detail;
-                        $last_nums = array();
-                    }
-                    else
-                    {
-                        $last_nums = array();
+                        $last_entry = $entry;
+                        $last_codes = array($entry->building_code => $entry->building_detail);
+                        if ($entry->has_detail && preg_match('/동$/u', $entry->building_detail))
+                        {
+                            $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
+                        }
+                        elseif ($entry->building_detail)
+                        {
+                            $last_entry->building_names[] = $last_entry->building_detail;
+                            $last_nums = array();
+                        }
+                        else
+                        {
+                            $last_nums = array();
+                        }
                     }
                 }
                 
@@ -827,9 +830,12 @@ class Postcodify_Indexer_CreateDB
                     
                     // 방금 읽어온 줄을 새로운 이전 주소로 설정한다.
                     
-                    $last_entry = $entry;
-                    $last_dongris = array($entry->dongri);
-                    $last_nums = array(array($entry->dongri, $entry->jibeon_major, $entry->jibeon_minor, $entry->is_mountain));
+                    if ($entry !== false)
+                    {
+                        $last_entry = $entry;
+                        $last_dongris = array($entry->dongri);
+                        $last_nums = array(array($entry->dongri, $entry->jibeon_major, $entry->jibeon_minor, $entry->is_mountain));
+                    }
                 }
                 
                 // 그 밖의 경우, 이전 주소에 관련지번을 추가한다.
