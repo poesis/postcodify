@@ -780,7 +780,7 @@ class Postcodify_Indexer_CreateDB
                         // 기타 주소 목록을 정리하여 업데이트한다.
                         
                         $other_addresses_temp = array();
-                        if ($other_addresses['a'] !== $address_info->dongri_ko && !in_array($last_dongris, $other_addresses['a']))
+                        if ($other_addresses['a'] !== $address_info->dongri_ko && !in_array($other_addresses['a'], $last_dongris))
                         {
                             $other_addresses_temp[] = $other_addresses['a'];
                         }
