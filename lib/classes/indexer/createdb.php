@@ -470,7 +470,7 @@ class Postcodify_Indexer_CreateDB
         
         // Zip 파일을 연다.
         
-        $zip = new Postcodify_Parser_Road_List;
+        $zip = new Postcodify_Parser_NewAddress;
         $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'RDNMADR.zip');
         
         // 카운터를 초기화한다.
@@ -704,7 +704,7 @@ class Postcodify_Indexer_CreateDB
         
         // Zip 파일을 연다.
         
-        $zip = new Postcodify_Parser_Road_List;
+        $zip = new Postcodify_Parser_NewJibeon;
         $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'RDNMADR.zip');
         
         // 카운터를 초기화한다.
