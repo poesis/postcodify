@@ -344,56 +344,6 @@ class Postcodify_Utility
         return array_unique($keywords);
     }
     
-    // 기타 주소들을 정리하고 문자열로 포맷하여 반환하는 메소드.
-    
-    public static function format_other_addresses($other_addresses, $building_names, $admin_dongri)
-    {
-        // 지번주소 목록을 분리한다.
-        
-        if (!is_array($other_addresses))
-        {
-            $other_addresses = explode("\n", $other_addresses);
-        }
-        
-        // 동별로 묶어서 재구성한다.
-        
-        $numeric_addresses = array();
-        foreach ($other_addresses as $address)
-        {
-            $address = explode(' ', $address);
-            if (count($address) < 2) continue;
-            $numeric_addresses[$address[0]][] = $address[1];
-        }
-        
-        $other_addresses = array();
-        foreach ($numeric_addresses as $dongri => $numbers)
-        {
-            natsort($numbers);
-            $other_addresses[] = $dongri . ' ' . implode(', ', $numbers);
-        }
-        
-        // 행정동명을 추가한다.
-        
-        $admin_dongri = strval($admin_dongri);
-        if ($admin_dongri !== '' && !isset($numeric_addresses[$admin_dongri]))
-        {
-            $other_addresses[] = $admin_dongri;
-        }
-        
-        // 건물 이름들을 추가한다.
-        
-        $building_names = self::remove_duplicate_building_names($building_names);
-        natsort($building_names);
-        foreach ($building_names as $building_name)
-        {
-            $other_addresses[] = str_replace(';', ':', $building_name);
-        }
-        
-        // 정리하여 반환한다.
-        
-        return implode('; ', $other_addresses);
-    }
-    
     // 상세건물명 번호를 정리하여 문자열로 반환하는 메소드. 아파트 동 범위를 작성할 때 사용한다.
     
     public static function consolidate_building_nums($nums)
@@ -429,6 +379,12 @@ class Postcodify_Utility
         $output = array();
         foreach ($intermediate as $key => $val)
         {
+            if ($key === 'other')
+            {
+                $output[] = implode(', ', $val);
+                continue;
+            }
+            
             switch (count($val))
             {
                 case 0: break;

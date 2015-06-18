@@ -36,10 +36,10 @@ return array(
         'jibeon_minor' => 'SMALLINT(5)',
         'is_mountain' => 'TINYINT(1) DEFAULT 0',
         'building_name' => 'VARCHAR(80)',
-        'building_num' => 'VARCHAR(40)',
+        'building_num' => 'VARCHAR(120)',
         'other_addresses' => 'TEXT',
         'updated' => 'NUMERIC(8)',
-        '_interim' => array('road_id', 'num_major', 'num_minor', 'is_basement'),
+        '_interim' => array('road_id', 'num_major', 'num_minor'),
         '_indexes' => array('postcode5', 'postcode6'),
     ),
     
