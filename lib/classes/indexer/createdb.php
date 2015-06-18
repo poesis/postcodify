@@ -354,7 +354,7 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Parser_Road_List;
         $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'RDNMCODE.zip');
-        $open_status = $zip->open_largest_file();
+        $open_status = $zip->open_named_file('전체분');
         if (!$open_status) throw new Exception('Failed to open 도로명코드_전체분');
         
         // 카운터를 초기화한다.
@@ -485,7 +485,7 @@ class Postcodify_Indexer_CreateDB
         {
             // 시·도 데이터 파일을 연다.
             
-            $open_status = $zip->open_named_file(iconv('UTF-8', 'CP949', '건물정보_' . $sido));
+            $open_status = $zip->open_named_file('건물정보_' . $sido);
             if (!$open_status) throw new Exception('Failed to open 건물정보_' . $sido);
             
             // 이전 주소를 초기화한다.
@@ -727,7 +727,7 @@ class Postcodify_Indexer_CreateDB
         {
             // 시·도 데이터 파일을 연다.
             
-            $open_status = $zip->open_named_file(iconv('UTF-8', 'CP949', '관련지번_' . $sido));
+            $open_status = $zip->open_named_file('관련지번_' . $sido);
             if (!$open_status) throw new Exception('Failed to open 관련지번_' . $sido);
             
             // 이전 주소를 초기화한다.
@@ -920,11 +920,8 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Parser_NewPobox;
         $zip->open_archive($this->_data_dir . '/areacd_pobox_DB.zip');
-        $openfile = $zip->open_named_file(iconv('UTF-8', 'CP949', '사서함'));
-        if ($openfile === false)
-        {
-            $zip->open_named_file('.txt');
-        }
+        $open_status = $zip->open_named_file('사서함');
+        if (!$open_status) throw new Exception('Failed to open areacd_pobox_DB');
         
         // 행정구역 캐시와 카운터를 초기화한다.
         
@@ -1061,11 +1058,8 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Parser_Ranges_Roads;
         $zip->open_archive($this->_data_dir . '/areacd_rangeaddr_DB.zip');
-        $openfile = $zip->open_named_file(iconv('UTF-8', 'CP949', '도로명'));
-        if ($openfile === false)
-        {
-            $zip->open_next_file();
-        }
+        $open_status = $zip->open_named_file('도로명');
+        if (!$open_status) throw new Exception('Failed to open areacd_rangeaddr_DB');
         
         // 데이터를 한 줄씩 읽는다.
         
@@ -1115,12 +1109,8 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Parser_Ranges_Jibeon;
         $zip->open_archive($this->_data_dir . '/areacd_rangeaddr_DB.zip');
-        $openfile = $zip->open_named_file(iconv('UTF-8', 'CP949', '지번'));
-        if ($openfile === false)
-        {
-            $zip->open_next_file();
-            $zip->open_next_file();
-        }
+        $open_status = $zip->open_named_file('지번');
+        if (!$open_status) throw new Exception('Failed to open areacd_rangeaddr_DB');
         
         // 데이터를 한 줄씩 읽는다.
         

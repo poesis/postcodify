@@ -77,12 +77,7 @@ class Postcodify_ZipReader
         {
             $str1 = $str;
         }
-        
-        $str2 = '';
-        for ($i = 0; $i < strlen($str1); $i++)
-        {
-            $str2 .= iconv('CP437', 'UTF-8', $str1[$i]);
-        }
+        $str2 = iconv('CP437', 'UTF-8', $str1);
         
         for ($i = 0; $i < $count; $i++)
         {
