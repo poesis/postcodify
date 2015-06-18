@@ -394,41 +394,84 @@ class Postcodify_Utility
         return implode('; ', $other_addresses);
     }
     
-    // 건물명 목록을 정리하여 문자열로 반환하는 메소드. 건물명 검색 테이블을 생성할 때 사용한다.
+    // 상세건물명 번호를 정리하여 문자열로 반환하는 메소드. 아파트 동 범위를 작성할 때 사용한다.
     
-    public static function consolidate_building_names($str)
+    public static function consolidate_building_nums($nums)
     {
-        // 건물명을 분리한다.
-        
-        if (!is_array($str))
+        $intermediate = array('numeric' => array(), 'alphabet' => array(), 'other' => array());
+        foreach ($nums as $num)
         {
-           $str = explode(',', $str);
+            if (ctype_digit($num))
+            {
+                $intermediate['numeric'][] = intval($num);
+            }
+            elseif (ctype_alnum($num))
+            {
+                $intermediate['alphabet'][] = strtoupper($num);
+            }
+            else
+            {
+                switch ($num)
+                {
+                    case '에이': $intermediate['alphabet'][] = 'A'; break;
+                    case '비': $intermediate['alphabet'][] = 'B'; break;
+                    case '시': case '씨': $intermediate['alphabet'][] = 'C'; break;
+                    case '디': $intermediate['alphabet'][] = 'D'; break;
+                    default: $intermediate['other'][] = strtoupper($num);
+                }
+            }
         }
         
+        sort($intermediate['numeric']);
+        natsort($intermediate['alphabet']);
+        natsort($intermediate['other']);
+        
+        $output = array();
+        foreach ($intermediate as $key => $val)
+        {
+            switch (count($val))
+            {
+                case 0: break;
+                case 1:
+                    $output[] = reset($val) . '동';
+                    break;
+                default:
+                    $output[] = reset($val) . '~' . end($val) . '동';
+            }
+        }
+        
+        return implode(', ', $output);
+    }
+    
+    // 건물명 목록을 정리하여 문자열로 반환하는 메소드. 건물명 검색 테이블을 생성할 때 사용한다.
+    
+    public static function consolidate_building_names($names)
+    {
         // 무의미하거나 불필요한 건물명은 무시한다.
         
-        foreach ($str as $key => $val)
+        foreach ($names as $key => $val)
         {
-            if (trim($val) === '') unset($str[$key]);
-            if (ctype_digit($val)) unset($str[$key]);
-            if (self::is_ignorable_building_name($val)) unset($str[$key]);
-            if (preg_match('/^(주|주건축물제|제)([0-9a-zA-Z]+|에이|비|씨|디|[가나다라마바사아자차카타파하])(호|동|호동)$/u', $val)) unset($str[$key]);
+            $val = self::get_canonical($val);
+            if (trim($val) === '') unset($names[$key]);
+            if (ctype_digit($val)) unset($names[$key]);
+            if (self::is_ignorable_building_name($val)) unset($names[$key]);
+            if (preg_match('/^(주|주건축물제|제)([0-9a-zA-Z]+|에이|비|씨|디|[가나다라마바사아자차카타파하])(호|동|호동)$/u', $val)) unset($names[$key]);
         }
         
         // 중복되는 이름을 제거하고 반환한다.
         
-        $str = self::remove_duplicate_building_names($str);
-        return implode(',', $str);
+        $names = self::remove_duplicate_building_names($names);
+        return implode(',', $names);
     }
     
     // 부분적으로 중복되는 건물명을 제거하는 메소드.
     
-    public static function remove_duplicate_building_names($building_names)
+    public static function remove_duplicate_building_names($names)
     {
-        usort($building_names, 'Postcodify_Utility::sort_building_names');
+        usort($names, 'Postcodify_Utility::sort_building_names');
         
         $output = array();
-        foreach ($building_names as $val)
+        foreach ($names as $val)
         {
             if ($val === '') continue;
             $exists = false;

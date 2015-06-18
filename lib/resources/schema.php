@@ -59,8 +59,7 @@ return array(
         'seq' => 'INT PRIMARY KEY AUTO_INCREMENT',
         'address_id' => 'INT NOT NULL',
         'keyword_crc32' => 'INT',
-        '_interim' => array('address_id'),
-        '_indexes' => array('keyword_crc32'),
+        '_indexes' => array('address_id', 'keyword_crc32'),
     ),
     
     // 지번 및 건물번호 검색 테이블.
@@ -70,8 +69,7 @@ return array(
         'address_id' => 'INT NOT NULL',
         'num_major' => 'SMALLINT(5)',
         'num_minor' => 'SMALLINT(5)',
-        '_interim' => array('address_id'),
-        '_indexes' => array('num_major', 'num_minor'),
+        '_indexes' => array('address_id', 'num_major', 'num_minor'),
     ),
     
     // 건물명 검색 키워드 테이블.

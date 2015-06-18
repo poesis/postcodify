@@ -64,25 +64,19 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         
         // 건물명을 정리한다.
         
-        $building_names = array();
-        if (($building = trim($line[13])) !== '') $building_names[] = Postcodify_Utility::get_canonical($building);
-        if (($building = trim($line[21])) !== '') $building_names[] = Postcodify_Utility::get_canonical($building);
-        if (($building = trim($line[25])) !== '') $building_names[] = Postcodify_Utility::get_canonical($building);
+        $common_residence_name = (intval($line[26]) && trim($line[13])) ? trim($line[13]) : null;
         
-        $building_detail = trim($line[14]);
-        if ($building_detail === '')
+        $building_names = array();
+        if (!$common_residence_name)
         {
-            $building_detail = null;
+            if (($building = trim($line[13])) !== '') $building_names[] = $building;
         }
-        elseif (!preg_match('/동$/u', $building_detail))
-        {
-            $building_names[] = $building_detail;
-            $building_detail = null;
-        }
+        if (($building = trim($line[21])) !== '') $building_names[] = $building;
+        if (($building = trim($line[25])) !== '') $building_names[] = $building;
         
         $building_names = array_unique($building_names);
+        $building_detail = trim($line[14]); if ($building_detail === '') $building_detail = null;
         $has_detail = intval($line[28]);
-        $is_common_residence = intval($line[26]);
         
         // 변경내역을 정리한다.
         
@@ -106,10 +100,10 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
             'is_mountain' => $is_mountain,
             'postcode6' => $postcode6,
             'postcode5' => $postcode5,
+            'common_residence_name' => $common_residence_name,
             'building_names' => $building_names,
             'building_detail' => $building_detail,
             'has_detail' => $has_detail,
-            'is_common_residence' => $is_common_residence,
             'previous_address' => $previous_address,
             'change_reason' => $change_reason,
             'updated' => $updated,
