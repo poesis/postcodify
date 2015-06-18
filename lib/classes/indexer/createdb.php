@@ -537,11 +537,16 @@ class Postcodify_Indexer_CreateDB
                     $building_nums = Postcodify_Utility::consolidate_building_nums($last_nums);
                     if ($building_nums === '') $building_nums = null;
                     
+                    $other_addresses = array();
+                    if ($last_entry->admin_dongri) $other_addresses[] = $last_entry->admin_dongri;
                     $last_entry->building_names = array_unique($last_entry->building_names);
-                    $other_addresses = json_encode(array(
-                        'a' => $last_entry->admin_dongri,
-                        'b' => $last_entry->building_names,
-                    ));
+                    $last_entry->building_names = Postcodify_Utility::remove_duplicate_building_names($last_entry->building_names);
+                    natcasesort($last_entry->building_names);
+                    foreach ($last_entry->building_names as $building_name)
+                    {
+                        $other_addresses[] = str_replace(';', ':', $building_name);
+                    }
+                    $other_addresses = implode('; ', $other_addresses);
                     
                     // 주소 테이블에 입력한다.
                     
@@ -611,7 +616,7 @@ class Postcodify_Indexer_CreateDB
                     // 불필요한 변수들을 unset한다.
                     
                     unset($road_name, $road_name_array, $dongri_array1, $dongri_array2, $dongri_array);
-                    unset($keyword, $building_names_consolidated, $proxy_id);
+                    unset($keyword, $building_names, $building_names_consolidated, $proxy_id);
                     unset($last_entry, $last_codes, $last_nums);
                     
                     // 방금 읽어온 줄을 새로운 이전 주소로 설정한다.
@@ -769,8 +774,19 @@ class Postcodify_Indexer_CreateDB
                     {
                         // 기타 주소 목록에 지번들을 추가한다.
                         
-                        $other_addresses = json_decode($address_info->other_addresses, true);
-                        $other_addresses['j'] = array();
+                        $other_addresses = array('a' => null, 'b' => array(), 'j' => array());
+                        $other_addresses_raw = explode('; ', $address_info->other_addresses);
+                        foreach ($other_addresses_raw as $i => $other_address)
+                        {
+                            if ($i === 0 && preg_match('/[동리]$/u', $other_address))
+                            {
+                                $other_addresses['a'] = $other_address;
+                            }
+                            else
+                            {
+                                $other_addresses['b'][] = $other_address;
+                            }
+                        }
                         foreach ($last_nums as $last_num)
                         {
                             $numtext = ($last_num[3] ? '산' : '') . $last_num[1] . ($last_num[2] ? ('-' . $last_num[2]) : '');
@@ -780,15 +796,14 @@ class Postcodify_Indexer_CreateDB
                         // 기타 주소 목록을 정리하여 업데이트한다.
                         
                         $other_addresses_temp = array();
-                        if ($other_addresses['a'] !== $address_info->dongri_ko && !in_array($other_addresses['a'], $last_dongris))
+                        if ($other_addresses['a'] && $other_addresses['a'] !== $address_info->dongri_ko &&
+                            !in_array($other_addresses['a'], $last_dongris))
                         {
                             $other_addresses_temp[] = $other_addresses['a'];
                         }
-                        $other_addresses['b'] = Postcodify_Utility::remove_duplicate_building_names($other_addresses['b']);
-                        natcasesort($other_addresses['b']);
                         foreach ($other_addresses['b'] as $building_name)
                         {
-                            $other_addresses_temp[] = str_replace(';', ':', $building_name);
+                            $other_addresses_temp[] = $building_name;
                         }
                         foreach ($other_addresses['j'] as $dongri => $nums)
                         {
@@ -826,7 +841,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 불필요한 변수들을 unset한다.
                     
-                    unset($other_addresses, $other_addresses_temp, $building_name, $dongri, $nums);
+                    unset($other_addresses, $other_addresses_raw, $other_addresses_temp, $building_name, $dongri, $nums);
                     unset($dongri_array1, $dongri_array2, $dongri_array, $dongri_new, $last_num, $numtext, $keyword);
                     unset($last_entry, $last_dongris, $last_nums);
                     
