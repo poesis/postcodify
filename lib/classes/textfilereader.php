@@ -87,7 +87,11 @@ class Postcodify_TextFileReader
     
     public function close()
     {
-        if ($this->_fp) fclose($this->_fp);
+        if (is_resource($this->_fp))
+        {
+            fclose($this->_fp);
+            $this->_fp = null;
+        }
     }
     
     // 파일 포인터를 반환한다.

@@ -160,15 +160,28 @@ class Postcodify_ZipReader
     
     public function close_file()
     {
-        if ($this->_fp) fclose($this->_fp);
+        if (is_resource($this->_fp))
+        {
+            fclose($this->_fp);
+            $this->_fp = null;
+        }
     }
     
     // Zip 아카이브를 닫는다.
     
     public function close()
     {
-        if ($this->_fp) fclose($this->_fp);
-        if ($this->_zip) $this->_zip->close();
+        if (is_resource($this->_fp))
+        {
+            fclose($this->_fp);
+            $this->_fp = null;
+        }
+        
+        if ($this->_zip)
+        {
+            $this->_zip->close();
+            $this->_zip = null;
+        }
     }
     
     // Zip 아카이브를 반환한다.
