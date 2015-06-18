@@ -197,6 +197,8 @@ class Postcodify_Indexer_CreateDB
                         {
                             $column_definition = preg_replace('/(SMALL|TINY)INT\b/', 'INT', $column_definition);
                             $column_definition = str_replace('INT PRIMARY KEY AUTO_INCREMENT', 'INTEGER PRIMARY KEY', $column_definition);
+                            $column_definition = str_replace('INT UNSIGNED', 'BIGINT', $column_definition);
+                            $column_definition = str_replace('SMALLINT(5) UNSIGNED', 'INT', $column_definition);
                         }
                         if ($column_name[0] !== '_')
                         {
