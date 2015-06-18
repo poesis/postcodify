@@ -69,11 +69,8 @@ class Postcodify_Indexer_CreateDB
         $this->start_threaded_workers('load_jibeon', '관련지번 데이터를 로딩하는 중...');
         
         $this->load_pobox();
-        
-        /*
         $this->load_new_ranges();
         $this->load_old_ranges();
-        */
         
         $this->save_english_keywords();
         $this->start_threaded_workers('final_indexes', '최종 인덱스를 생성하는 중...');
