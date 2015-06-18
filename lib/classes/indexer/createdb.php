@@ -756,10 +756,10 @@ class Postcodify_Indexer_CreateDB
                 {
                     // 이 주소에 해당하는 도로명주소 레코드를 가져온다.
                     
-                    $ps_address_select->execute(array(
+                    $ps_addr_select->execute(array(
                         $last_entry->road_id . '00', $last_entry->road_id . '99',
                         $last_entry->num_major, $last_entry->num_minor, $last_entry->is_basement));
-                    $address_info = $ps_address_select->fetchObject();
+                    $address_info = $ps_addr_select->fetchObject();
                     
                     // 레코드를 찾은 경우 업데이트할 수 있다.
                     
