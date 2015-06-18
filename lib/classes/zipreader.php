@@ -67,10 +67,27 @@ class Postcodify_ZipReader
     public function open_named_file($str)
     {
         $count = $this->_zip->numFiles;
+        if (!$count) return false;
+        
+        if (mb_check_encoding($str, 'UTF-8'))
+        {
+            $str1 = iconv('UTF-8', 'CP949', $str);
+        }
+        else
+        {
+            $str1 = $str;
+        }
+        
+        $str2 = '';
+        for ($i = 0; $i < strlen($str1); $i++)
+        {
+            $str2 .= iconv('CP437', 'UTF-8', $str1[$i]);
+        }
+        
         for ($i = 0; $i < $count; $i++)
         {
             $filename = $this->_zip->getNameIndex($i);
-            if (strpos($filename, $str) !== false)
+            if (strpos($filename, $str) !== false || strpos($filename, $str1) !== false || strpos($filename, $str2) !== false)
             {
                 $this->_fp = $this->_zip->getStream($filename);
                 return $filename;
