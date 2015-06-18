@@ -381,18 +381,23 @@ class Postcodify_Utility
         {
             if ($key === 'other')
             {
-                $output[] = implode(', ', $val);
-                continue;
+                foreach ($val as $vals)
+                {
+                    $output[] = $vals . '동';
+                }
             }
-            
-            switch (count($val))
+            else
             {
-                case 0: break;
-                case 1:
-                    $output[] = reset($val) . '동';
-                    break;
-                default:
-                    $output[] = reset($val) . '~' . end($val) . '동';
+                switch (count($val))
+                {
+                    case 0:
+                        break;
+                    case 1:
+                        $output[] = reset($val) . '동';
+                        break;
+                    default:
+                        $output[] = reset($val) . '~' . end($val) . '동';
+                }
             }
         }
         
