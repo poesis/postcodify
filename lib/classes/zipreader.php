@@ -79,6 +79,28 @@ class Postcodify_ZipReader
         return false;
     }
     
+    // Zip 아카이브 중 가장 큰 파일을 연다.
+    // 성공하면 파일명을 반환하고, 실패하면 false를 반환한다.
+    
+    public function open_largest_file()
+    {
+        $count = $this->_zip->numFiles;
+        if (!$count) return false;
+        
+        $sizes = array();
+        for ($i = 0; $i < $count; $i++)
+        {
+            $stat = $this->_zip->statIndex($i);
+            $sizes[$i] = intval($stat['size']);
+        }
+        arsort($sizes);
+        reset($sizes);
+        
+        $filename = $this->_zip->getNameIndex(key($sizes));
+        $this->_fp = $this->_zip->getStream($filename);
+        return $filename;
+    }
+    
     // 문자셋을 지정한다.
     
     public function set_charset($charset)

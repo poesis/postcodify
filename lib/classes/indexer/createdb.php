@@ -352,7 +352,7 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Parser_Road_List;
         $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'RDNMCODE.zip');
-        $open_status = $zip->open_named_file(iconv('UTF-8', 'CP949', '도로명코드_전체분'));
+        $open_status = $zip->open_largest_file();
         if (!$open_status) throw new Exception('Failed to open 도로명코드_전체분');
         
         // 카운터를 초기화한다.
