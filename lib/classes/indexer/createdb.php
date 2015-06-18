@@ -1014,7 +1014,7 @@ class Postcodify_Indexer_CreateDB
         $db->commit();
         unset($db);
         
-        Postcodify_Utility::print_ok();
+        Postcodify_Utility::print_ok($count);
     }
     
     // 새 우편번호 범위 DB를 로딩한다.
