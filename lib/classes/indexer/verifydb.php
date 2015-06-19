@@ -21,7 +21,9 @@
 
 class Postcodify_Indexer_VerifyDB
 {
-    // 확인할 데이터 갯수.
+    // 확인할 데이터 정의.
+    
+    protected $_schema;
     
     protected $_data_counts = array(
         'postcodify_roads' => 300000,
@@ -50,6 +52,7 @@ class Postcodify_Indexer_VerifyDB
             exit(1);
         }
         
+        $this->_schema = (include POSTCODIFY_LIB_DIR . '/resources/schema.php');
         $pass = true;
         
         echo '테이블 확인 중...' . PHP_EOL;
@@ -87,7 +90,7 @@ class Postcodify_Indexer_VerifyDB
         $tables_query = $db->query("SHOW TABLES");
         $tables = $tables_query->fetchAll(PDO::FETCH_NUM);
         
-        foreach ($this->_indexes as $table_name => $indexes)
+        foreach ($this->_schema as $table_name => $columns)
         {
             $found = false;
             foreach ($tables as $table)
@@ -114,7 +117,7 @@ class Postcodify_Indexer_VerifyDB
     {
         $pass = true;
         
-        foreach ($this->_indexes as $table_name => $indexes)
+        foreach ($this->_schema as $table_name => $columns)
         {
             try
             {
@@ -141,6 +144,10 @@ class Postcodify_Indexer_VerifyDB
                 echo '[ERROR] ' . $table_name . ' 테이블에 PRIMARY KEY가 없습니다.' . PHP_EOL;
                 $pass = false;
             }
+            
+            $indexes = array();
+            if (isset($columns['_interim'])) $indexes = array_merge($indexes, $columns['_interim']);
+            if (isset($columns['_indexes'])) $indexes = array_merge($indexes, $columns['_indexes']);
             
             foreach ($indexes as $index_name)
             {
