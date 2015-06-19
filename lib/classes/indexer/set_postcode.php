@@ -52,8 +52,8 @@ class Postcodify_Indexer_Set_Postcode
         
         // 주어진 주소가 존재하는지 확인한다.
         
-        $ps_select = $db->prepare('SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE pa.id = ? OR pa.address_id = ? ORDER BY id LIMIT 1');
-        $ps_select->execute(array($address_id, $address_id));
+        $ps_select = $db->prepare('SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE pa.id = ? ORDER BY id LIMIT 1');
+        $ps_select->execute(array($address_id));
         $entry = $ps_select->fetchObject();
         
         if (!$entry)
