@@ -52,7 +52,9 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         if ($dongri === '') $dongri = trim($line[3]);
         $dongri = preg_replace('/\\(.+\\)/', '', $dongri);
         
-        $admin_dongri = trim($line[18]); if (!$admin_dongri) $admin_dongri = null;
+        $admin_dongri = trim($line[18]);
+        if (!$admin_dongri || !preg_match('/.+동$/u', $admin_dongri)) $admin_dongri = null;
+        
         $jibeon_major = intval($line[6]);
         $jibeon_minor = intval($line[7]); if (!$jibeon_minor) $jibeon_minor = null;
         $is_mountain = intval($line[5]);
@@ -75,7 +77,8 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         if (($building = trim($line[25])) !== '') $building_names[] = $building;
         
         $building_names = array_unique($building_names);
-        $building_detail = trim($line[14]); if ($building_detail === '') $building_detail = null;
+        $building_detail = preg_replace('/[^가-힣a-zA-Z0-9\/\.\(\)-]/', '', trim($line[14]));
+        if ($building_detail === '') $building_detail = null;
         $has_detail = intval($line[28]);
         
         // 변경내역을 정리한다.

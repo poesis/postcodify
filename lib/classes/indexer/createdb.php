@@ -505,7 +505,7 @@ class Postcodify_Indexer_CreateDB
                 {
                     $last_entry = $entry;
                     $last_codes = array($entry->building_code => $entry->building_detail);
-                    if ($entry->has_detail && preg_match('/동$/u', $entry->building_detail))
+                    if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
                     {
                         $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
                     }
@@ -622,7 +622,7 @@ class Postcodify_Indexer_CreateDB
                     {
                         $last_entry = $entry;
                         $last_codes = array($entry->building_code => $entry->building_detail);
-                        if ($entry->has_detail && preg_match('/동$/u', $entry->building_detail))
+                        if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
                         {
                             $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
                         }
@@ -649,7 +649,7 @@ class Postcodify_Indexer_CreateDB
                         $last_entry->building_names = array_merge($last_entry->building_names, $entry->building_names);
                     }
                     
-                    if ($entry->has_detail && preg_match('/동$/u', $entry->building_detail))
+                    if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
                     {
                         $last_nums[] = preg_replace('/동$/u', '', $entry->building_detail);
                     }
