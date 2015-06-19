@@ -701,7 +701,9 @@ class Postcodify_Indexer_CreateDB
         
         $db = Postcodify_Utility::get_db();
         $db->beginTransaction();
-        $ps_addr_select = $db->prepare('SELECT * FROM postcodify_addresses WHERE road_id >= ? AND road_id <= ? AND num_major = ? AND num_minor = ? AND is_basement = ? ORDER BY id LIMIT 1');
+        $ps_addr_select = $db->prepare('SELECT * FROM postcodify_addresses WHERE road_id >= ? AND road_id <= ? AND ' .
+            'num_major = ? AND (num_minor = ? OR (? IS NULL AND num_minor IS NULL))' .
+            'AND is_basement = ? ORDER BY id LIMIT 1');
         $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET other_addresses = ? WHERE id = ?');
         $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
         $ps_num_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
@@ -763,7 +765,7 @@ class Postcodify_Indexer_CreateDB
                     
                     $ps_addr_select->execute(array(
                         $last_entry->road_id . '00', $last_entry->road_id . '99',
-                        $last_entry->num_major, $last_entry->num_minor, $last_entry->is_basement));
+                        $last_entry->num_major, $last_entry->num_minor, $last_entry->num_minor, $last_entry->is_basement));
                     $address_info = $ps_addr_select->fetchObject();
                     
                     // 레코드를 찾은 경우 업데이트할 수 있다.
