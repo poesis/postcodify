@@ -66,7 +66,14 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         
         // 건물명을 정리한다.
         
-        $common_residence_name = (intval($line[26]) && trim($line[13])) ? trim($line[13]) : null;
+        if (intval($line[26]) && trim($line[13]))
+        {
+            $common_residence_name = trim(preg_replace('/\s제?[a-zA-Z0-9]+동$/u', '', trim($line[13])));
+        }
+        else
+        {
+            $common_residence_name = null;
+        }
         
         $building_names = array();
         if (!$common_residence_name)
