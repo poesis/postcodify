@@ -264,15 +264,15 @@ class Postcodify_Indexer_CreateDB
     
     public function create_indexes($columns, $table_name)
     {
-        $db = Postcodify_Utility::get_db();
-        
         foreach ($columns as $column)
         {
             // 인덱스 생성 쿼리를 실행한다.
             
             try
             {
+                $db = Postcodify_Utility::get_db();
                 $db->exec('CREATE INDEX ' . $table_name . '_' . $column . ' ON ' . $table_name . ' (' . $column . ')');
+                unset($db);
             }
             catch (PDOException $e)
             {
@@ -290,6 +290,7 @@ class Postcodify_Indexer_CreateDB
             shmop_close($shmop);
         }
         
+        $db = Postcodify_Utility::get_db();
         $db->exec('ANALYZE TABLE ' . $table_name);
         unset($db);
     }
