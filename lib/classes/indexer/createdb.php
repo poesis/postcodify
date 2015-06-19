@@ -782,7 +782,7 @@ class Postcodify_Indexer_CreateDB
                             {
                                 $other_addresses['a'] = $other_address;
                             }
-                            else
+                            elseif ($other_address !== '')
                             {
                                 $other_addresses['b'][] = $other_address;
                             }
