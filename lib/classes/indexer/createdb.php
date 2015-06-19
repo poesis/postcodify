@@ -71,6 +71,7 @@ class Postcodify_Indexer_CreateDB
         $this->load_pobox();
         $this->load_new_ranges();
         $this->load_old_ranges();
+        $this->fix_missing_postcodes();
         
         $this->save_english_keywords();
         $this->start_threaded_workers('final_indexes', '최종 인덱스를 생성하는 중...');
@@ -1235,22 +1236,38 @@ class Postcodify_Indexer_CreateDB
         unset($zip);
         
         $db->commit();
+        unset($db);
+        
         Postcodify_Utility::print_ok($count);
+    }
+    
+    // 기존에 입력된 데이터 중 우편번호가 누락된 것이 있는지 찾아서, 누락된 우편번호를 입력한다.
+    
+    public function fix_missing_postcodes()
+    {
+        Postcodify_Utility::print_message('우편번호가 누락된 데이터를 확인하는 중...');
         
-        // 기존에 입력된 데이터 중 우편번호가 누락된 것이 있는지 찾아서, 누락된 우편번호를 입력한다.
+        // DB를 준비한다.
         
-        Postcodify_Utility::print_message('구 우편번호가 누락된 데이터를 확인하는 중...');
-        
+        $db = Postcodify_Utility::get_db();
         $db->beginTransaction();
-        $count = 0;
         
-        $last_id = 0;
-        $update_class = new Postcodify_Indexer_Update;
         $ps_missing_postcode6 = $db->prepare('SELECT * FROM postcodify_addresses pa ' .
             'JOIN postcodify_roads pr ON pa.road_id = pr.road_id ' .
             'WHERE (pa.postcode6 IS NULL or pa.postcode6 = \'000000\') AND id > ? ' .
             'ORDER BY id LIMIT 20');
-        $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode6 = ? WHERE id = ?');
+        $ps_missing_postcode5 = $db->prepare('SELECT * FROM postcodify_addresses pa ' .
+            'JOIN postcodify_roads pr ON pa.road_id = pr.road_id ' .
+            'WHERE (pa.postcode5 IS NULL or pa.postcode5 = \'00000\') AND id > ? ' .
+            'ORDER BY id LIMIT 20');
+        $ps_update_postcode6 = $db->prepare('UPDATE postcodify_addresses SET postcode6 = ? WHERE id = ?');
+        $ps_update_postcode5 = $db->prepare('UPDATE postcodify_addresses SET postcode5 = ? WHERE id = ?');
+        
+        // Update 클래스의 메소드를 활용한다.
+        
+        $count = 0;
+        $update_class = new Postcodify_Indexer_Update;
+        $last_id = 0;
         
         while (true)
         {
@@ -1259,13 +1276,36 @@ class Postcodify_Indexer_CreateDB
             if (!count($missing_entries)) break;
             foreach ($missing_entries as $missing_entry)
             {
+                $count++;
                 $last_id = $missing_entry->id;
                 $postcode6 = $update_class->find_postcode6($db, $missing_entry,
                     $missing_entry->dongri_ko, $missing_entry->dongri_ko,
                     $missing_entry->jibeon_major, $missing_entry->jibeon_minor);
                 if ($postcode6 !== null)
                 {
-                    $ps_addr_update->execute(array($postcode6, $missing_entry->id));
+                    $ps_update_postcode6->execute(array($postcode6, $missing_entry->id));
+                }
+            }
+        }
+        
+        $last_id = 0;
+        
+        while (true)
+        {
+            $ps_missing_postcode5->execute(array($last_id));
+            $missing_entries = $ps_missing_postcode5->fetchAll(PDO::FETCH_OBJ);
+            if (!count($missing_entries)) break;
+            foreach ($missing_entries as $missing_entry)
+            {
+                $count++;
+                $last_id = $missing_entry->id;
+                $postcode5 = $update_class->find_postcode5($db, $missing_entry,
+                    $missing_entry->num_major, $missing_entry->num_minor, 
+                    $missing_entry->dongri_ko, $missing_entry->dongri_ko,
+                    $missing_entry->jibeon_major, $missing_entry->jibeon_minor, $missing_entry->postcode6);
+                if ($postcode5 !== null)
+                {
+                    $ps_update_postcode5->execute(array($postcode5, $missing_entry->id));
                 }
             }
         }
