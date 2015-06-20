@@ -25,20 +25,6 @@ class Postcodify_Indexer_VerifyDB
     
     protected $_schema;
     
-    protected $_data_counts = array(
-        'postcodify_roads' => 300000,
-        'postcodify_addresses' => 5000000,
-        'postcodify_keywords' => 2000000,
-        'postcodify_english' => 100000,
-        'postcodify_numbers' => 8000000,
-        'postcodify_buildings' => 600000,
-        'postcodify_pobox' => 2000,
-        'postcodify_ranges_roads' => 200000,
-        'postcodify_ranges_jibeon' => 400000,
-        'postcodify_ranges_oldcode' => 30000,
-        'postcodify_settings' => 2,
-    );
-    
     // 엔트리 포인트.
     
     public function start()
@@ -64,7 +50,8 @@ class Postcodify_Indexer_VerifyDB
         if ($pass)
         {
             echo '데이터 확인 중...' . PHP_EOL;
-            $pass = $this->check_data_count($db) && $pass;
+            $pass = $pass && $this->check_data_count($db);
+            $pass = $pass && $this->check_missing_postcodes($db);
         }
         else
         {
@@ -177,14 +164,16 @@ class Postcodify_Indexer_VerifyDB
     {
         $pass = true;
         
-        foreach ($this->_data_counts as $table_name => $needed_count)
+        foreach ($this->_schema as $table_name => $columns)
         {
+            if (!isset($columns['_count'])) continue;
+            
             try
             {
                 $count_query = $db->query("SELECT COUNT(*) FROM $table_name");
                 $count = $count_query->fetchColumn();
                 
-                if ($count < $needed_count)
+                if ($count < $columns['_count'])
                 {
                     echo '[ERROR] ' . $table_name . ' 테이블의 레코드 수가 부족합니다.' . PHP_EOL;
                     $pass = false;
@@ -197,29 +186,35 @@ class Postcodify_Indexer_VerifyDB
             }
         }
         
-        if ($pass)
+        return $pass;
+    }
+    
+    // 우편번호 누락 레코드를 확인한다.
+    
+    public function check_missing_postcodes($db)
+    {
+        $pass = true;
+        
+        $pc6_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode6 IS NULL OR postcode6 = '000000' ORDER BY pa.id LIMIT 100");
+        if ($pc6_query->rowCount())
         {
-            $pc6_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode6 IS NULL OR postcode6 = '000000' ORDER BY pa.id LIMIT 100");
-            if ($pc6_query->rowCount())
+            echo '[ERROR] 우편번호(기존번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
+            while ($entry = $pc6_query->fetch(PDO::FETCH_OBJ))
             {
-                echo '[ERROR] 우편번호(기존번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
-                while ($entry = $pc6_query->fetch(PDO::FETCH_OBJ))
-                {
-                    echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
-                }
-                $pass = false;
+                echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
             }
-            
-            $pc5_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode5 IS NULL OR postcode5 = '000000' ORDER BY pa.id LIMIT 100");
-            if ($pc5_query->rowCount())
+            $pass = false;
+        }
+        
+        $pc5_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode5 IS NULL OR postcode5 = '000000' ORDER BY pa.id LIMIT 100");
+        if ($pc5_query->rowCount())
+        {
+            echo '[ERROR] 우편번호(기초구역번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
+            while ($entry = $pc5_query->fetch(PDO::FETCH_OBJ))
             {
-                echo '[ERROR] 우편번호(기초구역번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
-                while ($entry = $pc5_query->fetch(PDO::FETCH_OBJ))
-                {
-                    echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
-                }
-                $pass = false;
+                echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
             }
+            $pass = false;
         }
         
         return $pass;
