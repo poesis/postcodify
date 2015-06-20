@@ -24,16 +24,15 @@ class Postcodify_Indexer_Download
     // 상수 선언 부분.
     
     const RELATIVE_DOMAIN = 'http://www.juso.go.kr';
-    const LIST_URL = '/notice/OpenArchivesList.do?currentPage=1&countPerPage=20&noticeKd=26&type=matching';
+    const LIST_URL = '/support/AddressBuild.do';
+    const LIST_REGEXP1 = '#<li><a href="javascript:downloadAll\(\'([0-9]+)\', \'([0-9]+)\'\)"#';
+    const LIST_REGEXP2 = '#<li><a href="javascript:downloadRoad\(\'([0-9]+)\', \'([0-9]+)\'\)#';
+    const DOWNLOAD_URL = '/dn.do?reqType=%3$s&fileName=%1$04d%2$02d%3$s.zip&realFileName=%1$04d%2$02d%3$s.zip&regYmd=%1$04d';
+    
     const POBOX_URL = 'http://www.epost.go.kr/search/areacd/areacd_pobox_DB.zip';
     const RANGES_URL = 'http://www.epost.go.kr/search/areacd/areacd_rangeaddr_DB.zip';
-    const BUILNUM_URL = 'http://cdn.poesis.kr/archives/building_numbers_DB.zip';
     const ENGLISH_URL = 'http://cdn.poesis.kr/archives/english_aliases_DB.zip';
     const OLDADDR_URL = 'http://cdn.poesis.kr/archives/oldaddr_zipcode_DB.zip';
-    const FIND_ENTRIES_REGEXP = '#<td class="align-left">(.+)</td>#isU';
-    const FIND_LINKS_IN_ENTRY_REGEXP = '#<a href="([^"]+)">#iU';
-    const FIND_DATA_DATE_REGEXP = '#\\((20[0-9][0-9])년 ([0-9]+)월 ([0-9]+)일 기준\\)#uU';
-    const FIND_DOWNLOAD_REGEXP = '#<a href="(/dn\\.do\\?[^"]+)">([^<]+\\.zip)\s*</a>#iU';
     
     // 엔트리 포인트.
     
@@ -45,6 +44,7 @@ class Postcodify_Indexer_Download
         Postcodify_Utility::print_newline();
         
         $download_path = dirname(POSTCODIFY_LIB_DIR) . '/data';
+        $downloaded_files = 0;
         
         if ((!file_exists($download_path) || !is_dir($download_path)) && !@mkdir($download_path, 0755))
         {
@@ -56,125 +56,46 @@ class Postcodify_Indexer_Download
         
         $html = Postcodify_Utility::download(self::RELATIVE_DOMAIN . self::LIST_URL);
         
-        // 필요한 게시물들을 찾는다.
+        // 데이터가 존재하는 가장 최근 년월을 찾는다.
         
-        $articles = array(
-            '도로명코드_전체분' => '',
-            '주소' => '',
-            '지번' => '',
-            '부가정보' => '',
-            '상세건물명' => '',
-            '날짜' => '',
-        );
+        $address_maxdate = null;
+        $code_maxdate = null;
         
-        preg_match_all(self::FIND_ENTRIES_REGEXP, $html, $article_tags, PREG_SET_ORDER);
-        
-        foreach ($article_tags as $article_tag)
+        preg_match_all(self::LIST_REGEXP1, $html, $address_links, PREG_SET_ORDER);
+        foreach ($address_links as $address_link)
         {
-            if (strpos($article_tag[0], '개선안') !== false && strpos($article_tag[0], '도로명코드 전체분') !== false)
-            {
-                if (preg_match(self::FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
-                {
-                    $articles['도로명코드_전체분'] = htmlspecialchars_decode(self::RELATIVE_DOMAIN . $matches[1]);
-                    $articles['날짜'] = preg_match(self::FIND_DATA_DATE_REGEXP, $article_tag[0], $matches) ? $matches : '';
-                    break;
-                }
-                else
-                {
-                    continue;
-                }
-            }
+            $address_maxdate = max($address_maxdate, intval(sprintf('%04d%02d', $address_link[1], $address_link[2])));
         }
         
-        foreach ($article_tags as $article_tag)
+        preg_match_all(self::LIST_REGEXP2, $html, $code_links, PREG_SET_ORDER);
+        foreach ($code_links as $code_link)
         {
-            if (strpos($article_tag[0], '개선안') !== false && strpos($article_tag[0], '주소') !== false && strpos($article_tag[0], $articles['날짜'][0]) !== false)
-            {
-                if (preg_match(self::FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
-                {
-                    $articles['주소'] = self::RELATIVE_DOMAIN . htmlspecialchars_decode($matches[1]);
-                }
-            }
-            if (strpos($article_tag[0], '개선안') !== false && strpos($article_tag[0], '지번') !== false && strpos($article_tag[0], $articles['날짜'][0]) !== false)
-            {
-                if (preg_match(self::FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
-                {
-                    $articles['지번'] = self::RELATIVE_DOMAIN . htmlspecialchars_decode($matches[1]);
-                }
-            }
-            if (strpos($article_tag[0], '개선안') !== false && strpos($article_tag[0], '부가정보') !== false && strpos($article_tag[0], $articles['날짜'][0]) !== false)
-            {
-                if (preg_match(self::FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
-                {
-                    $articles['부가정보'] = self::RELATIVE_DOMAIN . htmlspecialchars_decode($matches[1]);
-                }
-            }
-            if (strpos($article_tag[0], '상세건물명') !== false && !$articles['상세건물명'])
-            {
-                if (preg_match(self::FIND_LINKS_IN_ENTRY_REGEXP, $article_tag[0], $matches))
-                {
-                    $articles['상세건물명'] = self::RELATIVE_DOMAIN . htmlspecialchars_decode($matches[1]);
-                }
-            }
+            $code_maxdate = max($code_maxdate, intval(sprintf('%04d%02d', $code_link[1], $code_link[2])));
         }
+        
+        $data_maxdate = min($address_maxdate, $code_maxdate);
+        if (strlen($data_maxdate) !== 6)
+        {
+            echo '[ERROR] 다운로드할 데이터를 찾을 수 없습니다.' . PHP_EOL;
+            exit(2);
+        }
+        
+        $data_year = intval(substr($data_maxdate, 0, 4), 10);
+        $data_month = intval(substr($data_maxdate, 4, 2), 10);
+        $data_day = intval(date('t', mktime(12, 0, 0, $data_month, 1, $data_year)));
         
         // 데이터 기준일을 YYYYMMDD 포맷으로 정리한다.
         
-        Postcodify_Utility::print_message('데이터 기준일은 ' . $articles['날짜'][1] . '년 ' . $articles['날짜'][2] . '월 ' . $articles['날짜'][3] . '일입니다.');
-        $articles['날짜'] = sprintf('%04d%02d%02d', $articles['날짜'][1], $articles['날짜'][2], $articles['날짜'][3]);
+        Postcodify_Utility::print_message('데이터 기준일은 ' . $data_year . '년 ' . $data_month . '월 ' . $data_day . '일입니다.');
         
-        // 진행하기 전에 데이터를 확인한다.
+        // 주소 데이터를 다운로드한다.
         
-        foreach ($articles as $value)
-        {
-            if ($value === '')
-            {
-                echo '[ERROR] 다운로드할 파일의 일부 또는 전부를 찾을 수 없습니다.' . PHP_EOL;
-                exit(2);
-            }
-        }
+        $download_url = self::RELATIVE_DOMAIN . sprintf(self::DOWNLOAD_URL, $data_year, $data_month, 'RDNMADR');
+        $filename = sprintf('%04d%02d%s.zip', $data_year, $data_month, 'RDNMADR');
+        $filepath = $download_path . '/' . $filename;
         
-        $downloaded_files = 0;
-        
-        // 모든 파일을 다운로드한다.
-        
-        foreach ($articles as $key => $url)
-        {
-            if ($key === '날짜') continue;
-            
-            $html = Postcodify_Utility::download($url);
-            
-            preg_match_all(self::FIND_DOWNLOAD_REGEXP, $html, $downloads, PREG_SET_ORDER);
-            
-            foreach ($downloads as $download)
-            {
-                $link = self::RELATIVE_DOMAIN . htmlspecialchars_decode(trim($download[1]));
-                $filename = trim($download[2]);
-                $filepath = $download_path . '/' . $filename;
-                
-                if (strpos($filename, $key) !== false)
-                {
-                    Postcodify_Utility::print_message('다운로드: ' . $filename);
-                    $result = Postcodify_Utility::download($link, $filepath);
-                    if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
-                    {
-                        Postcodify_Utility::print_error();
-                        exit(2);
-                    }
-                    else
-                    {
-                        Postcodify_Utility::print_ok();
-                        $downloaded_files++;
-                    }
-                }
-            }
-        }
-        
-        // 우체국 사서함 파일을 다운로드한다.
-        
-        Postcodify_Utility::print_message('다운로드: ' . basename(self::POBOX_URL));
-        $filepath = $download_path . '/' . basename(self::POBOX_URL);
-        $result = Postcodify_Utility::download(self::POBOX_URL, $filepath);
+        Postcodify_Utility::print_message('다운로드: ' . $filename);
+        $result = Postcodify_Utility::download($download_url, $filepath, array(__CLASS__, 'progress'));
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
             Postcodify_Utility::print_error();
@@ -182,7 +103,42 @@ class Postcodify_Indexer_Download
         }
         else
         {
-            Postcodify_Utility::print_ok();
+            Postcodify_Utility::print_ok(filesize($filepath));
+            $downloaded_files++;
+        }
+        
+        // 도로명코드 데이터를 다운로드한다.
+        
+        $download_url = self::RELATIVE_DOMAIN . sprintf(self::DOWNLOAD_URL, $data_year, $data_month, 'RDNMCODE');
+        $filename = sprintf('%04d%02d%s.zip', $data_year, $data_month, 'RDNMCODE');
+        $filepath = $download_path . '/' . $filename;
+        
+        Postcodify_Utility::print_message('다운로드: ' . $filename);
+        $result = Postcodify_Utility::download($download_url, $filepath, array(__CLASS__, 'progress'));
+        if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
+        {
+            Postcodify_Utility::print_error();
+            exit(2);
+        }
+        else
+        {
+            Postcodify_Utility::print_ok(filesize($filepath));
+            $downloaded_files++;
+        }
+        
+        // 우체국 사서함 파일을 다운로드한다.
+        
+        Postcodify_Utility::print_message('다운로드: ' . basename(self::POBOX_URL));
+        $filepath = $download_path . '/' . basename(self::POBOX_URL);
+        $result = Postcodify_Utility::download(self::POBOX_URL, $filepath, array(__CLASS__, 'progress'));
+        if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
+        {
+            Postcodify_Utility::print_error();
+            exit(2);
+        }
+        else
+        {
+            Postcodify_Utility::print_ok(filesize($filepath));
             $downloaded_files++;
         }
         
@@ -190,7 +146,7 @@ class Postcodify_Indexer_Download
         
         Postcodify_Utility::print_message('다운로드: ' . basename(self::RANGES_URL));
         $filepath = $download_path . '/' . basename(self::RANGES_URL);
-        $result = Postcodify_Utility::download(self::RANGES_URL, $filepath);
+        $result = Postcodify_Utility::download(self::RANGES_URL, $filepath, array(__CLASS__, 'progress'));
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
             Postcodify_Utility::print_error();
@@ -198,23 +154,7 @@ class Postcodify_Indexer_Download
         }
         else
         {
-            Postcodify_Utility::print_ok();
-            $downloaded_files++;
-        }
-        
-        // 아파트 동수 범위 데이터를 다운로드한다.
-        
-        Postcodify_Utility::print_message('다운로드: ' . basename(self::BUILNUM_URL));
-        $filepath = $download_path . '/' . basename(self::BUILNUM_URL);
-        $result = Postcodify_Utility::download(self::BUILNUM_URL, $filepath);
-        if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
-        {
-            Postcodify_Utility::print_error();
-            exit(2);
-        }
-        else
-        {
-            Postcodify_Utility::print_ok();
+            Postcodify_Utility::print_ok(filesize($filepath));
             $downloaded_files++;
         }
         
@@ -222,7 +162,7 @@ class Postcodify_Indexer_Download
         
         Postcodify_Utility::print_message('다운로드: ' . basename(self::ENGLISH_URL));
         $filepath = $download_path . '/' . basename(self::ENGLISH_URL);
-        $result = Postcodify_Utility::download(self::ENGLISH_URL, $filepath);
+        $result = Postcodify_Utility::download(self::ENGLISH_URL, $filepath, array(__CLASS__, 'progress'));
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
             Postcodify_Utility::print_error();
@@ -230,7 +170,7 @@ class Postcodify_Indexer_Download
         }
         else
         {
-            Postcodify_Utility::print_ok();
+            Postcodify_Utility::print_ok(filesize($filepath));
             $downloaded_files++;
         }
         
@@ -238,7 +178,7 @@ class Postcodify_Indexer_Download
         
         Postcodify_Utility::print_message('다운로드: ' . basename(self::OLDADDR_URL));
         $filepath = $download_path . '/' . basename(self::OLDADDR_URL);
-        $result = Postcodify_Utility::download(self::OLDADDR_URL, $filepath);
+        $result = Postcodify_Utility::download(self::OLDADDR_URL, $filepath, array(__CLASS__, 'progress'));
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
             Postcodify_Utility::print_error();
@@ -246,28 +186,24 @@ class Postcodify_Indexer_Download
         }
         else
         {
-            Postcodify_Utility::print_ok();
+            Postcodify_Utility::print_ok(filesize($filepath));
             $downloaded_files++;
         }
         
         // 파일 수가 맞는지 확인한다.
         
-        if ($downloaded_files < 49)
+        if ($downloaded_files < 6)
         {
             echo '[ERROR] 다운로드한 파일 수가 일치하지 않습니다.' . PHP_EOL;
             exit(2);
         }
-        
-        // 기준일을 기록한다.
-        
-        $data_date = $articles['날짜'];
-        $data_year = intval(substr($data_date, 0, 4), 10);
-        $data_month = intval(substr($data_date, 4, 2), 10);
-        $data_day = intval(substr($data_date, 6, 2), 10);
-        $data_day_max = date('t', mktime(12, 0, 0, $data_month, 1, $data_year));
-        $data_day = min($data_day, $data_day_max);
-        $data_date = sprintf('%04d%02d%02d', $data_year, $data_month, $data_day);
-        
-        file_put_contents($download_path . '/도로명코드_기준일.txt', $data_date);
+    }
+    
+    // 다운로드 진행 상황 표시 콜백 함수.
+    
+    public static function progress($ch, $fd, $size)
+    {
+        if ($size <= 0) return;
+        Postcodify_Utility::print_progress($size);
     }
 }

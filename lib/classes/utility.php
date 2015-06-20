@@ -78,7 +78,7 @@ class Postcodify_Utility
     
     // 파일 다운로드 함수.
     
-    public static function download($url, $target_filename = false)
+    public static function download($url, $target_filename = false, $progress_callback = false)
     {
         $ch = curl_init($url);
         if ($target_filename)
@@ -90,8 +90,16 @@ class Postcodify_Utility
         {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         }
+        
+        if ($progress_callback && defined('CURLOPT_PROGRESSFUNCTION'))
+        {
+            curl_setopt($ch, CURLOPT_NOPROGRESS, false);
+            curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, $progress_callback);
+        }
+        
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Compatible; Postcodify Downloader)');
+        
         $result = curl_exec($ch);
         curl_close($ch);
         if ($target_filename)
@@ -164,7 +172,8 @@ class Postcodify_Utility
     
     public static function print_message($str)
     {
-        echo $str . str_repeat(' ', self::get_terminal_width() - mb_strwidth($str, 'UTF-8'));
+        $spaces = self::get_terminal_width() - mb_strwidth($str, 'UTF-8');
+        echo $str . ($spaces > 0 ? str_repeat(' ', $spaces) : '');
     }
     
     // 터미널에 진행 상황을 출력한다.
