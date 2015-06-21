@@ -110,7 +110,7 @@ class Postcodify_Indexer_SQLite_Convert
                 {
                     case '_interim':
                     case '_indexes':
-                        foreach ($column_name as $column)
+                        foreach ($column_definition as $column)
                         {
                             $this->_indexes[$table_name][] = $column;
                         }
