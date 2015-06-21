@@ -449,7 +449,7 @@ class Postcodify_Indexer_CreateDB
         $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, ' .
             'road_id, num_major, num_minor, is_basement, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' . 
             'building_name, building_num, other_addresses) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $ps_code_insert = $db->prepare('INSERT INTO postcodify_codes (address_id, building_code, building_num) VALUES (?, ?, ?)');
+        $ps_code_insert = $db->prepare('INSERT INTO postcodify_codes (address_id, building_code, building_num, is_primary) VALUES (?, ?, ?, ?)');
         $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
         $ps_num_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
         $ps_building_insert = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
@@ -558,9 +558,11 @@ class Postcodify_Indexer_CreateDB
                     
                     // 건물번호 목록을 입력한다.
                     
+                    $building_code_is_primary = 1;
                     foreach ($last_codes as $code => $building_num)
                     {
-                        $ps_code_insert->execute(array($proxy_id, $code, $building_num));
+                        $ps_code_insert->execute(array($proxy_id, $code, $building_num, $building_code_is_primary));
+                        $building_code_is_primary = 0;
                     }
                     
                     // 도로명 키워드를 입력한다.
