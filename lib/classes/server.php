@@ -197,7 +197,7 @@ class Postcodify_Server
             else
             {
                 $record = new Postcodify_Server_Record_v17;
-                $record->dbid = strval($row->address_id);
+                $record->dbid = strval($row->building_code);
                 $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
                 $record->code5 = strval($row->postcode5);
                 $record->address = trim($address_ko_base . ' ' . $address_ko_new);
