@@ -189,7 +189,7 @@ class Postcodify_Indexer_SQLite_Convert
                 $sqlite->commit();
             }
             
-            Postcodify_Utility::print_ok();
+            Postcodify_Utility::print_ok($row_count);
         }
     }
     
@@ -208,7 +208,7 @@ class Postcodify_Indexer_SQLite_Convert
                 $sqlite->exec('CREATE INDEX ' . $table_name . '_' . $column . ' ON ' . $table_name . ' (' . $column . ')');
             }
             
-            Postcodify_Utility::print_ok();
+            Postcodify_Utility::print_ok(count($columns));
         }
     }
     
