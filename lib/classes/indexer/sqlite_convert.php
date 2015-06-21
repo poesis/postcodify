@@ -121,7 +121,7 @@ class Postcodify_Indexer_SQLite_Convert
                             $column_definition = preg_replace('/(SMALL|TINY)INT\b/', 'INT', $column_definition);
                             $column_definition = str_replace('INT PRIMARY KEY AUTO_INCREMENT', 'INTEGER PRIMARY KEY', $column_definition);
                             $column_definition = str_replace('INT UNSIGNED', 'BIGINT', $column_definition);
-                            $column_definition = str_replace('SMALLINT(5) UNSIGNED', 'INT', $column_definition);
+                            $column_definition = str_replace('INT(5) UNSIGNED', 'INT', $column_definition);
                             $columns[] = $column_name . ' ' . $column_definition;
                         }
                 }
