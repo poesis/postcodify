@@ -80,9 +80,15 @@ class Postcodify_Indexer_Download_Updates
         
         foreach ($updates as $date)
         {
+            $filepath = $download_path . '/' . $date . '_dailynoticedata.zip';
+            if (file_exists($filepath))
+            {
+                Postcodify_Utility::print_message('파일이 이미 존재함: ' . $date . '_dailynoticedata.zip');
+                continue;
+            }
+            
             Postcodify_Utility::print_message('다운로드: ' . $date . '_dailynoticedata.zip');
             
-            $filepath = $download_path . '/' . $date . '_dailynoticedata.zip';
             $link = self::RELATIVE_DOMAIN . sprintf(self::DOWNLOAD_URL, $date);
             $result = Postcodify_Utility::download($link, $filepath, array(__CLASS__, 'progress'));
             if (!$result || !file_exists($filepath))
