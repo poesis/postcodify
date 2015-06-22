@@ -108,7 +108,6 @@ class Postcodify_Indexer_Download_Updates
                 continue;
             }
             
-            @unlink($filepath);
             Postcodify_Utility::print_ok(filesize($filepath));
         }
     }
