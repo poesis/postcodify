@@ -446,10 +446,9 @@ class Postcodify_Indexer_CreateDB
         
         $db = Postcodify_Utility::get_db();
         $db->beginTransaction();
-        $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, ' .
+        $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, management_id, ' .
             'road_id, num_major, num_minor, is_basement, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' . 
-            'building_name, building_num, other_addresses) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $ps_code_insert = $db->prepare('INSERT INTO postcodify_codes (address_id, building_code, building_num, is_primary) VALUES (?, ?, ?, ?)');
+            'building_name, building_num, other_addresses) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
         $ps_num_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
         $ps_building_insert = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
@@ -479,7 +478,6 @@ class Postcodify_Indexer_CreateDB
             // 이전 주소를 초기화한다.
             
             $last_entry = null;
-            $last_codes = array();
             $last_nums = array();
             
             // 데이터를 한 줄씩 읽어 처리한다.
@@ -495,7 +493,6 @@ class Postcodify_Indexer_CreateDB
                 if ($last_entry === null)
                 {
                     $last_entry = $entry;
-                    $last_codes = array($entry->building_code => $entry->building_detail);
                     if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
                     {
                         $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
@@ -541,6 +538,7 @@ class Postcodify_Indexer_CreateDB
                     $ps_addr_insert->execute(array(
                         $last_entry->postcode5,
                         $last_entry->postcode6,
+                        $last_entry->management_id,
                         $last_entry->road_id . $last_entry->road_section,
                         $last_entry->num_major,
                         $last_entry->num_minor,
@@ -555,15 +553,6 @@ class Postcodify_Indexer_CreateDB
                         $other_addresses,
                     ));
                     $proxy_id = $db->lastInsertId();
-                    
-                    // 건물번호 목록을 입력한다.
-                    
-                    $building_code_is_primary = 1;
-                    foreach ($last_codes as $code => $building_num)
-                    {
-                        $ps_code_insert->execute(array($proxy_id, $code, $building_num, $building_code_is_primary));
-                        $building_code_is_primary = 0;
-                    }
                     
                     // 도로명 키워드를 입력한다.
                     
@@ -607,14 +596,13 @@ class Postcodify_Indexer_CreateDB
                     
                     unset($road_name, $road_name_array, $dongri_array1, $dongri_array2, $dongri_array);
                     unset($keyword, $building_names, $building_names_consolidated, $proxy_id);
-                    unset($last_entry, $last_codes, $last_nums);
+                    unset($last_entry, $last_nums);
                     
                     // 방금 읽어온 줄을 새로운 이전 주소로 설정한다.
                     
                     if ($entry !== false)
                     {
                         $last_entry = $entry;
-                        $last_codes = array($entry->building_code => $entry->building_detail);
                         if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
                         {
                             $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
@@ -635,8 +623,6 @@ class Postcodify_Indexer_CreateDB
                 
                 else
                 {
-                    $last_codes[$entry->building_code] = $entry->building_detail;
-                    
                     if (count($entry->building_names))
                     {
                         $last_entry->building_names = array_merge($last_entry->building_names, $entry->building_names);

@@ -27,6 +27,7 @@ return array(
         'id' => 'INT PRIMARY KEY AUTO_INCREMENT',
         'postcode5' => 'CHAR(5)',
         'postcode6' => 'CHAR(6)',
+        'management_id' => 'NUMERIC(25)',
         'road_id' => 'NUMERIC(14)',
         'num_major' => 'SMALLINT(5) UNSIGNED',
         'num_minor' => 'SMALLINT(5) UNSIGNED',
@@ -43,18 +44,6 @@ return array(
         '_interim' => array('road_id', 'num_major', 'num_minor'),
         '_indexes' => array('postcode5', 'postcode6'),
         '_count' => 5000000,
-    ),
-    
-    // 행자부 건물관리번호 테이블.
-    
-    'postcodify_codes' => array(
-        'seq' => 'INT PRIMARY KEY AUTO_INCREMENT',
-        'address_id' => 'INT NOT NULL',
-        'building_code' => 'NUMERIC(25)',
-        'building_num' => 'VARCHAR(40)',
-        'is_primary' => 'TINYINT(1) DEFAULT 0',
-        '_indexes' => array('address_id', 'building_code', 'is_primary'),
-        '_count' => 9000000,
     ),
     
     // 한글 검색 키워드 테이블.

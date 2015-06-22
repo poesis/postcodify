@@ -180,7 +180,7 @@ class Postcodify_Server
             if (version_compare($version, '1.8', '>='))
             {
                 $record = new Postcodify_Server_Record_v18;
-                $record->dbid = strval($row->building_code);
+                $record->dbid = strval($row->management_id);
                 $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
                 $record->code5 = strval($row->postcode5);
                 $record->address = array('base' => $address_ko_base, 'new' => $address_ko_new, 'old' => $address_ko_old, 'building' => strval($row->building_name));
@@ -197,7 +197,7 @@ class Postcodify_Server
             else
             {
                 $record = new Postcodify_Server_Record_v17;
-                $record->dbid = strval($row->building_code);
+                $record->dbid = strval($row->management_id);
                 $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
                 $record->code5 = strval($row->postcode5);
                 $record->address = trim($address_ko_base . ' ' . $address_ko_new);
@@ -257,9 +257,7 @@ class Postcodify_Server
             
             // 쿼리 작성을 준비한다.
             
-            $query = 'SELECT DISTINCT pa.*, pr.*, pc.building_code FROM postcodify_addresses pa ' .
-                'JOIN postcodify_roads pr ON pa.road_id = pr.road_id ' .
-                'JOIN postcodify_codes pc ON pa.id = pc.address_id AND pc.is_primary = 1';
+            $query = 'SELECT DISTINCT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id';
             $joins = array();
             $conds = array();
             $args = array();

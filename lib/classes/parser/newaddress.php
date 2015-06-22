@@ -44,7 +44,7 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         $num_major = intval($line[11]);
         $num_minor = intval($line[12]); if (!$num_minor) $num_minor = null;
         $is_basement = intval($line[10]);
-        $building_code = trim($line[15]);
+        $management_id = trim($line[15]);
         
         // 지번주소를 정리한다.
         
@@ -102,7 +102,7 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
             'num_major' => $num_major,
             'num_minor' => $num_minor,
             'is_basement' => $is_basement,
-            'building_code' => $building_code,
+            'management_id' => $management_id,
             'dongri' => $dongri,
             'admin_dongri' => $admin_dongri,
             'jibeon_major' => $jibeon_major,
