@@ -18,7 +18,7 @@ return array(
         'eupmyeon_en' => 'VARCHAR(40)',
         'updated' => 'NUMERIC(8)',
         '_indexes' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
-        '_count' => 300000,
+        '_count' => 320000,
     ),
     
     // 주소 정보 테이블.
@@ -43,7 +43,7 @@ return array(
         'updated' => 'NUMERIC(8)',
         '_interim' => array('road_id', 'num_major', 'num_minor'),
         '_indexes' => array('postcode5', 'postcode6'),
-        '_count' => 5000000,
+        '_count' => 5800000,
     ),
     
     // 한글 검색 키워드 테이블.
@@ -53,7 +53,7 @@ return array(
         'address_id' => 'INT NOT NULL',
         'keyword_crc32' => 'INT UNSIGNED',
         '_indexes' => array('address_id', 'keyword_crc32'),
-        '_count' => 18000000,
+        '_count' => 21000000,
     ),
     
     // 지번 및 건물번호 검색 테이블.
@@ -64,7 +64,7 @@ return array(
         'num_major' => 'SMALLINT(5) UNSIGNED',
         'num_minor' => 'SMALLINT(5) UNSIGNED',
         '_indexes' => array('address_id', 'num_major', 'num_minor'),
-        '_count' => 10000000,
+        '_count' => 12000000,
     ),
     
     // 건물명 검색 키워드 테이블.
@@ -100,7 +100,7 @@ return array(
         'en' => 'VARCHAR(40)',
         'en_crc32' => 'INT UNSIGNED',
         '_indexes' => array('ko', 'ko_crc32', 'en', 'en_crc32'),
-        '_count' => 100000,
+        '_count' => 130000,
     ),
     
     // 우편번호 범위 테이블 (도로명주소).
