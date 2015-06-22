@@ -194,10 +194,10 @@ class Postcodify_Utility
     
     // 터미널에 OK 메시지를 출력하고 커서를 다음 줄로 이동한다.
     
-    public static function print_ok($count = 0)
+    public static function print_ok($count = null)
     {
         self::print_negative_spaces(25);
-        if ($count)
+        if ($count !== null)
         {
             echo str_pad(number_format($count), 17, ' ', STR_PAD_LEFT) . '  ' . '[ OK ]';
         }
