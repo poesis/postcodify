@@ -35,7 +35,7 @@ class Postcodify_Indexer_Download_Updates
         Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
         Postcodify_Utility::print_newline();
         
-        $download_path = dirname(POSTCODIFY_LIB_DIR) . '/data/updates';
+        $download_path = dirname(POSTCODIFY_LIB_DIR) . '/data';
         
         if ((!file_exists($download_path) || !is_dir($download_path)) && !@mkdir($download_path, 0755, true))
         {
