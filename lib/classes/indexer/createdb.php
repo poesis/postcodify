@@ -525,7 +525,7 @@ class Postcodify_Indexer_CreateDB
                     $other_addresses = array();
                     if ($last_entry->admin_dongri) $other_addresses[] = $last_entry->admin_dongri;
                     $last_entry->building_names = array_unique($last_entry->building_names);
-                    $last_entry->building_names = Postcodify_Utility::remove_duplicate_building_names($last_entry->building_names);
+                    $last_entry->building_names = Postcodify_Utility::consolidate_building_names($last_entry->building_names);
                     natcasesort($last_entry->building_names);
                     foreach ($last_entry->building_names as $building_name)
                     {
@@ -585,17 +585,17 @@ class Postcodify_Indexer_CreateDB
                     if ($last_entry->common_residence_name || count($last_entry->building_names))
                     {
                         if ($last_entry->common_residence_name !== null) $last_entry->building_names[] = $last_entry->common_residence_name;
-                        $building_names_consolidated = Postcodify_Utility::consolidate_building_names($last_entry->building_names);
-                        if ($building_names_consolidated !== '')
+                        $building_names_str = Postcodify_Utility::compress_building_names($last_entry->building_names);
+                        if ($building_names_str !== '')
                         {
-                            $ps_building_insert->execute(array($proxy_id, $building_names_consolidated));
+                            $ps_building_insert->execute(array($proxy_id, $building_names_str));
                         }
                     }
                     
                     // 불필요한 변수들을 unset한다.
                     
                     unset($road_name, $road_name_array, $dongri_array1, $dongri_array2, $dongri_array);
-                    unset($keyword, $building_names, $building_names_consolidated, $proxy_id);
+                    unset($keyword, $building_names, $building_names_str, $proxy_id);
                     unset($last_entry, $last_nums);
                     
                     // 방금 읽어온 줄을 새로운 이전 주소로 설정한다.

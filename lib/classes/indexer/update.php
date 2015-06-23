@@ -402,7 +402,7 @@ class Postcodify_Indexer_Update
                         $other_addresses = array();
                         if ($last_entry->admin_dongri) $other_addresses[] = $last_entry->admin_dongri;
                         $last_entry->building_names = array_unique($last_entry->building_names);
-                        $last_entry->building_names = Postcodify_Utility::remove_duplicate_building_names($last_entry->building_names);
+                        $last_entry->building_names = Postcodify_Utility::consolidate_building_names($last_entry->building_names);
                         natcasesort($last_entry->building_names);
                         foreach ($last_entry->building_names as $building_name)
                         {
@@ -495,16 +495,16 @@ class Postcodify_Indexer_Update
                         // 건물명을 정리하여 저장한다.
                         
                         $building_names = array_merge($existing_buildings, $last_entry->building_names);
-                        $building_names_consolidated = Postcodify_Utility::consolidate_building_names($building_names);
-                        if ($building_names_consolidated !== '' && !in_array($building_names_consolidated, $existing_buildings))
+                        $building_names_str = Postcodify_Utility::compress_building_names($building_names);
+                        if ($building_names_str !== '' && !in_array($building_names_str, $existing_buildings))
                         {
                             if (count($existing_buildings))
                             {
-                                $ps_building_update->execute(array($building_names_consolidated, $proxy_id));
+                                $ps_building_update->execute(array($building_names_str, $proxy_id));
                             }
                             else
                             {
-                                $ps_building_insert->execute(array($proxy_id, $building_names_consolidated));
+                                $ps_building_insert->execute(array($proxy_id, $building_names_str));
                             }
                         }
                     }
@@ -528,7 +528,7 @@ class Postcodify_Indexer_Update
                     // 불필요한 변수들을 unset한다.
                     
                     unset($address_info, $road_info, $existing_keywords, $existing_numbers, $existing_buildings);
-                    unset($keywords, $numbers, $building_names, $building_names_consolidated);
+                    unset($keywords, $numbers, $building_names, $building_names_str);
                     unset($last_entry, $last_nums);
                     
                     // 방금 읽어온 줄을 새로운 이전 주소로 설정한다.

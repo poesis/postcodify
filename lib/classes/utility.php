@@ -247,7 +247,7 @@ class Postcodify_Utility
     
     public static function get_canonical($str)
     {
-        $str = str_replace(array('(주)', '(유)', '(사)', '(재)', '(아)'), '', $str);
+        $str = str_replace(array('(주)', '(유)', '(사)', '(재)', '(아)', '㈜'), '', $str);
         return preg_replace('/[^ㄱ-ㅎ가-힣a-z0-9-]/uU', '', strtolower($str));
     }
     
@@ -413,35 +413,33 @@ class Postcodify_Utility
         return implode(', ', $output);
     }
     
-    // 건물명 목록을 정리하여 문자열로 반환하는 메소드. 건물명 검색 테이블을 생성할 때 사용한다.
+    // 건물명 목록에서 불필요하거나 중복되는 것을 제거하여 반환하는 메소드.
     
     public static function consolidate_building_names($names)
     {
-        // 무의미하거나 불필요한 건물명은 무시한다.
+        // 불필요한 건물명을 제거한다.
         
-        foreach ($names as $key => $val)
+        $input = array();
+        foreach ($names as $val)
         {
-            $val = self::get_canonical($val);
-            if (trim($val) === '') unset($names[$key]);
-            if (ctype_digit($val)) unset($names[$key]);
-            if (self::is_ignorable_building_name($val)) unset($names[$key]);
-            if (preg_match('/^(주|주건축물제|제)([0-9a-zA-Z]+|에이|비|씨|디|[가나다라마바사아자차카타파하])(호|동|호동)$/u', $val)) unset($names[$key]);
+            if (ctype_digit($val)) continue;
+            if (self::is_ignorable_building_name($val)) continue;
+            if (preg_match('/(?:(?:근린생활|동\.?식물관련|노유자|발전|창고)시설|(?:단독|다세대|다가구)주택)/u', $val)) continue;
+            if (preg_match('/(?:주|(?:주|부속)건축물)제?(?:[0-9a-zA-Z-]+|에이|비|씨|디|[가나다라마바사아자차카타파하])(?:호|동|호동)/u', $val)) continue;
+            if (preg_match('/[0-9a-zA-Z-]+(?:블럭|로트|롯트)/u', $val)) continue;
+            if (preg_match('/^(?:[가-힣0-9]+[읍면]\s?)?[가-힣0-9]+[동리가]\s?[0-9]+(?:-[0-9]+)?번지/u', $val)) continue;
+            if (preg_match('/\((?:[가-힣0-9]{3,}\)?$|[가-힣0-9]{0,2})$/u', $val)) continue;
+            $input[] = str_replace('㈜', '(주)', $val);
         }
         
-        // 중복되는 이름을 제거하고 반환한다.
+        // 건물명 목록을 긴 것부터 짧은 순으로 정렬한다.
         
-        $names = self::remove_duplicate_building_names($names);
-        return implode(',', $names);
-    }
-    
-    // 부분적으로 중복되는 건물명을 제거하는 메소드.
-    
-    public static function remove_duplicate_building_names($names)
-    {
-        usort($names, 'Postcodify_Utility::sort_building_names');
+        usort($input, 'Postcodify_Utility::sort_building_names');
+        
+        // 짧은 건물명이 긴 건물명에 포함되어 있는 경우 제거한다.
         
         $output = array();
-        foreach ($names as $val)
+        foreach ($input as $val)
         {
             if ($val === '') continue;
             $exists = false;
@@ -460,6 +458,23 @@ class Postcodify_Utility
         }
         
         return $output;
+    }
+    
+    // 건물명 목록을 압축하여 문자열로 반환하는 메소드. 건물명 검색 테이블을 생성할 때 사용한다.
+    
+    public static function compress_building_names($names)
+    {
+        // 검색어에 포함될 수 없는 문자를 모두 제거한다.
+        
+        foreach ($names as $key => $val)
+        {
+            $val = self::get_canonical($val);
+            if (trim($val) === '') unset($names[$key]);
+        }
+        
+        // 하나로 합쳐서 반환한다.
+        
+        return implode(',', $names);
     }
     
     // 건물명의 길이를 비교하는 메소드. 중복 건물명 제거를 위한 콜백 메소드이다.
@@ -485,6 +500,7 @@ class Postcodify_Utility
                 '빈집', '다가구주택', '상점', '고물상', '원룸', '폐창고', '농막', '사찰', '회관', '관리사', '폐공장',
                 '식당', '주차장', '사당', '온실', '빌라', '일반공장', '공중화장실', '마을공동시설', '방앗간',
                 '여관', '학원', '수리점', '약국', '다세대', '다가구', '미용실', '고시원', '세탁소', '공사중',
+                '동.식물관련시설', '노유자시설', '발전시설', '창고시설', '컨테이너',
             );
             foreach ($ignore_list_human_readable as $building_name)
             {
