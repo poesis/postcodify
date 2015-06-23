@@ -275,7 +275,7 @@ class Postcodify_Indexer_Update
                 if ($last_entry === null)
                 {
                     $last_entry = $entry;
-                    if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
+                    if (preg_match('/.+동$/u', $entry->building_detail))
                     {
                         $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
                     }
@@ -536,7 +536,7 @@ class Postcodify_Indexer_Update
                     if ($entry !== false)
                     {
                         $last_entry = $entry;
-                        if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
+                        if (preg_match('/.+동$/u', $entry->building_detail))
                         {
                             $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
                         }
@@ -561,7 +561,7 @@ class Postcodify_Indexer_Update
                         $last_entry->building_names = array_merge($last_entry->building_names, $entry->building_names);
                     }
                     
-                    if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
+                    if (preg_match('/.+동$/u', $entry->building_detail))
                     {
                         $last_nums[] = preg_replace('/동$/u', '', $entry->building_detail);
                     }
