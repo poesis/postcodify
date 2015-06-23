@@ -745,6 +745,7 @@ class Postcodify_Indexer_CreateDB
                         $last_entry->road_id . '00', $last_entry->road_id . '99',
                         $last_entry->num_major, $last_entry->num_minor, $last_entry->num_minor, $last_entry->is_basement));
                     $address_info = $ps_addr_select->fetchObject();
+                    $ps_addr_select->closeCursor();
                     
                     // 레코드를 찾은 경우 업데이트할 수 있다.
                     
