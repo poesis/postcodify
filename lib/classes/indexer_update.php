@@ -345,7 +345,7 @@ class Postcodify_Indexer_Update
                         
                         if (trim($entry->postcode6) === '' || $entry->postcode6 === '000000')
                         {
-                            $entry->postcode6 = $this->find_postcode6($db, $road_info, $entry->dongri, $entry->admin_dongri, $entry->jibeon_major, $entry->jibeon_major, $entry->jibeon_minor);
+                            $entry->postcode6 = $this->find_postcode6($db, $road_info, $entry->dongri, $entry->admin_dongri, $entry->jibeon_major, $entry->jibeon_minor);
                             $postcode6_is_guess = true;
                         }
                         
