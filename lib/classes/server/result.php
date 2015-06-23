@@ -36,7 +36,7 @@ class Postcodify_Server_Result
     public $sort = 'JUSO';
     public $type = '';
     public $nums = '';
-    public $cache = 'miss';
+    public $cache = 'MISS';
     public $results = array();
 }
 

@@ -133,7 +133,7 @@ class Postcodify_Server
         $result->sort = $q->sort;
         $result->nums = $q->numbers[0] . ($q->numbers[1] ? ('-' . $q->numbers[1]) : '');
         $result->type = $search_type;
-        $result->cache = $data_source === 'cache' ? 'hit' : 'miss';
+        $result->cache = $data_source === 'cache' ? 'HIT' : 'MISS';
         
         // 각 레코드를 추가한다.
         
