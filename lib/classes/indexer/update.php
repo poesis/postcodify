@@ -76,13 +76,21 @@ class Postcodify_Indexer_Update
         
         // 데이터 기준일 정보를 업데이트한다.
         
-        $updated = strval(max(intval($updated), intval($updated_new)));
+        $updated_new = strval(max(intval($updated), intval($updated_new)));
         
-        $db = Postcodify_Utility::get_db();
-        $updated_query = $db->prepare('UPDATE postcodify_settings SET v = ? WHERE k = \'updated\'');
-        $updated_query->execute(array($updated));
-        unset($updated_query);
-        unset($db);
+        if ($updated_new === strval($updated))
+        {
+            echo '업데이트할 것이 없습니다.' . PHP_EOL;
+            exit;
+        }
+        else
+        {
+            $db = Postcodify_Utility::get_db();
+            $updated_query = $db->prepare('UPDATE postcodify_settings SET v = ? WHERE k = \'updated\'');
+            $updated_query->execute(array($updated_new));
+            unset($updated_query);
+            unset($db);
+        }
     }
     
     // 업데이트를 로딩한다.
