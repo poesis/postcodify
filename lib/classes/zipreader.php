@@ -179,6 +179,13 @@ class Postcodify_ZipReader
         }
     }
     
+    // 파일 포인터를 반환한다.
+    
+    public function get_fp()
+    {
+        return $this->_fp;
+    }
+    
     // Zip 아카이브를 반환한다.
     
     public function get_zip()

@@ -21,17 +21,22 @@
 
 class Postcodify_Indexer_Update
 {
+    // 변경사유 관련 상수들.
+    
+    const ADDR_NEW = 31;
+    const ADDR_MODIFIED = 34;
+    const ADDR_DELETED = 63;
+    
     // 설정 저장.
     
     protected $_data_dir;
-    protected $_dry_run = false;
     protected $_ranges_available = true;
     
     // 생성자.
     
     public function __construct()
     {
-        $this->_data_dir = dirname(POSTCODIFY_LIB_DIR) . '/data/updates';
+        $this->_data_dir = dirname(POSTCODIFY_LIB_DIR) . '/data';
     }
     
     // 엔트리 포인트.
@@ -65,19 +70,13 @@ class Postcodify_Indexer_Update
         unset($tables_query);
         unset($db);
         
-        // 신설·변경·폐지된 도로 정보를 로딩한다.
+        // 업데이트를 적용한다.
         
-        echo '업데이트된 도로 정보를 로딩하는 중...' . PHP_EOL;
-        $updated1 = $this->load_updated_road_list($updated);
-        
-        // 신설·변경·폐지된 주소 정보를 로딩한다.
-        
-        echo '업데이트된 주소 정보를 로딩하는 중...' . PHP_EOL;
-        $updated2 = $this->load_updated_addresses($updated);
+        $updated_new = $this->load_updates($updated);
         
         // 데이터 기준일 정보를 업데이트한다.
         
-        $updated = strval(max(intval($updated), intval($updated1), intval($updated2)));
+        $updated = strval(max(intval($updated), intval($updated_new)));
         
         $db = Postcodify_Utility::get_db();
         $updated_query = $db->prepare('UPDATE postcodify_settings SET v = ? WHERE k = \'updated\'');
@@ -86,28 +85,59 @@ class Postcodify_Indexer_Update
         unset($db);
     }
     
-    // 업데이트된 도로 정보를 로딩한다.
+    // 업데이트를 로딩한다.
     
-    public function load_updated_road_list($after_date)
+    public function load_updates($after_date)
     {
         // DB를 준비한다.
         
-        if (!$this->_dry_run)
-        {
-            $db = Postcodify_Utility::get_db();
-            $db->beginTransaction();
-            $ps_exists = $db->prepare('SELECT 1 FROM postcodify_roads WHERE road_id = ?');
-            $ps_insert = $db->prepare('INSERT INTO postcodify_roads (road_id, road_name_ko, road_name_en, ' .
-                'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en) ' .
-                'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $ps_update = $db->prepare('UPDATE postcodify_roads SET road_name_ko = ?, road_name_en = ?, ' .
-                'sido_ko = ?, sido_en = ?, sigungu_ko = ?, sigungu_en = ?, ilbangu_ko = ?, ilbangu_en = ?, ' .
-                'eupmyeon_ko = ?, eupmyeon_en = ? WHERE road_id = ?');
-        }
+        $db = Postcodify_Utility::get_db();
+        $db->beginTransaction();
+        
+        // 도로명코드 테이블 관련 쿼리들.
+        
+        $ps_road_select = $db->prepare('SELECT * FROM postcodify_roads WHERE road_id = ?');
+        $ps_road_insert = $db->prepare('INSERT INTO postcodify_roads (road_id, road_name_ko, road_name_en, ' .
+            'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en, updated) ' .
+            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $ps_road_update = $db->prepare('UPDATE postcodify_roads SET road_name_ko = ?, road_name_en = ?, ' .
+            'sido_ko = ?, sido_en = ?, sigungu_ko = ?, sigungu_en = ?, ilbangu_ko = ?, ilbangu_en = ?, ' .
+            'eupmyeon_ko = ?, eupmyeon_en = ?, updated = ? WHERE road_id = ?');
+        
+        // 주소 테이블 관련 쿼리들.
+        
+        $ps_addr_select = $db->prepare('SELECT * FROM postcodify_addresses WHERE road_id >= ? AND road_id <= ? AND ' .
+            'num_major = ? AND (num_minor = ? OR (? IS NULL AND num_minor IS NULL))' .
+            'AND is_basement = ? ORDER BY id LIMIT 1');
+        $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, management_id, ' .
+            'road_id, num_major, num_minor, is_basement, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' .
+            'building_name, building_num, other_addresses, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode5 = ?, postcode6 = ?, management_id = ?, ' .
+            'road_id = ?, num_major = ?, num_minor = ?, is_basement = ?, dongri_ko = ?, dongri_en = ?, ' .
+            'jibeon_major = ?, jibeon_minor = ?, is_mountain = ?, building_name = ?, building_num = ?, ' .
+            'other_addresses = ?, updated = ? WHERE id = ?');
+        $ps_addr_update_other = $db->prepare('UPDATE postcodify_addresses SET other_addresses = ? WHERE id = ?');
+        
+        // 도로명 및 동·리 키워드 관련 쿼리들.
+        
+        $ps_kwd_select = $db->prepare('SELECT keyword_crc32 FROM postcodify_keywords WHERE address_id = ?');
+        $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
+        
+        // 건물번호 및 지번 키워드 관련 쿼리들.
+        
+        $ps_num_select = $db->prepare('SELECT num_major, num_minor FROM postcodify_numbers WHERE address_id = ?');
+        $ps_num_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
+        
+        // 건물명 키워드 관련 쿼리들.
+        
+        $ps_building_select = $db->prepare('SELECT keyword FROM postcodify_buildings WHERE address_id = ?');
+        $ps_building_insert = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
+        $ps_building_update = $db->prepare('UPDATE postcodify_buildings SET keyword = ? WHERE address_id = ?');
+        $ps_building_delete = $db->prepare('DELETE FROM postcodify_buildings WHERE address_id = ?');
         
         // 데이터 파일 목록을 구한다.
         
-        $files = glob($this->_data_dir . '/AlterD.JUSUZC.*.TXT');
+        $files = glob($this->_data_dir . '/????????_dailynoticedata.zip');
         $last_date = $after_date;
         
         // 각 파일을 순서대로 파싱한다.
@@ -116,15 +146,20 @@ class Postcodify_Indexer_Update
         {
             // 데이터 기준일 이전의 파일은 무시한다.
             
-            $file_date = substr(basename($filename), 14, 8);
+            $file_date = substr(basename($filename), 0, 8);
             if (strcmp($file_date, $after_date) <= 0) continue;
             if (strcmp($file_date, $last_date) > 0) $last_date = $file_date;
             
-            // 파일을 연다.
+            Postcodify_Utility::print_message('업데이트 파일: ' . $file_date . '_dailynoticedata.zip');
             
-            echo '  - ' . substr(basename($filename), 14) . PHP_EOL;
-            $file = new Postcodify_Parser_Updated_Road_List;
-            $file->open($filename);
+            // 도로정보 파일을 연다.
+            
+            Postcodify_Utility::print_message('  - 도로명코드');
+            
+            $zip = new Postcodify_Parser_Road_List;
+            $zip->open_archive($filename);
+            $open_status = $zip->open_named_file('TI_SPRD_STRET');
+            if (!$open_status) continue;
             
             // 카운터를 초기화한다.
             
@@ -132,414 +167,585 @@ class Postcodify_Indexer_Update
             
             // 데이터를 한 줄씩 읽는다.
             
-            while ($entry = $file->read_line())
+            while ($entry = $zip->read_line())
             {
+                // 카운터를 표시한다.
+                
+                if (++$count % 32 === 0) Postcodify_Utility::print_progress($count);
+                
+                // 폐지된 도로는 무시한다.
+                
+                if ($entry->change_reason === 1)
+                {
+                    unset($entry);
+                    continue;
+                }
+                
                 // 이미 존재하는 도로인지 확인한다.
                 
-                if (!$this->_dry_run)
+                $ps_road_select->execute(array($entry->road_id . $entry->road_section));
+                $road_exists = $ps_road_select->fetchColumn();
+                $ps_road_select->closeCursor();
+                
+                // 신규 또는 변경된 도로 정보를 DB에 저장한다.
+                
+                if (!$road_exists)
                 {
-                    $ps_exists->execute(array($entry->road_id . $entry->road_section));
-                    $road_exists = $ps_exists->fetchColumn();
-                    $ps_exists->closeCursor();
+                    $ps_road_insert->execute(array(
+                        $entry->road_id . $entry->road_section,
+                        $entry->road_name_ko,
+                        $entry->road_name_en,
+                        $entry->sido_ko,
+                        $entry->sido_en,
+                        $entry->sigungu_ko,
+                        $entry->sigungu_en,
+                        $entry->ilbangu_ko,
+                        $entry->ilbangu_en,
+                        $entry->eupmyeon_ko,
+                        $entry->eupmyeon_en,
+                        $entry->updated,
+                    ));
                 }
                 else
                 {
-                    $road_exists = false;
+                    $ps_road_update->execute(array(
+                        $entry->road_name_ko,
+                        $entry->road_name_en,
+                        $entry->sido_ko,
+                        $entry->sido_en,
+                        $entry->sigungu_ko,
+                        $entry->sigungu_en,
+                        $entry->ilbangu_ko,
+                        $entry->ilbangu_en,
+                        $entry->eupmyeon_ko,
+                        $entry->eupmyeon_en,
+                        $entry->updated,
+                        $entry->road_id . $entry->road_section,
+                    ));
                 }
                 
-                // 도로 정보를 DB에 저장한다.
+                // 뒷정리.
                 
-                if (!$this->_dry_run)
-                {
-                    if (!$road_exists)
-                    {
-                        $ps_insert->execute(array(
-                            $entry->road_id . $entry->road_section,
-                            $entry->road_name,
-                            $entry->road_name_english,
-                            $entry->sido,
-                            $entry->sido_english,
-                            $entry->sigungu,
-                            $entry->sigungu_english,
-                            $entry->ilbangu,
-                            $entry->ilbangu_english,
-                            $entry->eupmyeon,
-                            $entry->eupmyeon_english,
-                        ));
-                    }
-                    else
-                    {
-                        $ps_update->execute(array(
-                            $entry->road_name,
-                            $entry->road_name_english,
-                            $entry->sido,
-                            $entry->sido_english,
-                            $entry->sigungu,
-                            $entry->sigungu_english,
-                            $entry->ilbangu,
-                            $entry->ilbangu_english,
-                            $entry->eupmyeon,
-                            $entry->eupmyeon_english,
-                            $entry->road_id . $entry->road_section,
-                        ));
-                    }
-                }
-            }
-            
-            // 파일을 닫는다.
-            
-            $file->close();
-            unset($file);
-        }
-        
-        // 뒷정리.
-        
-        if (!$this->_dry_run)
-        {
-            $db->commit();
-            unset($db);
-        }
-        
-        // 마지막으로 처리한 파일의 기준일을 반환한다.
-        
-        return $last_date;
-    }
-    
-    // 업데이트된 주소 정보를 로딩한다.
-    
-    public function load_updated_addresses($after_date)
-    {
-        // DB를 준비한다.
-        
-        if (!$this->_dry_run)
-        {
-            $db = Postcodify_Utility::get_db();
-            $db->beginTransaction();
-            $ps_exists = $db->prepare('SELECT * FROM postcodify_addresses WHERE address_id = ?');
-            $ps_road_info = $db->prepare('SELECT * FROM postcodify_roads WHERE road_id = ?');
-            $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (address_id, postcode5, postcode6, ' .
-                'road_id, num_major, num_minor, is_basement, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' .
-                'building_name, other_addresses, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET address_id = ?, postcode5 = ?, postcode6 = ?, ' .
-                'road_id = ?, num_major = ?, num_minor = ?, is_basement = ?, dongri_ko = ?, dongri_en = ?, ' .
-                'jibeon_major = ?, jibeon_minor = ?, is_mountain = ?, building_name = ?, other_addresses = ?, updated = ? ' .
-                'WHERE id = ?');
-            $ps_select_keywords = $db->prepare('SELECT keyword_crc32 FROM postcodify_keywords WHERE address_id = ?');
-            $ps_select_numbers = $db->prepare('SELECT num_major, num_minor FROM postcodify_numbers WHERE address_id = ?');
-            $ps_select_buildings = $db->prepare('SELECT keyword FROM postcodify_buildings WHERE address_id = ?');
-            $ps_insert_keywords = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
-            $ps_insert_numbers = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
-            $ps_insert_buildings = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
-            $ps_delete_buildings = $db->prepare('DELETE FROM postcodify_buildings WHERE address_id = ?');
-        }
-        
-        // 데이터 파일 목록을 구한다.
-        
-        $files = glob($this->_data_dir . '/AlterD.JUSUBH.*.TXT');
-        $last_date = $after_date;
-        
-        // 각 파일을 순서대로 파싱한다.
-        
-        foreach ($files as $filename)
-        {
-            // 데이터 기준일 이전의 파일은 무시한다.
-            
-            $file_date = substr(basename($filename), 14, 8);
-            if (strcmp($file_date, $after_date) <= 0) continue;
-            if (strcmp($file_date, $last_date) > 0) $last_date = $file_date;
-            
-            // 파일을 연다.
-            
-            echo '  - ' . substr(basename($filename), 14) . PHP_EOL;
-            $file = new Postcodify_Parser_Updated_Address;
-            $file->open($filename);
-            
-            // 카운터를 초기화한다.
-            
-            $count = 0;
-            
-            // 데이터를 한 줄씩 읽는다.
-            
-            while ($entry = $file->read_line())
-            {
-                // 디버깅을 위한 변수들.
-                
-                $update_type = false;
-                $postcode6_is_guess = false;
-                $postcode5_is_guess = false;
-                
-                // 이미 존재하는 주소인지 확인한다.
-                
-                if (!$this->_dry_run)
-                {
-                    $ps_exists->execute(array($entry->address_id));
-                    $address_info = $ps_exists->fetchObject();
-                    $ps_exists->closeCursor();
-                }
-                else
-                {
-                    $address_info = false;
-                }
-                
-                // 도로 정보를 파악한다.
-                
-                if (!$this->_dry_run)
-                {
-                    $ps_road_info->execute(array($entry->road_id . $entry->road_section));
-                    $road_info = $ps_road_info->fetchObject();
-                    $ps_road_info->closeCursor();
-                }
-                else
-                {
-                    $road_info = false;
-                }
-                
-                // 도로 정보가 없는 레코드는 무시한다.
-                
-                if (!$road_info) continue;
-                
-                // 기존의 검색 키워드와 번호들을 가져온다.
-                
-                $existing_keywords = $existing_numbers = $existing_buildings = array();
-                
-                if (!$this->_dry_run && $address_info)
-                {
-                    $ps_select_keywords->execute(array($address_info->id));
-                    while ($row = $ps_select_keywords->fetchColumn())
-                    {
-                        $existing_keywords[$row] = true;
-                    }
-                    $ps_select_keywords->closeCursor();
-                    
-                    $ps_select_numbers->execute(array($address_info->id));
-                    while ($row = $ps_select_numbers->fetch(PDO::FETCH_NUM))
-                    {
-                        $existing_numbers[implode('-', $row)] = true;
-                    }
-                    $ps_select_numbers->closeCursor();
-                    
-                    $ps_select_buildings->execute(array($address_info->id));
-                    while ($row = $ps_select_buildings->fetchColumn())
-                    {
-                        $existing_buildings[] = $row;
-                    }
-                    $ps_select_buildings->closeCursor();
-                }
-                
-                // 신설 또는 변경된 주소인 경우...
-                
-                if (!$this->_dry_run && $entry->change_code !== Postcodify_Parser_Updated_Address::CODE_DELETED)
-                {
-                    // 이미 존재하는 주소가 아닌 경우... (신설)
-                    
-                    if (!$address_info)
-                    {
-                        $update_type = 'C';
-                        
-                        // 우편번호가 누락된 경우 구 주소 우편번호 데이터를 사용하여 찾는다.
-                        
-                        if (trim($entry->postcode6) === '' || $entry->postcode6 === '000000')
-                        {
-                            $entry->postcode6 = $this->find_postcode6($db, $road_info, $entry->dongri, $entry->admin_dongri, $entry->jibeon_major, $entry->jibeon_major, $entry->jibeon_minor);
-                            $postcode6_is_guess = true;
-                        }
-                        
-                        // 기초구역번호를 구한다.
-                        
-                        $postcode5 = $this->find_postcode5($db, $road_info, $entry->num_major, $entry->num_minor, $entry->dongri, $entry->admin_dongri, $entry->jibeon_major, $entry->jibeon_minor, $entry->postcode6);
-                        $postcode5_is_guess = true;
-                        $address_info = (object)array('postcode5' => $postcode5);
-                        
-                        // 영문 동·리를 구한다.
-                        
-                        $dongri_en = $this->find_dongri_english($db, $entry->dongri);
-                        
-                        // 기타 주소 목록을 생성한다.
-                        
-                        $other_addresses = $entry->admin_dongri ? array($entry->admin_dongri) : array();
-                        $other_addresses = array_merge($other_addresses, $entry->building_names);
-                        $other_addresses = implode('; ', $other_addresses);
-                        
-                        // DB에 저장한다.
-                        
-                        $ps_addr_insert->execute(array(
-                            $entry->address_id,
-                            $postcode5,
-                            $entry->postcode6,
-                            $entry->road_id . $entry->road_section,
-                            $entry->num_major,
-                            $entry->num_minor,
-                            $entry->is_basement,
-                            $entry->dongri,
-                            $dongri_en,
-                            $entry->jibeon_major,
-                            $entry->jibeon_minor,
-                            $entry->is_mountain,
-                            $entry->common_residence_name,
-                            $other_addresses,
-                            $entry->change_date,
-                        ));
-                        $proxy_id = $db->lastInsertId();
-                    }
-                    
-                    // 이미 존재하는 주소인 경우... (변경)
-                    
-                    else
-                    {
-                        $update_type = 'M';
-                        
-                        // 우편번호가 누락된 경우 기존의 우편번호를 사용한다.
-                        
-                        if (trim($entry->postcode6) === '' || $entry->postcode6 === '000000')
-                        {
-                            $entry->postcode6 = $address_info->postcode6;
-                        }
-                        
-                        // 영문 동·리를 구한다.
-                        
-                        if ($entry->dongri === $address_info->dongri_ko)
-                        {
-                            $dongri_en = $address_info->dongri_en;
-                        }
-                        else
-                        {
-                            $dongri_en = $this->find_dongri_english($db, $entry->dongri);
-                        }
-                        
-                        // 기타 주소 목록을 생성한다.
-                        
-                        $other_addresses = explode('; ', $address_info->other_addresses);
-                        foreach ($entry->building_names as $building_name)
-                        {
-                            if (!in_array($building_name, $other_addresses))
-                            {
-                                $other_addresses[] = $building_name;
-                            }
-                        }
-                        $other_addresses = implode('; ', $other_addresses);
-                        
-                        // DB에 저장한다.
-                        
-                        $ps_addr_update->execute(array(
-                            $entry->address_id,
-                            $address_info->postcode5,
-                            $entry->postcode6,
-                            $entry->road_id . $entry->road_section,
-                            $entry->num_major,
-                            $entry->num_minor,
-                            $entry->is_basement,
-                            $entry->dongri,
-                            $dongri_en,
-                            $entry->jibeon_major,
-                            $entry->jibeon_minor,
-                            $entry->is_mountain,
-                            $entry->common_residence_name,
-                            $other_addresses,
-                            $entry->change_date,
-                            $address_info->id,
-                        ));
-                        $proxy_id = $address_info->id;
-                    }
-                    
-                    // 검색 키워드를 정리하여 저장한다.
-                    
-                    $keywords = array();
-                    $keywords = array_merge($keywords, Postcodify_Utility::get_variations_of_road_name($road_info->road_name_ko));
-                    $keywords = array_merge($keywords, Postcodify_Utility::get_variations_of_dongri($entry->dongri));
-                    $keywords = array_merge($keywords, Postcodify_Utility::get_variations_of_dongri($entry->admin_dongri));
-                    $keywords = array_unique($keywords);
-                    foreach ($keywords as $keyword)
-                    {
-                        $keyword_crc32 = Postcodify_Utility::crc32_x64($keyword);
-                        if (isset($existing_keywords[$keyword_crc32])) continue;
-                        $ps_insert_keywords->execute(array($proxy_id, $keyword_crc32));
-                    }
-                    
-                    // 번호들을 정리하여 저장한다.
-                    
-                    $numbers = array(
-                        array($entry->num_major, $entry->num_minor),
-                        array($entry->jibeon_major, $entry->jibeon_minor),
-                    );
-                    foreach ($numbers as $number)
-                    {
-                        $number_key = implode('-', $number);
-                        if (isset($existing_numbers[$number_key])) continue;
-                        $ps_insert_numbers->execute(array($proxy_id, $number[0], $number[1]));
-                    }
-                    
-                    // 건물명을 정리하여 저장한다.
-                    
-                    $building_names = array_merge($existing_buildings, $entry->building_names);
-                    $building_names_consolidated = Postcodify_Utility::consolidate_building_names($building_names);
-                    if ($building_names_consolidated !== '')
-                    {
-                        if (count($existing_buildings)) $ps_delete_buildings->execute(array($proxy_id));
-                        $ps_insert_buildings->execute(array($proxy_id, $building_names_consolidated));
-                    }
-                }
-                
-                // 폐지된 주소인 경우...
-                
-                if (!$this->_dry_run && $entry->change_code === Postcodify_Parser_Updated_Address::CODE_DELETED)
-                {
-                    // 안행부에서 멀쩡한 주소를 삭제했다가 며칠 후 다시 추가하는 경우가 종종 있다.
-                    // 이걸 너무 열심히 따라하면 애꿎은 사용자들이 불편을 겪게 되므로
-                    // 주소가 폐지된 것으로 나오더라도 DB에는 그대로 두는 것이 좋다.
-                    
-                    $update_type = 'D';
-                }
-                
-                // 디버깅 정보를 표시한다.
-                
-                if ($update_type !== false)
-                {
-                    $debug_msg = '    - ' . $update_type . ': ';
-                    if ($entry->postcode6 !== null)
-                    {
-                        $debug_msg .= str_pad($entry->postcode6, 6, ' ') . ($postcode6_is_guess ? '* ' : '  ');
-                    }
-                    else
-                    {
-                        $debug_msg .= '        ';
-                    }
-                    if ($address_info && $address_info->postcode5 !== null)
-                    {
-                        $debug_msg .= str_pad($address_info->postcode5, 5, ' ') . ($postcode5_is_guess ? '* ' : '  ');
-                    }
-                    else
-                    {
-                        $debug_msg .= '       ';
-                    }
-                    echo $debug_msg . $this->format_address($road_info, $entry) . PHP_EOL;
-                }
-                
-                // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
-                
-                unset($address_info);
-                unset($road_info);
-                unset($existing_keywords);
-                unset($existing_numbers);
-                unset($existing_buildings);
-                unset($keywords);
-                unset($numbers);
-                unset($building_names);
                 unset($entry);
             }
             
             // 파일을 닫는다.
             
-            $file->close();
-            unset($file);
+            $zip->close();
+            unset($zip);
+            
+            Postcodify_Utility::print_ok($count);
+            
+            // 건물정보 파일을 연다.
+            
+            Postcodify_Utility::print_message('  - 건물정보');
+            
+            $zip = new Postcodify_Parser_NewAddress;
+            $zip->open_archive($filename);
+            $open_status = $zip->open_named_file('TI_SPBD_BULD');
+            if (!$open_status) continue;
+            
+            // 카운터를 초기화한다.
+            
+            $count = 0;
+            
+            // 이전 주소를 초기화한다.
+            
+            $last_entry = null;
+            $last_nums = array();
+            
+            // 데이터를 한 줄씩 읽어 처리한다.
+            
+            while (true)
+            {
+                // 읽어온 줄을 분석한다.
+                
+                $entry = $zip->read_line();
+                
+                // 이전 주소가 없다면 방금 읽어온 줄을 이전 주소로 설정한다.
+                
+                if ($last_entry === null)
+                {
+                    $last_entry = $entry;
+                    if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
+                    {
+                        $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
+                    }
+                    elseif ($entry->building_detail)
+                    {
+                        $last_entry->building_names[] = $last_entry->building_detail;
+                        $last_nums = array();
+                    }
+                    else
+                    {
+                        $last_nums = array();
+                    }
+                }
+                
+                // 방금 읽어온 줄이 이전 주소와 다른 경우, 이전 주소 정리가 끝난 것이므로 이전 주소를 저장해야 한다.
+                
+                elseif ($entry === false ||
+                    $last_entry->road_id !== $entry->road_id ||
+                    $last_entry->road_section !== $entry->road_section ||
+                    $last_entry->num_major !== $entry->num_major ||
+                    $last_entry->num_minor !== $entry->num_minor ||
+                    $last_entry->is_basement !== $entry->is_basement)
+                {
+                    // 디버깅을 위한 변수들.
+                    
+                    $update_type = false;
+                    $postcode6_is_guess = false;
+                    $postcode5_is_guess = false;
+                    
+                    // 이미 존재하는 주소인지 확인한다.
+                    
+                    $ps_addr_select->execute(array(
+                        $last_entry->road_id . '00', $last_entry->road_id . '99',
+                        $last_entry->num_major, $last_entry->num_minor, $last_entry->num_minor, $last_entry->is_basement));
+                    $address_info = $ps_addr_select->fetchObject();
+                    $ps_addr_select->closeCursor();
+                    
+                    // 도로 정보를 파악한다.
+                    
+                    $ps_road_select->execute(array($last_entry->road_id . $last_entry->road_section));
+                    $road_info = $ps_road_select->fetchObject();
+                    $ps_road_select->closeCursor();
+                    
+                    // 도로 정보가 없는 레코드는 무시한다.
+                    
+                    if (!$road_info) continue;
+                    
+                    // 이미 존재하는 주소인 경우, 기존의 검색 키워드와 번호들을 가져온다.
+                    
+                    $existing_keywords = $existing_numbers = $existing_buildings = array();
+                    
+                    if ($address_info)
+                    {
+                        $ps_kwd_select->execute(array($address_info->id));
+                        while ($row = $ps_kwd_select->fetchColumn())
+                        {
+                            $existing_keywords[$row] = true;
+                        }
+                        $ps_kwd_select->closeCursor();
+                        
+                        $ps_num_select->execute(array($address_info->id));
+                        while ($row = $ps_num_select->fetch(PDO::FETCH_NUM))
+                        {
+                            $existing_numbers[implode('-', $row)] = true;
+                        }
+                        $ps_num_select->closeCursor();
+                        
+                        $ps_building_select->execute(array($address_info->id));
+                        while ($row = $ps_building_select->fetchColumn())
+                        {
+                            $existing_buildings[] = $row;
+                        }
+                        $ps_building_select->closeCursor();
+                    }
+                    
+                    // 신설과 변경 주소 구분은 변경코드에 의존하지 않고,
+                    // 로컬 DB에 해당 주소가 이미 존재하는지에 따라 판단한다.
+                    
+                    if ($last_entry->change_reason !== self::ADDR_DELETED)
+                    {
+                        // 우편번호가 누락된 경우, 범위 데이터를 사용하여 찾거나 기존 주소의 우편번호를 그대로 사용한다.
+                        
+                        if (trim($last_entry->postcode6) === '' || $last_entry->postcode6 === '000000')
+                        {
+                            if ($address_info && $address_info->postcode6 !== null)
+                            {
+                                $last_entry->postcode6 = $address_info->postcode6;
+                            }
+                            else
+                            {
+                                $last_entry->postcode6 = $this->find_postcode6($db, $road_info, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor);
+                            }
+                            $postcode6_is_guess = true;
+                        }
+                        if (trim($last_entry->postcode5) === '' || $last_entry->postcode5 === '00000')
+                        {
+                            if ($address_info && $address_info->postcode5 !== null)
+                            {
+                                $last_entry->postcode5 = $address_info->postcode5;
+                            }
+                            else
+                            {
+                                $last_entry->postcode5 = $this->find_postcode5($db, $road_info, $last_entry->num_major, $last_entry->num_minor, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor, $last_entry->postcode6);
+                            }
+                            $postcode5_is_guess = true;
+                        }
+                        
+                        // 영문 동·리를 구한다.
+                        
+                        if ($address_info && $last_entry->dongri === $address_info->dongri_ko)
+                        {
+                            $dongri_en = $address_info->dongri_en;
+                        }
+                        else
+                        {
+                            $dongri_en = $this->find_dongri_english($db, $last_entry->dongri);
+                        }
+                        
+                        // 상세건물명과 기타 주소를 정리한다.
+                        
+                        $building_nums = Postcodify_Utility::consolidate_building_nums($last_nums);
+                        if ($building_nums === '') $building_nums = null;
+                        
+                        $other_addresses = array();
+                        if ($last_entry->admin_dongri) $other_addresses[] = $last_entry->admin_dongri;
+                        $last_entry->building_names = array_unique($last_entry->building_names);
+                        $last_entry->building_names = Postcodify_Utility::remove_duplicate_building_names($last_entry->building_names);
+                        natcasesort($last_entry->building_names);
+                        foreach ($last_entry->building_names as $building_name)
+                        {
+                            $other_addresses[] = str_replace(';', ':', $building_name);
+                        }
+                        $other_addresses = implode('; ', $other_addresses);
+                        
+                        // 신설 주소인 경우...
+                        
+                        if (!$address_info)
+                        {
+                            $ps_addr_insert->execute(array(
+                                $last_entry->postcode5,
+                                $last_entry->postcode6,
+                                $last_entry->management_id,
+                                $last_entry->road_id . $last_entry->road_section,
+                                $last_entry->num_major,
+                                $last_entry->num_minor,
+                                $last_entry->is_basement,
+                                $last_entry->dongri,
+                                $dongri_en,
+                                $last_entry->jibeon_major,
+                                $last_entry->jibeon_minor,
+                                $last_entry->is_mountain,
+                                $last_entry->common_residence_name,
+                                $building_nums,
+                                $other_addresses,
+                                $last_entry->updated,
+                            ));
+                            
+                            $proxy_id = $db->lastInsertId();
+                            $update_type = 'C';
+                        }
+                        
+                        // 변경 주소인 경우...
+                        
+                        else
+                        {
+                            $ps_addr_update->execute(array(
+                                $last_entry->postcode5,
+                                $last_entry->postcode6,
+                                $last_entry->management_id,
+                                $last_entry->road_id . $last_entry->road_section,
+                                $last_entry->num_major,
+                                $last_entry->num_minor,
+                                $last_entry->is_basement,
+                                $last_entry->dongri,
+                                $dongri_en,
+                                $last_entry->jibeon_major,
+                                $last_entry->jibeon_minor,
+                                $last_entry->is_mountain,
+                                $last_entry->common_residence_name,
+                                $building_nums,
+                                $other_addresses,
+                                $last_entry->updated,
+                                $address_info->id,
+                            ));
+                            
+                            $proxy_id = $address_info->id;
+                            $update_type = 'M';
+                        }
+                        
+                        // 검색 키워드를 정리하여 저장한다.
+                        
+                        $keywords = array();
+                        $keywords = array_merge($keywords, Postcodify_Utility::get_variations_of_road_name($road_info->road_name_ko));
+                        $keywords = array_merge($keywords, Postcodify_Utility::get_variations_of_dongri($last_entry->dongri));
+                        $keywords = array_merge($keywords, Postcodify_Utility::get_variations_of_dongri($last_entry->admin_dongri));
+                        $keywords = array_unique($keywords);
+                        foreach ($keywords as $keyword)
+                        {
+                            $keyword_crc32 = Postcodify_Utility::crc32_x64($keyword);
+                            if (isset($existing_keywords[$keyword_crc32])) continue;
+                            $ps_kwd_insert->execute(array($proxy_id, $keyword_crc32));
+                        }
+                        
+                        // 번호들을 정리하여 저장한다.
+                        
+                        $numbers = array(
+                            array($last_entry->num_major, $last_entry->num_minor),
+                            array($last_entry->jibeon_major, $last_entry->jibeon_minor),
+                        );
+                        foreach ($numbers as $number)
+                        {
+                            $number_key = implode('-', $number);
+                            if (isset($existing_numbers[$number_key])) continue;
+                            $ps_num_insert->execute(array($proxy_id, $number[0], $number[1]));
+                        }
+                        
+                        // 건물명을 정리하여 저장한다.
+                        
+                        $building_names = array_merge($existing_buildings, $last_entry->building_names);
+                        $building_names_consolidated = Postcodify_Utility::consolidate_building_names($building_names);
+                        if ($building_names_consolidated !== '' && !in_array($building_names_consolidated, $existing_buildings))
+                        {
+                            if (count($existing_buildings))
+                            {
+                                $ps_building_update->execute(array($building_names_consolidated, $proxy_id));
+                            }
+                            else
+                            {
+                                $ps_building_insert->execute(array($proxy_id, $building_names_consolidated));
+                            }
+                        }
+                    }
+                    
+                    // 폐지된 주소인 경우...
+                    
+                    if ($last_entry->change_reason === self::ADDR_DELETED)
+                    {
+                        // 행자부에서 멀쩡한 주소를 삭제했다가 며칠 후 다시 추가하는 경우가 종종 있다.
+                        // 이걸 너무 열심히 따라하면 애꿎은 사용자들이 불편을 겪게 되므로
+                        // 주소가 폐지된 것으로 나오더라도 DB에는 그대로 두는 것이 좋다.
+                        // 나중에 다시 추가될 경우 위의 코드에 따라 업데이트로 처리하면 그만이다.
+                        
+                        $update_type = 'D';
+                    }
+                    
+                    // 카운터를 표시한다.
+                    
+                    if (++$count % 32 === 0) Postcodify_Utility::print_progress($count);
+                    
+                    // 불필요한 변수들을 unset한다.
+                    
+                    unset($address_info, $road_info, $existing_keywords, $existing_numbers, $existing_buildings);
+                    unset($keywords, $numbers, $building_names, $building_names_consolidated);
+                    unset($last_entry, $last_nums);
+                    
+                    // 방금 읽어온 줄을 새로운 이전 주소로 설정한다.
+                    
+                    if ($entry !== false)
+                    {
+                        $last_entry = $entry;
+                        if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
+                        {
+                            $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
+                        }
+                        elseif ($entry->building_detail)
+                        {
+                            $last_entry->building_names[] = $last_entry->building_detail;
+                            $last_nums = array();
+                        }
+                        else
+                        {
+                            $last_nums = array();
+                        }
+                    }
+                }
+                
+                // 그 밖의 경우, 이전 주소에 상세주소를 추가한다.
+                
+                else
+                {
+                    if (count($entry->building_names))
+                    {
+                        $last_entry->building_names = array_merge($last_entry->building_names, $entry->building_names);
+                    }
+                    
+                    if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
+                    {
+                        $last_nums[] = preg_replace('/동$/u', '', $entry->building_detail);
+                    }
+                    elseif ($entry->building_detail)
+                    {
+                        $last_entry->building_names[] = $entry->building_detail;
+                    }
+                }
+                
+                // 더이상 데이터가 없는 경우 루프를 탈출한다.
+                
+                if ($entry === false) break;
+                
+                // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
+                
+                unset($entry);
+            }
+            
+            // 건물정보 파일을 닫는다.
+            
+            $zip->close();
+            unset($zip);
+            
+            Postcodify_utility::print_ok($count);
+            
+            // 관련지번 파일을 연다.
+            
+            Postcodify_Utility::print_message('  - 관련지번');
+            
+            $zip = new Postcodify_Parser_NewJibeon;
+            $zip->open_archive($filename);
+            $open_status = $zip->open_named_file('TI_SCCO_MVMN');
+            if (!$open_status) continue;
+            
+            // 카운터를 초기화한다.
+            
+            $count = 0;
+            
+            // 관련지번 업데이트는 건물정보 파일처럼 도로명주소 단위로 연속되어 나온다는 보장이 없다.
+            // 따라서 $last_entry를 사용하는 방식은 적절하지 않고, 1천 건 단위로 분류하여 사용한다.
+            // 1천 건의 경계선에 걸리는 주소는 두 번에 걸쳐 업데이트되는 비효율성이 있으나,
+            // 현실적으로 하루에 1천 건 이상 업데이트되는 경우는 드물다.
+            
+            while (true)
+            {
+                // 1천 건 단위로 읽어와서 도로명주소 단위로 분류한다.
+                
+                $entries = array();
+                for ($i = 0; $i < 1000; $i++)
+                {
+                    $entry = $zip->read_line();
+                    if ($entry === false) break;
+                    $key = $entry->road_id . '|' . $entry->num_major . '|' . $entry->num_minor . '|' . $entry->is_basement;
+                    $entries[$key][] = array($entry->dongri, $entry->jibeon_major, $entry->jibeon_minor, $entry->is_mountain);
+                    unset($entry);
+                }
+                
+                // 더이상 데이터가 없는 경우 루프를 탈출한다.
+                
+                if (!count($entries)) break;
+                
+                // 분류한 데이터를 처리한다.
+                
+                foreach ($entries as $key => $jibeons)
+                {
+                    // 이 주소에 해당하는 도로명주소 레코드를 가져온다.
+                    
+                    list($road_id, $num_major, $num_minor, $is_basement) = explode('|', $key);
+                    $ps_addr_select->execute(array($road_id . '00', $road_id . '99', $num_major, $num_minor, $num_minor, $is_basement));
+                    $address_info = $ps_addr_select->fetchObject();
+                    $ps_addr_select->closeCursor();
+                    
+                    // 레코드를 찾은 경우 업데이트할 수 있다.
+                    
+                    if ($address_info)
+                    {
+                        // 기존의 건물명 및 지번 목록을 파싱한다.
+                        
+                        $other_addresses = array('b' => array(), 'j' => array());
+                        $other_addresses_raw = explode('; ', $address_info->other_addresses);
+                        foreach ($other_addresses_raw as $i => $other_address)
+                        {
+                            if (preg_match('/^(.+[동리로가])\s(산?[0-9-]+(?:,\s산?[0-9-]+)*)$/u', $other_address, $matches))
+                            {
+                                $dongri = $matches[1];
+                                $nums = explode(', ', $matches[2]);
+                                $other_addresses[$dongri] = $nums;
+                            }
+                            elseif (strlen($other_address))
+                            {
+                                $other_addresses['b'][] = $other_address;
+                            }
+                        }
+                        
+                        // 업데이트된 지번 목록을 추가하고, 중복을 제거한다.
+                        
+                        foreach ($jibeons as $last_num)
+                        {
+                            $numtext = ($last_num[3] ? '산' : '') . $last_num[1] . ($last_num[2] ? ('-' . $last_num[2]) : '');
+                            $other_addresses['j'][$last_num[0]][] = $numtext;
+                        }
+                        foreach ($other_addresses['j'] as $dongri => $nums)
+                        {
+                            $other_addresses['j'][$dongri] = array_unique($other_addresses['j'][$dongri]);
+                        }
+                        
+                        // 기타 주소 목록을 정리하여 업데이트한다.
+                        
+                        $other_addresses_temp = array();
+                        foreach ($other_addresses['b'] as $building_name)
+                        {
+                            $other_addresses_temp[] = $building_name;
+                        }
+                        foreach ($other_addresses['j'] as $dongri => $nums)
+                        {
+                            natsort($nums);
+                            $other_addresses_temp[] = $dongri . ' ' . implode(', ', $nums);
+                        }
+                        $ps_addr_update_other->execute(array(implode('; ', $other_addresses_temp), $address_info->id));
+                        
+                        // 기존의 검색 키워드와 번호들을 가져온다.
+                        
+                        $existing_keywords = array();
+                        $ps_kwd_select->execute(array($address_info->id));
+                        while ($row = $ps_kwd_select->fetchColumn())
+                        {
+                            $existing_keywords[$row] = true;
+                        }
+                        $ps_kwd_select->closeCursor();
+                        
+                        $existing_numbers = array();
+                        $ps_num_select->execute(array($address_info->id));
+                        while ($row = $ps_num_select->fetch(PDO::FETCH_NUM))
+                        {
+                            $existing_numbers[implode('-', $row)] = true;
+                        }
+                        $ps_num_select->closeCursor();
+                        
+                        // 업데이트된 검색 키워드와 번호들을 추가한다.
+                        
+                        $keywords = array();
+                        foreach ($jibeons as $last_num)
+                        {
+                            $keywords = array_merge($keywords, Postcodify_Utility::get_variations_of_dongri($last_num[0]));
+                        }
+                        $keywords = array_unique($keywords);
+                        foreach ($keywords as $keyword)
+                        {
+                            $keyword_crc32 = Postcodify_Utility::crc32_x64($keyword);
+                            if (isset($existing_keywords[$keyword_crc32])) continue;
+                            $ps_kwd_insert->execute(array($address_info->id, $keyword_crc32));
+                        }
+                        
+                        // 번호들을 정리하여 저장한다.
+                        
+                        foreach ($jibeons as $last_num)
+                        {
+                            $number_key = $last_num[1] . '-' . $last_num[2];
+                            if (isset($existing_numbers[$number_key])) continue;
+                            $ps_num_insert->execute(array($address_info->id, $last_num[1], $last_num[2]));
+                        }
+                    }
+                    
+                    // 카운터를 표시한다.
+                    
+                    if (++$count % 32 === 0) Postcodify_Utility::print_progress($count);
+                    
+                    // 불필요한 변수들을 unset한다.
+                    
+                    unset($key, $jibeons, $road_id, $num_major, $num_minor, $is_basement);
+                    unset($address_info, $other_addresses, $other_addresses_raw, $other_addresses_temp, $nums, $last_num);
+                    unset($existing_keywords, $existing_numbers);
+                    unset($keywords, $numbers);
+                }
+                
+                // 불필요한 변수들을 unset한다.
+                
+                unset($entries);
+            }
+            
+            // 관련지번 파일을 닫는다.
+            
+            $zip->close();
+            unset($zip);
+            
+            Postcodify_utility::print_ok($count);
         }
         
         // 뒷정리.
         
-        if (!$this->_dry_run)
-        {
-            $db->commit();
-            unset($db);
-        }
+        $db->commit();
+        unset($db);
         
         // 마지막으로 처리한 파일의 기준일을 반환한다.
         
@@ -550,10 +756,6 @@ class Postcodify_Indexer_Update
     
     public function find_postcode6($db, $road_info, $dongri, $admin_dongri, $jibeon_major, $jibeon_minor)
     {
-        // 시험구동인 경우 null을 반환한다.
-        
-        if ($this->_dry_run) return null;
-        
         // 범위 데이터를 사용할 수 없는 경우 null을 반환한다.
         
         if (!$this->_ranges_available) return null;
@@ -604,10 +806,6 @@ class Postcodify_Indexer_Update
     
     public function find_postcode5($db, $road_info, $num_major, $num_minor, $dongri, $admin_dongri, $jibeon_major, $jibeon_minor, $postcode6)
     {
-        // 시험구동인 경우 null을 반환한다.
-        
-        if ($this->_dry_run) return null;
-        
         // 범위 데이터를 사용할 수 없는 경우 null을 반환한다.
         
         if (!$this->_ranges_available) return null;
@@ -772,10 +970,6 @@ class Postcodify_Indexer_Update
     
     public function find_dongri_english($db, $dongri)
     {
-        // 시험구동인 경우 null을 반환한다.
-        
-        if ($this->_dry_run) return null;
-        
         // Prepared Statement를 생성한다.
         
         static $ps = null;
