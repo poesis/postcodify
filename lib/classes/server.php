@@ -275,9 +275,9 @@ class Postcodify_Server
             
             // 쿼리 작성을 준비한다.
             
-            $query = 'SELECT DISTINCT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id';
-            $joins = array();
-            $conds = array();
+            $query = 'SELECT DISTINCT pa.*, pr.* FROM postcodify_addresses pa';
+            $joins = array('JOIN postcodify_roads pr ON pa.road_id = pr.road_id');
+            $conds = array('pa.building_id IS NOT NULL');
             $args = array();
             
             // 특정 지역으로 검색을 제한하는 경우를 처리한다.

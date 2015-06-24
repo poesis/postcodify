@@ -37,8 +37,25 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         $line = parent::read_line($delimiter);
         if ($line === false || count($line) < 29) return false;
         
+        // 행정구역 정보를 정리한다.
+        
+        $sido = trim($line[1]);
+        $sigungu = trim($line[2]); if ($sigungu === '') $sigungu = null;
+        $ilbangu = null;
+        $eupmyeon = trim($line[3]);
+        if ($eupmyeon === '' || !preg_match('/[읍면]$/u', $eupmyeon))
+        {
+            $eupmyeon = null;
+        }
+        if (($pos = strpos($sigungu, ' ')) !== false)
+        {
+            $ilbangu = substr($sigungu, $pos + 1);
+            $sigungu = substr($sigungu, 0, $pos);
+        }
+        
         // 도로명주소를 정리한다.
         
+        $road_name = trim($line[9]);
         $road_id = trim($line[8]);
         $road_section = trim($line[16]);
         $num_major = intval($line[11]);
@@ -98,6 +115,11 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         // 데이터를 정리하여 반환한다.
         
         return (object)array(
+            'sido' => $sido,
+            'sigungu' => $sigungu,
+            'ilbangu' => $ilbangu,
+            'eupmyeon' => $eupmyeon,
+            'road_name' => $road_name,
             'road_id' => $road_id,
             'road_section' => $road_section,
             'num_major' => $num_major,

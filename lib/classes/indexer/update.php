@@ -319,9 +319,33 @@ class Postcodify_Indexer_Update
                     $road_info = $ps_road_select->fetchObject();
                     $ps_road_select->closeCursor();
                     
-                    // 도로 정보가 없는 레코드는 무시한다.
+                    // 도로 정보가 없는 경우, 더미 레코드를 생성한다.
                     
-                    if (!$road_info) continue;
+                    if (!$road_info)
+                    {
+                        // 더미 레코드를 DB에 입력한다.
+                        
+                        $ps_road_insert->execute(array(
+                            $last_entry->road_id . $last_entry->road_section,
+                            $last_entry->road_name,
+                            $this->find_english_name($db, $last_entry->road_name),
+                            $last_entry->sido,
+                            $this->find_english_name($db, $last_entry->sido),
+                            $last_entry->sigungu,
+                            $this->find_english_name($db, $last_entry->sigungu),
+                            $last_entry->ilbangu,
+                            $this->find_english_name($db, $last_entry->ilbangu),
+                            $last_entry->eupmyeon,
+                            $this->find_english_name($db, $last_entry->eupmyeon),
+                            '99999999',
+                        ));
+                        
+                        // 입력한 더미 레코드를 DB에서 다시 불러온다.
+                        
+                        $ps_road_select->execute(array($last_entry->road_id . $last_entry->road_section));
+                        $road_info = $ps_road_select->fetchObject();
+                        $ps_road_select->closeCursor();
+                    }
                     
                     // 이미 존재하는 주소인 경우, 기존의 검색 키워드와 번호들을 가져온다.
                     
@@ -391,7 +415,7 @@ class Postcodify_Indexer_Update
                         }
                         else
                         {
-                            $dongri_en = $this->find_dongri_english($db, $last_entry->dongri);
+                            $dongri_en = $this->find_english_name($db, $last_entry->dongri);
                         }
                         
                         // 상세건물명과 기타 주소를 정리한다.
@@ -411,6 +435,14 @@ class Postcodify_Indexer_Update
                         {
                             $other_addresses[] = str_replace(';', ':', $building_name);
                         }
+                        
+                        // 더미 레코드에 관련지번이 먼저 입력되어 있는 경우, 다시 추가한다.
+                        
+                        if ($address_info && strval($address_info->updated) === '99999999' && strval($address_info->other_addresses) !== '')
+                        {
+                            $other_addresses[] = $address_info->other_addresses;
+                        }
+                        
                         $other_addresses = implode('; ', $other_addresses);
                         if ($other_addresses === '') $other_addresses = null;
                         
@@ -649,7 +681,7 @@ class Postcodify_Indexer_Update
                     $address_info = $ps_addr_select->fetchObject();
                     $ps_addr_select->closeCursor();
                     
-                    // 레코드를 찾은 경우 업데이트할 수 있다.
+                    // 레코드를 찾은 경우, 기존 정보를 가져온다.
                     
                     if ($address_info)
                     {
@@ -671,32 +703,6 @@ class Postcodify_Indexer_Update
                             }
                         }
                         
-                        // 업데이트된 지번 목록을 추가하고, 중복을 제거한다.
-                        
-                        foreach ($jibeons as $last_num)
-                        {
-                            $numtext = ($last_num[3] ? '산' : '') . $last_num[1] . ($last_num[2] ? ('-' . $last_num[2]) : '');
-                            $other_addresses['j'][$last_num[0]][] = $numtext;
-                        }
-                        foreach ($other_addresses['j'] as $dongri => $nums)
-                        {
-                            $other_addresses['j'][$dongri] = array_unique($other_addresses['j'][$dongri]);
-                        }
-                        
-                        // 기타 주소 목록을 정리하여 업데이트한다.
-                        
-                        $other_addresses_temp = array();
-                        foreach ($other_addresses['b'] as $building_name)
-                        {
-                            $other_addresses_temp[] = $building_name;
-                        }
-                        foreach ($other_addresses['j'] as $dongri => $nums)
-                        {
-                            natsort($nums);
-                            $other_addresses_temp[] = $dongri . ' ' . implode(', ', $nums);
-                        }
-                        $ps_addr_update_other->execute(array(implode('; ', $other_addresses_temp), $address_info->id));
-                        
                         // 기존의 검색 키워드와 번호들을 가져온다.
                         
                         $existing_keywords = array();
@@ -714,30 +720,94 @@ class Postcodify_Indexer_Update
                             $existing_numbers[implode('-', $row)] = true;
                         }
                         $ps_num_select->closeCursor();
+                    }
+                    
+                    // 도로명주소 레코드가 없는 경우, 더미 레코드를 생성한다.
+                    
+                    else
+                    {
+                        // 더미 레코드를 DB에 입력한다.
                         
-                        // 업데이트된 검색 키워드와 번호들을 추가한다.
+                        $ps_addr_insert->execute(array(
+                            null,
+                            null,
+                            $road_id . '00',
+                            $num_major,
+                            $num_minor,
+                            $is_basement,
+                            $jibeons[0][0],
+                            $this->find_english_name($db, $jibeons[0][0]),
+                            $jibeons[0][1],
+                            $jibeons[0][2],
+                            $jibeons[0][3],
+                            null,
+                            null,
+                            null,
+                            null,
+                            '99999999',
+                        ));
                         
-                        $keywords = array();
-                        foreach ($jibeons as $last_num)
-                        {
-                            $keywords = array_merge($keywords, Postcodify_Utility::get_variations_of_dongri($last_num[0]));
-                        }
-                        $keywords = array_unique($keywords);
-                        foreach ($keywords as $keyword)
-                        {
-                            $keyword_crc32 = Postcodify_Utility::crc32_x64($keyword);
-                            if (isset($existing_keywords[$keyword_crc32])) continue;
-                            $ps_kwd_insert->execute(array($address_info->id, $keyword_crc32));
-                        }
+                        // 입력한 더미 레코드를 DB에서 다시 불러온다.
                         
-                        // 번호들을 정리하여 저장한다.
+                        $ps_addr_select->execute(array($road_id . '00', $road_id . '99', $num_major, $num_minor, $num_minor, $is_basement));
+                        $address_info = $ps_addr_select->fetchObject();
+                        $ps_addr_select->closeCursor();
                         
-                        foreach ($jibeons as $last_num)
-                        {
-                            $number_key = $last_num[1] . '-' . $last_num[2];
-                            if (isset($existing_numbers[$number_key])) continue;
-                            $ps_num_insert->execute(array($address_info->id, $last_num[1], $last_num[2]));
-                        }
+                        // 기존의 건물명, 지번 목록, 검색 키워드와 번호들은 빈 배열로 초기화한다.
+                        
+                        $other_addresses = array('b' => array(), 'j' => array());
+                        $existing_keywords = array();
+                        $existing_numbers = array();
+                    }
+                
+                    // 업데이트된 지번 목록을 추가하고, 중복을 제거한다.
+                    
+                    foreach ($jibeons as $last_num)
+                    {
+                        $numtext = ($last_num[3] ? '산' : '') . $last_num[1] . ($last_num[2] ? ('-' . $last_num[2]) : '');
+                        $other_addresses['j'][$last_num[0]][] = $numtext;
+                    }
+                    foreach ($other_addresses['j'] as $dongri => $nums)
+                    {
+                        $other_addresses['j'][$dongri] = array_unique($other_addresses['j'][$dongri]);
+                    }
+                    
+                    // 기타 주소 목록을 정리하여 업데이트한다.
+                    
+                    $other_addresses_temp = array();
+                    foreach ($other_addresses['b'] as $building_name)
+                    {
+                        $other_addresses_temp[] = $building_name;
+                    }
+                    foreach ($other_addresses['j'] as $dongri => $nums)
+                    {
+                        natsort($nums);
+                        $other_addresses_temp[] = $dongri . ' ' . implode(', ', $nums);
+                    }
+                    $ps_addr_update_other->execute(array(implode('; ', $other_addresses_temp), $address_info->id));
+                    
+                    // 업데이트된 검색 키워드와 번호들을 추가한다.
+                    
+                    $keywords = array();
+                    foreach ($jibeons as $last_num)
+                    {
+                        $keywords = array_merge($keywords, Postcodify_Utility::get_variations_of_dongri($last_num[0]));
+                    }
+                    $keywords = array_unique($keywords);
+                    foreach ($keywords as $keyword)
+                    {
+                        $keyword_crc32 = Postcodify_Utility::crc32_x64($keyword);
+                        if (isset($existing_keywords[$keyword_crc32])) continue;
+                        $ps_kwd_insert->execute(array($address_info->id, $keyword_crc32));
+                    }
+                    
+                    // 번호들을 정리하여 저장한다.
+                    
+                    foreach ($jibeons as $last_num)
+                    {
+                        $number_key = $last_num[1] . '-' . $last_num[2];
+                        if (isset($existing_numbers[$number_key])) continue;
+                        $ps_num_insert->execute(array($address_info->id, $last_num[1], $last_num[2]));
                     }
                     
                     // 카운터를 표시한다.
@@ -989,9 +1059,9 @@ class Postcodify_Indexer_Update
         return null;
     }
     
-    // 주어진 동·리의 영문 명칭을 찾는 메소드.
+    // 주어진 이름의 영문 명칭을 찾는 메소드.
     
-    public function find_dongri_english($db, $dongri)
+    public function find_english_name($db, $korean_name)
     {
         // Prepared Statement를 생성한다.
         
@@ -1003,11 +1073,11 @@ class Postcodify_Indexer_Update
         
         // 쿼리를 실행한다.
         
-        $ps->execute(array($dongri));
-        if ($dongri_en = $ps->fetchColumn())
+        $ps->execute(array($korean_name));
+        if ($english_name = $ps->fetchColumn())
         {
             $ps->closeCursor();
-            return $dongri_en;
+            return $english_name;
         }
         else
         {
