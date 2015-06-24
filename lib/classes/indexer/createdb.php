@@ -523,7 +523,10 @@ class Postcodify_Indexer_CreateDB
                     if ($building_nums === '') $building_nums = null;
                     
                     $other_addresses = array();
-                    if ($last_entry->admin_dongri) $other_addresses[] = $last_entry->admin_dongri;
+                    if ($last_entry->admin_dongri && $last_entry->admin_dongri !== $last_entry->dongri)
+                    {
+                        $other_addresses[] = $last_entry->admin_dongri;
+                    }
                     $last_entry->building_names = array_unique($last_entry->building_names);
                     $last_entry->building_names = Postcodify_Utility::consolidate_building_names($last_entry->building_names, $last_entry->common_residence_name);
                     natcasesort($last_entry->building_names);
