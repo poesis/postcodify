@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "2.5.0", location : "" };
+    var info = { version : "3.0.0", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -70,6 +70,10 @@
                 insertEnglishJibeonAddress : null,
                 insertDetails : null,
                 insertExtraInfo : null,
+                insertBuildingId : null,
+                insertBuildingName : null,
+                insertBuildingNums : null,
+                insertOtherAddresses : null,
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results, lang, sort) { },
                 beforeSelect : function(selectedEntry) { },
@@ -108,6 +112,9 @@
                 } else if (settings.forceUseSSL) {
                     settings.apiBackup = "https:" + settings.apiBackup;
                 }
+            }
+            if (settings.insertBuildingId === null && settings.insertDbid !== null) {
+                settings.insertBuildingId = settings.insertDbid;
             }
             if (settings.searchButtonContent === null) {
                 settings.searchButtonContent = info.translations[settings.language].msgSearch;
@@ -422,17 +429,17 @@
                             
                             // 예전 주소 및 검색어 목록을 추가한다.
                             
+                            var other_addresses = option.data("other_addresses");
                             if (typeof data.lang !== "undefined" && data.lang === "EN") {
-                                option.data("other_addresses") = option.data("other_addresses").replace(/산([0-9]+)/g, "San $1");
-                                option.data("other_addresses") = $.trim(option.data("other_addresses").replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " "));
+                                other_addresses = other_addresses.replace(/산([0-9]+)/g, "San $1");
+                                other_addresses = $.trim(other_addresses.replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " "));
                             }
-                            
-                            if (option.data("other_addresses") !== "") {
+                            if (other_addresses !== "") {
                                 var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>');
                                 oldAddrLink.attr("title", info.translations[resultLanguage].msgShowOthers);
                                 if (!settings.hideOldAddresses) oldAddrLink.css("display", "none");
                                 oldAddrLink.appendTo(option.find("div.address"));
-                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(option.data("other_addresses"));
+                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(other_addresses);
                                 if (settings.hideOldAddresses) oldAddrDiv.css("display", "none");
                                 oldAddrDiv.appendTo(option);
                             }
@@ -589,13 +596,16 @@
                 
                 // 사용자가 지정한 입력칸에 데이터를 입력한다.
                 
-                if (settings.insertDbid) $(settings.insertDbid).val(entry.data("dbid"));
                 if (settings.insertPostcode6) $(settings.insertPostcode6).val(entry.data("code6"));
                 if (settings.insertPostcode5) $(settings.insertPostcode5).val(entry.data("code5"));
                 if (settings.insertAddress) $(settings.insertAddress).val(koAddrNew);
                 if (settings.insertJibeonAddress) $(settings.insertJibeonAddress).val(koAddrOld);
                 if (settings.insertEnglishAddress) $(settings.insertEnglishAddress).val(enAddrNew);
                 if (settings.insertEnglishJibeonAddress) $(settings.insertEnglishJibeonAddress).val(enAddrOld);
+                if (settings.insertBuildingId) $(settings.insertBuildingId).val(entry.data("building_id"));
+                if (settings.insertBuildingName) $(settings.insertBuildingName).val(entry.data("building_name"));
+                if (settings.insertBuildingNums) $(settings.insertBuildingNums).val(entry.data("building_nums"));
+                if (settings.insertOtherAddresses) $(settings.insertOtherAddresses).val(entry.data("other_addresses"));
                 if (settings.insertExtraInfo) {
                     var extra_info = settings.useFullJibeon ? entry.data("extra_info_long") : entry.data("extra_info_short");
                     if (extra_info.length) extra_info = "(" + extra_info + ")";

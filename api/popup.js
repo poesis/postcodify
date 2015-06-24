@@ -26,7 +26,7 @@
     
     // 팝업 스크립트 버전을 선언한다.
     
-    var info = { version : "2.5.0" };
+    var info = { version : "3.0.0" };
     
     // Postcodify 메인 플러그인과 팝업 레이어를 위한 스타일시트를 로딩한다.
     
@@ -127,7 +127,6 @@
                 layer.data("initialized", "Y");
                 layer.find("div.postcodify_results").postcodify($.extend({
                     controls : layer.find("div.postcodify_controls"),
-                    insertDbid : container.find(".postcodify_address_id"),
                     insertPostcode6 : container.find(".postcodify_postcode6"),
                     insertPostcode5 : container.find(".postcodify_postcode5"),
                     insertAddress : container.find(".postcodify_address"),
@@ -136,6 +135,10 @@
                     insertJibeonAddress : container.find(".postcodify_jibeon_address"),
                     insertEnglishAddress : container.find(".postcodify_english_address"),
                     insertEnglishJibeonAddress : container.find(".postcodify_english_jibeon_address"),
+                    insertBuildingId : container.find(".postcodify_address_id,.postcodify_building_id"),
+                    insertBuildingName : container.find(".postcodify_building_name"),
+                    insertBuildingNums : container.find(".postcodify_building_nums"),
+                    insertOtherAddresses : container.find(".postcodify_other_addresses"),
                     mapLinkProvider : "daum",
                     hideOldAddresses : false,
                     afterSelect : function(entry) {
