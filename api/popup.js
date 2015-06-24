@@ -32,6 +32,9 @@
     
     $(function() {
         var cdnPrefix = navigator.userAgent.match(/MSIE [56]\./) ? "http:" : "";
+        if (cdnPrefix === "" && !window.location.protocol.match(/^https?/)) {
+            cdnPrefix = "http:";
+        }
         var cdnStylesheet = document.createElement("link");
         cdnStylesheet.rel = "stylesheet";
         cdnStylesheet.type = "text/css";

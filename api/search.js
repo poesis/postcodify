@@ -104,6 +104,8 @@
                     settings.api = "http:" + settings.api;
                 } else if (settings.forceUseSSL) {
                     settings.api = "https:" + settings.api;
+                } else if (!window.location.protocol.match(/^https?/)) {
+                    settings.api = "http:" + settings.api;
                 }
             }
             if (settings.apiBackup && settings.apiBackup.substr(0, 2) === "//") {
@@ -111,6 +113,8 @@
                     settings.apiBackup = "http:" + settings.apiBackup;
                 } else if (settings.forceUseSSL) {
                     settings.apiBackup = "https:" + settings.apiBackup;
+                } else if (!window.location.protocol.match(/^https?/)) {
+                    settings.api = "http:" + settings.api;
                 }
             }
             if (settings.insertBuildingId === null && settings.insertDbid !== null) {
