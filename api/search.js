@@ -367,12 +367,12 @@
                             // 구 버전과의 호환성을 위한 속성들을 입력한다.
                             
                             option.data("dbid", result.building_id);
-                            option.data("code6", result.postcode6);
+                            option.data("code6", result.postcode6.substr(0, 3) + "-" + result.postcode6.substr(3, 3));
                             option.data("code5", result.postcode5);
                             
                             // 현재 버전이 공식적으로 지원하는 속성들을 입력한다.
                             
-                            option.data("postcode6", result.postcode6);
+                            option.data("postcode6", result.postcode6.substr(0, 3) + "-" + result.postcode6.substr(3, 3));
                             option.data("postcode5", result.postcode5);
                             option.data("address", result.ko_common + " " + result.ko_doro);
                             option.data("jibeon_address", result.ko_common + " " + result.ko_jibeon);
