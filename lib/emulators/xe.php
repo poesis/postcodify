@@ -107,11 +107,11 @@ else
     foreach ($result->results as $entry)
     {
         $json['values']['address'][] = array(
-            'seq' => $entry->dbid,
-            'addr1' => $entry->address['base'],
-            'addr2_new' => $entry->address['new'],
-            'addr2_old' => $entry->address['old'],
-            'bdname' => $entry->address['building'],
+            'seq' => $entry->building_id,
+            'addr1' => $entry->ko_common,
+            'addr2_new' => $entry->ko_doro,
+            'addr2_old' => $entry->ko_jibeon,
+            'bdname' => $entry->building_name,
             'zipcode' => $entry->code6,
         );
     }

@@ -98,10 +98,10 @@ else
     $json['juso'][] = '<ul>';
     foreach ($result->results as $entry)
     {
-        $code6 = explode('-', $entry->code6);
-        $juso = htmlspecialchars($entry->address['base'] . ' ' . $entry->address['new'], ENT_COMPAT, 'UTF-8');
-        $jibeon = htmlspecialchars($entry->address['base'] . ' ' . $entry->address['old'], ENT_COMPAT, 'UTF-8');
-        $extra = htmlspecialchars($entry->other['short'], ENT_COMPAT, 'UTF-8');
+        $code6 = array(substr($entry->postcode6, 0, 3), substr($entry->postcode6, 3, 3));
+        $juso = htmlspecialchars($entry->ko_common . ' ' . $entry->ko_doro, ENT_COMPAT, 'UTF-8');
+        $jibeon = htmlspecialchars($entry->ko_common . ' ' . $entry->ko_jibeon, ENT_COMPAT, 'UTF-8');
+        $extra = htmlspecialchars(preg_replace('/\s.+$/', '', $entry->ko_jibeon) . ($entry_building_name === '' ? '' : (', ' . $entry->building_name)), ENT_COMPAT, 'UTF-8');
         $json['juso'][] = sprintf('<li><span></span>' . 
             '<a href="#" onclick="put_data(\'%s\', \'%s\', \'%s\', \'(%s)\', \'%s\'); return false;">' . 
             '<strong>%s-%s</strong> %s (%s)</a><div>(지번주소) %s</div></li>',
