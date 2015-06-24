@@ -68,8 +68,8 @@ class Postcodify_Server_Record_v18 extends Postcodify_Server_Record
 
 class Postcodify_Server_Record_v3 extends Postcodify_Server_Record
 {
-    public $postcode6;
     public $postcode5;
+    public $postcode6;
     public $ko_common;
     public $ko_doro;
     public $ko_jibeon;
