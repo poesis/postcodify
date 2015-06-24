@@ -364,7 +364,7 @@
                             var result = data.results[i];
                             if (typeof result.postcode5 === "undefined" && typeof result.code5 !== "undefined") {
                                 result.postcode5 = result.code5;
-                                result.postcode6 = result.code6;
+                                result.postcode6 = result.code6.replace(/[^0-9]/, "");
                                 result.ko_common = result.address["base"];
                                 result.ko_doro = result.address["new"];
                                 result.ko_jibeon = result.address["old"];
