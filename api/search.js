@@ -334,7 +334,7 @@
                     
                     // 정상 처리되었지만 검색 서버의 버전이 맞지 않는 경우...
                     
-                    else if (typeof data.results[0].postcode5 === "undefined") {
+                    else if (typeof data.results[0].postcode5 === "undefined" && typeof data.results[0].other === "undefined") {
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorVersion);
                         } else {
@@ -359,21 +359,39 @@
                         
                         for (var i = 0; i < data.count; i++) {
                             
-                            // 검색 결과 항목을 작성한다.
+                            // 구 버전 서버에서 작성한 검색 결과인 경우 새 버전으로 변환한다.
                             
                             var result = data.results[i];
+                            if (typeof result.postcode5 === "undefined" && typeof result.code5 !== "undefined") {
+                                result.postcode5 = result.code5;
+                                result.postcode6 = result.code6;
+                                result.ko_common = result.address["base"];
+                                result.ko_doro = result.address["new"];
+                                result.ko_jibeon = result.address["old"];
+                                result.en_common = result.english["base"];
+                                result.en_doro = result.english["new"];
+                                result.en_jibeon = result.english["old"];
+                                result.building_id = result.dbid;
+                                result.building_name = result.address.building;
+                                result.building_nums = result.other.bldnum;
+                                result.other_addresses = result.other.others;
+                                result.road_id = result.other.roadid;
+                            }
+                            
+                            // 검색 결과 항목을 작성한다.
+                            
                             var option = $('<div></div>').postcodifyAddClass("search_result");
                             
                             // 구 버전과의 호환성을 위한 속성들을 입력한다.
                             
                             option.data("dbid", result.building_id);
-                            option.data("code6", result.postcode6.substr(0, 3) + "-" + result.postcode6.substr(3, 3));
                             option.data("code5", result.postcode5);
+                            option.data("code6", result.postcode6.substr(0, 3) + "-" + result.postcode6.substr(3, 3));
                             
                             // 현재 버전이 공식적으로 지원하는 속성들을 입력한다.
                             
-                            option.data("postcode6", result.postcode6.substr(0, 3) + "-" + result.postcode6.substr(3, 3));
                             option.data("postcode5", result.postcode5);
+                            option.data("postcode6", result.postcode6.substr(0, 3) + "-" + result.postcode6.substr(3, 3));
                             option.data("address", result.ko_common + " " + result.ko_doro);
                             option.data("jibeon_address", result.ko_common + " " + result.ko_jibeon);
                             option.data("english_address", (result.en_doro === "" ? "" : (result.en_doro + ", ")) + result.en_common);
@@ -385,6 +403,7 @@
                             option.data("extra_info_short", result.ko_jibeon.replace(/\s.+$/, "") + (result.building_name === "" ? "" : (", " + result.building_name)));
                             option.data("extra_info_nums", data.nums);
                             option.data("other_addresses", result.other_addresses);
+                            option.data("road_id", result.road_id);
                             
                             // 반환된 데이터의 언어, 정렬 방법에 따라 클릭할 링크를 생성한다.
                             

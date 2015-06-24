@@ -180,8 +180,8 @@ class Postcodify_Server
             if (version_compare($version, '3', '>='))
             {
                 $record = new Postcodify_Server_Record_v3;
-                $record->postcode6 = strval($row->postcode6);
                 $record->postcode5 = strval($row->postcode5);
+                $record->postcode6 = strval($row->postcode6);
                 $record->ko_common = $ko_common;
                 $record->ko_doro = $ko_doro;
                 $record->ko_jibeon = $ko_jibeon;
