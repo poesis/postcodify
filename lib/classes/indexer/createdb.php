@@ -493,7 +493,7 @@ class Postcodify_Indexer_CreateDB
                 if ($last_entry === null)
                 {
                     $last_entry = $entry;
-                    if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
+                    if (($entry->has_detail || $entry->is_common_residence) && preg_match('/.+동$/u', $entry->building_detail))
                     {
                         $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
                     }
@@ -535,6 +535,18 @@ class Postcodify_Indexer_CreateDB
                         $other_addresses[] = str_replace(';', ':', $building_name);
                     }
                     $other_addresses = implode('; ', $other_addresses);
+                    if ($other_addresses === '') $other_addresses = null;
+                    
+                    // 공동주택인데 공동주택명이 없는 경우 다른 건물명을 이용한다.
+                    
+                    if ($last_entry->is_common_residence && $last_entry->common_residence_name === null)
+                    {
+                        if (strpos($other_addresses, '; ') === false)
+                        {
+                            $last_entry->common_residence_name = $other_addresses;
+                            $other_addresses = null;
+                        }
+                    }
                     
                     // 주소 테이블에 입력한다.
                     
@@ -606,7 +618,7 @@ class Postcodify_Indexer_CreateDB
                     if ($entry !== false)
                     {
                         $last_entry = $entry;
-                        if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
+                        if (($entry->has_detail || $entry->is_common_residence) && preg_match('/.+동$/u', $entry->building_detail))
                         {
                             $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
                         }
@@ -631,7 +643,7 @@ class Postcodify_Indexer_CreateDB
                         $last_entry->building_names = array_merge($last_entry->building_names, $entry->building_names);
                     }
                     
-                    if ($entry->has_detail && preg_match('/.+동$/u', $entry->building_detail))
+                    if (($entry->has_detail || $entry->is_common_residence) && preg_match('/.+동$/u', $entry->building_detail))
                     {
                         $last_nums[] = preg_replace('/동$/u', '', $entry->building_detail);
                     }

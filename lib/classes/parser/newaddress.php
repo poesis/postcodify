@@ -66,7 +66,8 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         
         // 건물명을 정리한다.
         
-        if (intval($line[26]) && trim($line[13]))
+        $is_common_residence = intval($line[26]);
+        if ($is_common_residence && trim($line[13]))
         {
             $common_residence_name = trim(preg_replace('/\s제?[a-zA-Z0-9]+동$/u', '', trim($line[13])));
         }
@@ -109,6 +110,7 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
             'is_mountain' => $is_mountain,
             'postcode6' => $postcode6,
             'postcode5' => $postcode5,
+            'is_common_residence' => $is_common_residence,
             'common_residence_name' => $common_residence_name,
             'building_id' => $building_id,
             'building_names' => $building_names,
