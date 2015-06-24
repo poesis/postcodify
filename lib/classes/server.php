@@ -177,10 +177,28 @@ class Postcodify_Server
             
             // 요청받은 버전에 따라 다른 형태로 작성한다.
             
-            if (version_compare($version, '1.8', '>='))
+            if (version_compare($version, '3', '>='))
+            {
+                $record = new Postcodify_Server_Record_v3;
+                $record->postcode6 = strval($row->postcode6);
+                $record->postcode5 = strval($row->postcode5);
+                $record->ko_common = $address_ko_base;
+                $record->ko_doro = $address_ko_new;
+                $record->ko_jibeon = $address_ko_old;
+                $record->en_common = $address_en_base;
+                $record->en_doro = $address_en_new;
+                $record->en_jibeon = $address_en_old;
+                $record->building_id = strval($row->building_id);
+                $record->building_name = strval($row->building_name);
+                $record->building_num = isset($row->building_num) ? strval($row->building_num) : '';
+                $record->other_addrs = strval($other_addresses);
+                $record->road_id = ($result->sort === 'POBOX') ? '' : substr($row->road_id, 0, 12);
+                $record->internal_id = strval($row->id);
+            }
+            elseif (version_compare($version, '1.8', '>='))
             {
                 $record = new Postcodify_Server_Record_v18;
-                $record->dbid = strval($row->management_id);
+                $record->dbid = strval($row->building_id);
                 $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
                 $record->code5 = strval($row->postcode5);
                 $record->address = array('base' => $address_ko_base, 'new' => $address_ko_new, 'old' => $address_ko_old, 'building' => strval($row->building_name));
@@ -197,7 +215,7 @@ class Postcodify_Server
             else
             {
                 $record = new Postcodify_Server_Record_v17;
-                $record->dbid = strval($row->management_id);
+                $record->dbid = strval($row->building_id);
                 $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
                 $record->code5 = strval($row->postcode5);
                 $record->address = trim($address_ko_base . ' ' . $address_ko_new);

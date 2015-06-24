@@ -40,15 +40,12 @@ class Postcodify_Server_Result
     public $results = array();
 }
 
-class Postcodify_Server_Record
-{
-    public $dbid;
-    public $code6;
-    public $code5;
-}
+class Postcodify_Server_Record { }
 
 class Postcodify_Server_Record_v17 extends Postcodify_Server_Record
 {
+    public $code6;
+    public $code5;
     public $address;
     public $canonical;
     public $extra_info_long;
@@ -56,11 +53,33 @@ class Postcodify_Server_Record_v17 extends Postcodify_Server_Record
     public $english_address;
     public $jibeon_address;
     public $other;
+    public $dbid;
 }
 
 class Postcodify_Server_Record_v18 extends Postcodify_Server_Record
 {
+    public $code6;
+    public $code5;
     public $address;
     public $english;
     public $other;
+    public $dbid;
+}
+
+class Postcodify_Server_Record_v3 extends Postcodify_Server_Record
+{
+    public $postcode6;
+    public $postcode5;
+    public $ko_common;
+    public $ko_doro;
+    public $ko_jibeon;
+    public $en_common;
+    public $en_doro;
+    public $en_jibeon;
+    public $building_id;
+    public $building_name;
+    public $building_num;
+    public $other_addrs;
+    public $road_id;
+    public $internal_id;
 }

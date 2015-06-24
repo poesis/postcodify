@@ -446,9 +446,9 @@ class Postcodify_Indexer_CreateDB
         
         $db = Postcodify_Utility::get_db();
         $db->beginTransaction();
-        $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, management_id, ' .
+        $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, ' .
             'road_id, num_major, num_minor, is_basement, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' . 
-            'building_name, building_num, other_addresses) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            'building_id, building_name, building_num, other_addresses) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
         $ps_num_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
         $ps_building_insert = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
@@ -538,7 +538,6 @@ class Postcodify_Indexer_CreateDB
                     $ps_addr_insert->execute(array(
                         $last_entry->postcode5,
                         $last_entry->postcode6,
-                        $last_entry->management_id,
                         $last_entry->road_id . $last_entry->road_section,
                         $last_entry->num_major,
                         $last_entry->num_minor,
@@ -548,6 +547,7 @@ class Postcodify_Indexer_CreateDB
                         $last_entry->jibeon_major,
                         $last_entry->jibeon_minor,
                         $last_entry->is_mountain,
+                        $last_entry->building_id,
                         $last_entry->common_residence_name,
                         $building_nums,
                         $other_addresses,

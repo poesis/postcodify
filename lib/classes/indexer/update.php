@@ -117,12 +117,12 @@ class Postcodify_Indexer_Update
         $ps_addr_select = $db->prepare('SELECT * FROM postcodify_addresses WHERE road_id >= ? AND road_id <= ? AND ' .
             'num_major = ? AND (num_minor = ? OR (? IS NULL AND num_minor IS NULL))' .
             'AND is_basement = ? ORDER BY id LIMIT 1');
-        $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, management_id, ' .
+        $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, ' .
             'road_id, num_major, num_minor, is_basement, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' .
-            'building_name, building_num, other_addresses, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-        $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode5 = ?, postcode6 = ?, management_id = ?, ' .
+            'building_id, building_name, building_num, other_addresses, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+        $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode5 = ?, postcode6 = ?, ' .
             'road_id = ?, num_major = ?, num_minor = ?, is_basement = ?, dongri_ko = ?, dongri_en = ?, ' .
-            'jibeon_major = ?, jibeon_minor = ?, is_mountain = ?, building_name = ?, building_num = ?, ' .
+            'jibeon_major = ?, jibeon_minor = ?, is_mountain = ?, building_id = ?, building_name = ?, building_num = ?, ' .
             'other_addresses = ?, updated = ? WHERE id = ?');
         $ps_addr_update_other = $db->prepare('UPDATE postcodify_addresses SET other_addresses = ? WHERE id = ?');
         
@@ -417,7 +417,6 @@ class Postcodify_Indexer_Update
                             $ps_addr_insert->execute(array(
                                 $last_entry->postcode5,
                                 $last_entry->postcode6,
-                                $last_entry->management_id,
                                 $last_entry->road_id . $last_entry->road_section,
                                 $last_entry->num_major,
                                 $last_entry->num_minor,
@@ -427,6 +426,7 @@ class Postcodify_Indexer_Update
                                 $last_entry->jibeon_major,
                                 $last_entry->jibeon_minor,
                                 $last_entry->is_mountain,
+                                $last_entry->building_id,
                                 $last_entry->common_residence_name,
                                 $building_nums,
                                 $other_addresses,
@@ -444,7 +444,6 @@ class Postcodify_Indexer_Update
                             $ps_addr_update->execute(array(
                                 $last_entry->postcode5,
                                 $last_entry->postcode6,
-                                $last_entry->management_id,
                                 $last_entry->road_id . $last_entry->road_section,
                                 $last_entry->num_major,
                                 $last_entry->num_minor,
@@ -454,6 +453,7 @@ class Postcodify_Indexer_Update
                                 $last_entry->jibeon_major,
                                 $last_entry->jibeon_minor,
                                 $last_entry->is_mountain,
+                                $last_entry->building_id,
                                 $last_entry->common_residence_name,
                                 $building_nums,
                                 $other_addresses,
