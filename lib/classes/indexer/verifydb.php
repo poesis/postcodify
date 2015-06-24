@@ -195,7 +195,8 @@ class Postcodify_Indexer_VerifyDB
     {
         $pass = true;
         
-        $pc6_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode6 IS NULL OR postcode6 = '000000' ORDER BY pa.id LIMIT 100");
+        $pc6_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id " .
+            "WHERE (postcode6 IS NULL OR postcode6 = '000000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");
         if ($pc6_query->rowCount())
         {
             echo '[ERROR] 우편번호(기존번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
@@ -206,7 +207,8 @@ class Postcodify_Indexer_VerifyDB
             $pass = false;
         }
         
-        $pc5_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode5 IS NULL OR postcode5 = '000000' ORDER BY pa.id LIMIT 100");
+        $pc5_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id " .
+            "WHERE (postcode5 IS NULL OR postcode5 = '000000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");
         if ($pc5_query->rowCount())
         {
             echo '[ERROR] 우편번호(기초구역번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
