@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (서버측 API)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -107,12 +107,12 @@ else
     foreach ($result->results as $entry)
     {
         $json['values']['address'][] = array(
-            'seq' => $entry->dbid,
-            'addr1' => $entry->address['base'],
-            'addr2_new' => $entry->address['new'],
-            'addr2_old' => $entry->address['old'],
-            'bdname' => $entry->address['building'],
-            'zipcode' => $entry->code6,
+            'seq' => $entry->building_id,
+            'addr1' => $entry->ko_common,
+            'addr2_new' => $entry->ko_doro,
+            'addr2_old' => $entry->ko_jibeon,
+            'bdname' => $entry->building_name,
+            'zipcode' => $entry->postcode6,
         );
     }
 }

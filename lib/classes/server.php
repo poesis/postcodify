@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (서버측 API)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -133,7 +133,7 @@ class Postcodify_Server
         $result->sort = $q->sort;
         $result->nums = $q->numbers[0] . ($q->numbers[1] ? ('-' . $q->numbers[1]) : '');
         $result->type = $search_type;
-        $result->cache = $data_source === 'cache' ? 'hit' : 'miss';
+        $result->cache = $data_source === 'cache' ? 'HIT' : 'MISS';
         
         // 각 레코드를 추가한다.
         
@@ -141,22 +141,22 @@ class Postcodify_Server
         {
             // 한글 도로명 및 지번주소를 정리한다.
             
-            $address_ko_base = trim($row->sido_ko . ' ' . ($row->sigungu_ko ? ($row->sigungu_ko . ' ') : '') .
+            $ko_common = trim($row->sido_ko . ' ' . ($row->sigungu_ko ? ($row->sigungu_ko . ' ') : '') .
                 ($row->ilbangu_ko ? ($row->ilbangu_ko . ' ') : '') . ($row->eupmyeon_ko ? ($row->eupmyeon_ko . ' ') : ''));
-            $address_ko_new = trim($row->road_name_ko . ' ' . ($row->is_basement ? '지하 ' : '') .
+            $ko_doro = trim($row->road_name_ko . ' ' . ($row->is_basement ? '지하 ' : '') .
                 ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : ''));
-            $address_ko_old = trim($row->dongri_ko . ' ' . ($row->is_mountain ? '산' : '') .
+            $ko_jibeon = trim($row->dongri_ko . ' ' . ($row->is_mountain ? '산' : '') .
                 ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : ''));
             
             // 영문 도로명 및 지번주소를 정리한다.
             
-            $address_en_base = trim(($row->eupmyeon_en ? ($row->eupmyeon_en . ', ') : '') .
+            $en_common = trim(($row->eupmyeon_en ? ($row->eupmyeon_en . ', ') : '') .
                 ($row->ilbangu_en ? ($row->ilbangu_en . ', ') : '') . ($row->sigungu_en ? ($row->sigungu_en . ', ') : '') .
                 $row->sido_en);
-            $address_en_new = trim(($row->is_basement ? 'Jiha ' : '') .
+            $en_doro = trim(($row->is_basement ? 'Jiha ' : '') .
                 ($row->num_major ? $row->num_major : '') . ($row->num_minor ? ('-' . $row->num_minor) : '') .
                 ', ' . $row->road_name_en);
-            $address_en_old = trim(($row->is_mountain ? 'San ' : '') .
+            $en_jibeon = trim(($row->is_mountain ? 'San ' : '') .
                 ($row->jibeon_major ? $row->jibeon_major : '') . ($row->jibeon_minor ? ('-' . $row->jibeon_minor) : '') .
                 ', ' . $row->dongri_en);
             
@@ -164,48 +164,66 @@ class Postcodify_Server
             
             if ($result->sort === 'POBOX')
             {
-                $address_ko_new = $address_ko_old = $row->dongri_ko . ' ' . $row->other_addresses;
-                $address_en_new = $address_en_old = $row->dongri_en . ' ' . $row->other_addresses;
-                $extra_info_long = $extra_info_short = $other_addresses = '';
+                $ko_doro = $ko_jibeon = $row->dongri_ko . ' ' . $row->other_addresses;
+                $en_doro = $en_jibeon = $row->dongri_en . ' ' . $row->other_addresses;
+                $extra_long = $extra_short = $other_addresses = '';
             }
             else
             {
-                $extra_info_long = trim($address_ko_old . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
-                $extra_info_short = trim($row->dongri_ko . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+                $extra_long = trim($ko_jibeon . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
+                $extra_short = trim($row->dongri_ko . (strval($row->building_name) !== '' ? (', ' . $row->building_name) : ''), ', ');
                 $other_addresses = strval($row->other_addresses);
             }
             
             // 요청받은 버전에 따라 다른 형태로 작성한다.
             
-            if (version_compare($version, '1.8', '>='))
+            if (version_compare($version, '3', '>='))
+            {
+                $record = new Postcodify_Server_Record_v3;
+                $record->postcode5 = strval($row->postcode5);
+                $record->postcode6 = strval($row->postcode6);
+                $record->ko_common = $ko_common;
+                $record->ko_doro = $ko_doro;
+                $record->ko_jibeon = $ko_jibeon;
+                $record->en_common = $en_common;
+                $record->en_doro = $en_doro;
+                $record->en_jibeon = $en_jibeon;
+                $record->building_id = strval($row->building_id);
+                $record->building_name = strval($row->building_name);
+                $record->building_nums = isset($row->building_nums) ? strval($row->building_nums) : '';
+                $record->other_addresses = $other_addresses;
+                $record->road_id = ($result->sort === 'POBOX') ? '' : substr($row->road_id, 0, 12);
+                $record->internal_id = strval($row->id);
+            }
+            elseif (version_compare($version, '1.8', '>='))
             {
                 $record = new Postcodify_Server_Record_v18;
-                $record->dbid = strval($row->address_id);
+                $record->dbid = strval($row->building_id);
                 $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
                 $record->code5 = strval($row->postcode5);
-                $record->address = array('base' => $address_ko_base, 'new' => $address_ko_new, 'old' => $address_ko_old, 'building' => strval($row->building_name));
-                $record->english = array('base' => $address_en_base, 'new' => $address_en_new, 'old' => $address_en_old, 'building' => '');
+                $record->address = array('base' => $ko_common, 'new' => $ko_doro, 'old' => $ko_jibeon, 'building' => strval($row->building_name));
+                $record->english = array('base' => $en_common, 'new' => $en_doro, 'old' => $en_jibeon, 'building' => '');
                 $record->other = array(
-                    'long' => strval($extra_info_long),
-                    'short' => strval($extra_info_short),
+                    'long' => strval($extra_long),
+                    'short' => strval($extra_short),
                     'others' => strval($other_addresses),
                     'addrid' => strval($row->id),
                     'roadid' => ($result->sort === 'POBOX') ? '' : $row->road_id,
-                    'bldnum' => isset($row->building_num) ? strval($row->building_num) : '',
+                    'bldnum' => isset($row->building_nums) ? strval($row->building_nums) : '',
                 );
             }
             else
             {
                 $record = new Postcodify_Server_Record_v17;
-                $record->dbid = strval($row->address_id);
+                $record->dbid = strval($row->building_id);
                 $record->code6 = substr($row->postcode6, 0, 3) . '-' . substr($row->postcode6, 3, 3);
                 $record->code5 = strval($row->postcode5);
-                $record->address = trim($address_ko_base . ' ' . $address_ko_new);
-                $record->canonical = strval($address_ko_old);
-                $record->extra_info_long = strval($extra_info_long);
-                $record->extra_info_short = strval($extra_info_short);
-                $record->english_address = trim($address_en_new . ', ' . $address_en_base);
-                $record->jibeon_address = trim($address_ko_base . ' ' . $address_ko_old);
+                $record->address = trim($ko_common . ' ' . $ko_doro);
+                $record->canonical = strval($ko_jibeon);
+                $record->extra_info_long = strval($extra_long);
+                $record->extra_info_short = strval($extra_short);
+                $record->english_address = trim($en_doro . ', ' . $en_common);
+                $record->jibeon_address = trim($ko_common . ' ' . $ko_jibeon);
                 $record->other = strval($other_addresses);
             }
             
@@ -257,9 +275,9 @@ class Postcodify_Server
             
             // 쿼리 작성을 준비한다.
             
-            $query = 'SELECT DISTINCT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id';
-            $joins = array();
-            $conds = array();
+            $query = 'SELECT DISTINCT pa.*, pr.* FROM postcodify_addresses pa';
+            $joins = array('JOIN postcodify_roads pr ON pa.road_id = pr.road_id');
+            $conds = array('pa.building_id IS NOT NULL');
             $args = array();
             
             // 특정 지역으로 검색을 제한하는 경우를 처리한다.

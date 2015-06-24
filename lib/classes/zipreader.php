@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (인덱서)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -25,6 +25,20 @@ class Postcodify_ZipReader
     protected $_current;
     protected $_zip;
     protected $_fp;
+    
+    // 새로운 Zip 아카이브를 열거나, 이미 열린 Zip 아카이브를 삽입할 수 있다.
+    
+    public function __construct($zip = null)
+    {
+        if ($zip instanceof ZipArchive || $zip === null)
+        {
+            $this->_zip = $zip;
+        }
+        elseif (file_exists($zip) && is_readable($zip))
+        {
+            $this->open_archive($zip);
+        }
+    }
     
     // Zip 아카이브를 연다.
     
@@ -53,16 +67,50 @@ class Postcodify_ZipReader
     public function open_named_file($str)
     {
         $count = $this->_zip->numFiles;
+        if (!$count) return false;
+        
+        if (mb_check_encoding($str, 'UTF-8'))
+        {
+            $str1 = iconv('UTF-8', 'CP949', $str);
+        }
+        else
+        {
+            $str1 = $str;
+        }
+        $str2 = iconv('CP437', 'UTF-8', $str1);
+        
         for ($i = 0; $i < $count; $i++)
         {
             $filename = $this->_zip->getNameIndex($i);
-            if (strpos($filename, $str) !== false)
+            if (strpos($filename, $str) !== false || strpos($filename, $str1) !== false || strpos($filename, $str2) !== false)
             {
                 $this->_fp = $this->_zip->getStream($filename);
                 return $filename;
             }
         }
         return false;
+    }
+    
+    // Zip 아카이브 중 가장 큰 파일을 연다.
+    // 성공하면 파일명을 반환하고, 실패하면 false를 반환한다.
+    
+    public function open_largest_file()
+    {
+        $count = $this->_zip->numFiles;
+        if (!$count) return false;
+        
+        $sizes = array();
+        for ($i = 0; $i < $count; $i++)
+        {
+            $stat = $this->_zip->statIndex($i);
+            $sizes[$i] = intval($stat['size']);
+        }
+        arsort($sizes);
+        reset($sizes);
+        
+        $filename = $this->_zip->getNameIndex(key($sizes));
+        $this->_fp = $this->_zip->getStream($filename);
+        return $filename;
     }
     
     // 문자셋을 지정한다.
@@ -103,11 +151,45 @@ class Postcodify_ZipReader
         return explode($delimiter, $line);
     }
     
-    // 파일을 닫는다.
+    // 열린 파일을 닫는다.
+    
+    public function close_file()
+    {
+        if (is_resource($this->_fp))
+        {
+            fclose($this->_fp);
+            $this->_fp = null;
+        }
+    }
+    
+    // Zip 아카이브를 닫는다.
     
     public function close()
     {
-        if ($this->_fp) fclose($this->_fp);
-        if ($this->_zip) $this->_zip->close();
+        if (is_resource($this->_fp))
+        {
+            fclose($this->_fp);
+            $this->_fp = null;
+        }
+        
+        if ($this->_zip)
+        {
+            $this->_zip->close();
+            $this->_zip = null;
+        }
+    }
+    
+    // 파일 포인터를 반환한다.
+    
+    public function get_fp()
+    {
+        return $this->_fp;
+    }
+    
+    // Zip 아카이브를 반환한다.
+    
+    public function get_zip()
+    {
+        return $this->_zip;
     }
 }

@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 API)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  *  
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "2.5.1", location : "" };
+    var info = { version : "3.0.0", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -70,6 +70,10 @@
                 insertEnglishJibeonAddress : null,
                 insertDetails : null,
                 insertExtraInfo : null,
+                insertBuildingId : null,
+                insertBuildingName : null,
+                insertBuildingNums : null,
+                insertOtherAddresses : null,
                 beforeSearch : function(keywords) { },
                 afterSearch : function(keywords, results, lang, sort) { },
                 beforeSelect : function(selectedEntry) { },
@@ -100,6 +104,8 @@
                     settings.api = "http:" + settings.api;
                 } else if (settings.forceUseSSL) {
                     settings.api = "https:" + settings.api;
+                } else if (!window.location.protocol.match(/^https?/)) {
+                    settings.api = "http:" + settings.api;
                 }
             }
             if (settings.apiBackup && settings.apiBackup.substr(0, 2) === "//") {
@@ -107,7 +113,12 @@
                     settings.apiBackup = "http:" + settings.apiBackup;
                 } else if (settings.forceUseSSL) {
                     settings.apiBackup = "https:" + settings.apiBackup;
+                } else if (!window.location.protocol.match(/^https?/)) {
+                    settings.api = "http:" + settings.api;
                 }
+            }
+            if (settings.insertBuildingId === null && settings.insertDbid !== null) {
+                settings.insertBuildingId = settings.insertDbid;
             }
             if (settings.searchButtonContent === null) {
                 settings.searchButtonContent = info.translations[settings.language].msgSearch;
@@ -323,7 +334,7 @@
                     
                     // 정상 처리되었지만 검색 서버의 버전이 맞지 않는 경우...
                     
-                    else if (typeof data.results[0].other === "undefined") {
+                    else if (typeof data.results[0].postcode5 === "undefined" && typeof data.results[0].other === "undefined") {
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorVersion);
                         } else {
@@ -348,21 +359,51 @@
                         
                         for (var i = 0; i < data.count; i++) {
                             
-                            // 검색 결과 항목을 작성한다.
+                            // 구 버전 서버에서 작성한 검색 결과인 경우 새 버전으로 변환한다.
                             
                             var result = data.results[i];
+                            if (typeof result.postcode5 === "undefined" && typeof result.code5 !== "undefined") {
+                                result.postcode5 = result.code5;
+                                result.postcode6 = result.code6.replace(/[^0-9]/, "");
+                                result.ko_common = result.address["base"];
+                                result.ko_doro = result.address["new"];
+                                result.ko_jibeon = result.address["old"];
+                                result.en_common = result.english["base"];
+                                result.en_doro = result.english["new"];
+                                result.en_jibeon = result.english["old"];
+                                result.building_id = result.dbid;
+                                result.building_name = result.address.building;
+                                result.building_nums = result.other.bldnum;
+                                result.other_addresses = result.other.others;
+                                result.road_id = result.other.roadid;
+                            }
+                            
+                            // 검색 결과 항목을 작성한다.
+                            
                             var option = $('<div></div>').postcodifyAddClass("search_result");
-                            option.data("dbid", result.dbid);
-                            option.data("code6", result.code6);
-                            option.data("code5", result.code5);
-                            option.data("address", result.address.base + " " + result.address["new"]);
-                            option.data("jibeon_address", result.address["base"] + " " + result.address["old"]);
-                            option.data("english_address", (result.english["new"] === "" ? "" : (result.english["new"] + ", ")) + result.english["base"]);
-                            option.data("english_jibeon_address", (result.english["old"] === "" ? "" : (result.english["old"] + ", ")) + result.english["base"]);
-                            option.data("extra_info_long", result.other["long"]);
-                            option.data("extra_info_short", result.other["short"]);
+                            
+                            // 구 버전과의 호환성을 위한 속성들을 입력한다.
+                            
+                            option.data("dbid", result.building_id);
+                            option.data("code5", result.postcode5);
+                            option.data("code6", result.postcode6.substr(0, 3) + "-" + result.postcode6.substr(3, 3));
+                            
+                            // 현재 버전이 공식적으로 지원하는 속성들을 입력한다.
+                            
+                            option.data("postcode5", result.postcode5);
+                            option.data("postcode6", result.postcode6.substr(0, 3) + "-" + result.postcode6.substr(3, 3));
+                            option.data("address", result.ko_common + " " + result.ko_doro);
+                            option.data("jibeon_address", result.ko_common + " " + result.ko_jibeon);
+                            option.data("english_address", (result.en_doro === "" ? "" : (result.en_doro + ", ")) + result.en_common);
+                            option.data("english_jibeon_address", (result.en_jibeon === "" ? "" : (result.en_jibeon + ", ")) + result.en_common);
+                            option.data("building_id", result.building_id);
+                            option.data("building_name", result.building_name);
+                            option.data("building_nums", result.building_nums);
+                            option.data("extra_info_long", result.ko_jibeon + (result.building_name === "" ? "" : (", " + result.building_name)));
+                            option.data("extra_info_short", result.ko_jibeon.replace(/\s.+$/, "") + (result.building_name === "" ? "" : (", " + result.building_name)));
                             option.data("extra_info_nums", data.nums);
-                            option.data("building_nums", typeof result.other["bldnum"] === "undefined" ? "" : result.other["bldnum"]);
+                            option.data("other_addresses", result.other_addresses);
+                            option.data("road_id", result.road_id);
                             
                             // 반환된 데이터의 언어, 정렬 방법에 따라 클릭할 링크를 생성한다.
                             
@@ -372,23 +413,23 @@
                             if (resultLanguage === "en") {
                                 if (typeof data.sort !== "undefined" && data.sort === "JIBEON") {
                                     mainText = option.data("english_jibeon_address");
-                                    extraText = result.english["new"];
+                                    extraText = result.en_doro;
                                 } else {
                                     mainText = option.data("english_address");
-                                    extraText = result.english["old"];
+                                    extraText = result.en_jibeon;
                                 }
                             } else {
                                 if (typeof data.sort !== "undefined" && data.sort === "JIBEON") {
-                                    mainText = result.address["base"] + " " + result.address["old"];
-                                    extraText = result.address["new"];
+                                    mainText = option.data("jibeon_address");
+                                    extraText = result.ko_doro;
                                 } else {
-                                    mainText = result.address["base"] + " " + result.address["new"];
-                                    extraText = result.address["old"];
+                                    mainText = option.data("address");
+                                    extraText = result.ko_jibeon;
                                 }
-                                if (result.address["building"] !== "" && result.address["building"] !== null) {
-                                    extraText += ", " + result.address["building"];
-                                    if (!settings.hideBuildingNums && result.other["bldnum"]) {
-                                        extraText += " " + result.other["bldnum"];
+                                if (result.building_name !== "" && result.building_name !== null) {
+                                    extraText += ", " + result.building_name;
+                                    if (!settings.hideBuildingNums && result.building_nums !== "") {
+                                        extraText += " " + result.building_nums;
                                     }
                                 }
                             }
@@ -402,26 +443,26 @@
                             // 우편번호, 기초구역번호, 주소 등을 항목에 추가한다.
                             
                             if (settings.forceDisplayPostcode5) {
-                                $('<div class="code"></div>').text("[\u2009" + result.code5 + "\u2009]").appendTo(option);
+                                $('<div class="code"></div>').text("[\u2009" + option.data("postcode5") + "\u2009]").appendTo(option);
                             } else {
-                                $('<div class="code6"></div>').text(result.code6).appendTo(option);
-                                $('<div class="code5"></div>').text(result.code5).appendTo(option);
+                                $('<div class="code6"></div>').text(option.data("postcode6")).appendTo(option);
+                                $('<div class="code5"></div>').text(option.data("postcode5")).appendTo(option);
                             }
                             $('<div class="address"></div>').append(selector).appendTo(option);
                             
                             // 예전 주소 및 검색어 목록을 추가한다.
                             
+                            var other_addresses = option.data("other_addresses");
                             if (typeof data.lang !== "undefined" && data.lang === "EN") {
-                                result.other["others"] = result.other["others"].replace(/산([0-9]+)/g, "San $1");
-                                result.other["others"] = $.trim(result.other["others"].replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " "));
+                                other_addresses = other_addresses.replace(/산([0-9]+)/g, "San $1");
+                                other_addresses = $.trim(other_addresses.replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " "));
                             }
-                            
-                            if (result.other["others"] !== "") {
+                            if (other_addresses !== "") {
                                 var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>');
                                 oldAddrLink.attr("title", info.translations[resultLanguage].msgShowOthers);
                                 if (!settings.hideOldAddresses) oldAddrLink.css("display", "none");
                                 oldAddrLink.appendTo(option.find("div.address"));
-                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(result.other["others"]);
+                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(other_addresses);
                                 if (settings.hideOldAddresses) oldAddrDiv.css("display", "none");
                                 oldAddrDiv.appendTo(option);
                             }
@@ -435,8 +476,8 @@
                                 } else {
                                     mapurl = settings.mapLinkProvider;
                                 }
-                                mapurl = mapurl.replace("$JUSO", encodeURIComponent(result.address["base"] + " " + result.address["new"]).replace(/%20/g, '+'));
-                                mapurl = mapurl.replace("$JIBEON", encodeURIComponent(result.address["base"] + " " + result.address["old"]).replace(/%20/g, '+'));
+                                mapurl = mapurl.replace("$JUSO", encodeURIComponent(option.data("address")).replace(/%20/g, '+'));
+                                mapurl = mapurl.replace("$JIBEON", encodeURIComponent(option.data("jibeon_address")).replace(/%20/g, '+'));
                                 var mapLinkContent = (settings.mapLinkContent !== null) ? settings.mapLinkContent : info.translations[resultLanguage].msgMap;
                                 var maplink = $('<a target="_blank"></a>').attr("href", mapurl).html(mapLinkContent);
                                 $('<div class="map_link"></div>').append(maplink).appendTo(option);
@@ -578,13 +619,16 @@
                 
                 // 사용자가 지정한 입력칸에 데이터를 입력한다.
                 
-                if (settings.insertDbid) $(settings.insertDbid).val(entry.data("dbid"));
                 if (settings.insertPostcode6) $(settings.insertPostcode6).val(entry.data("code6"));
                 if (settings.insertPostcode5) $(settings.insertPostcode5).val(entry.data("code5"));
                 if (settings.insertAddress) $(settings.insertAddress).val(koAddrNew);
                 if (settings.insertJibeonAddress) $(settings.insertJibeonAddress).val(koAddrOld);
                 if (settings.insertEnglishAddress) $(settings.insertEnglishAddress).val(enAddrNew);
                 if (settings.insertEnglishJibeonAddress) $(settings.insertEnglishJibeonAddress).val(enAddrOld);
+                if (settings.insertBuildingId) $(settings.insertBuildingId).val(entry.data("building_id"));
+                if (settings.insertBuildingName) $(settings.insertBuildingName).val(entry.data("building_name"));
+                if (settings.insertBuildingNums) $(settings.insertBuildingNums).val(entry.data("building_nums"));
+                if (settings.insertOtherAddresses) $(settings.insertOtherAddresses).val(entry.data("other_addresses"));
                 if (settings.insertExtraInfo) {
                     var extra_info = settings.useFullJibeon ? entry.data("extra_info_long") : entry.data("extra_info_short");
                     if (extra_info.length) extra_info = "(" + extra_info + ")";

@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (서버측 API)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -36,19 +36,16 @@ class Postcodify_Server_Result
     public $sort = 'JUSO';
     public $type = '';
     public $nums = '';
-    public $cache = 'miss';
+    public $cache = 'MISS';
     public $results = array();
 }
 
-class Postcodify_Server_Record
-{
-    public $dbid;
-    public $code6;
-    public $code5;
-}
+class Postcodify_Server_Record { }
 
 class Postcodify_Server_Record_v17 extends Postcodify_Server_Record
 {
+    public $code6;
+    public $code5;
     public $address;
     public $canonical;
     public $extra_info_long;
@@ -56,11 +53,33 @@ class Postcodify_Server_Record_v17 extends Postcodify_Server_Record
     public $english_address;
     public $jibeon_address;
     public $other;
+    public $dbid;
 }
 
 class Postcodify_Server_Record_v18 extends Postcodify_Server_Record
 {
+    public $code6;
+    public $code5;
     public $address;
     public $english;
     public $other;
+    public $dbid;
+}
+
+class Postcodify_Server_Record_v3 extends Postcodify_Server_Record
+{
+    public $postcode5;
+    public $postcode6;
+    public $ko_common;
+    public $ko_doro;
+    public $ko_jibeon;
+    public $en_common;
+    public $en_doro;
+    public $en_jibeon;
+    public $building_id;
+    public $building_name;
+    public $building_nums;
+    public $other_addresses;
+    public $road_id;
+    public $internal_id;
 }

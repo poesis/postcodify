@@ -2,7 +2,7 @@
 
 // 버전 선언.
 
-define('POSTCODIFY_VERSION', '2.5.1');
+define('POSTCODIFY_VERSION', '3.0.0');
 define('POSTCODIFY_LIB_DIR', dirname(__FILE__));
 
 // 설정을 불러온다.
@@ -13,10 +13,13 @@ require POSTCODIFY_LIB_DIR . '/config.php';
 
 function _postcodify_autoloader($class_name)
 {
-    if (preg_match('/^postcodify_([a-z0-9_]+)$/', strtolower($class_name), $matches) &&
-        file_exists(POSTCODIFY_LIB_DIR . '/classes/' . $matches[1] . '.php'))
+    if (preg_match('/^postcodify_([a-z0-9_]+)$/', strtolower($class_name), $matches))
     {
-        include POSTCODIFY_LIB_DIR . '/classes/' . $matches[1] . '.php';
+        $class_location = preg_replace('/^(indexer|parser|server)_/', '$1/', $matches[1]);
+        if (file_exists(POSTCODIFY_LIB_DIR . '/classes/' . $class_location . '.php'))
+        {
+            include POSTCODIFY_LIB_DIR . '/classes/' . $class_location . '.php';
+        }
     }
 }
 

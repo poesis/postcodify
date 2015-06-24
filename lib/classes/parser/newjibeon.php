@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (인덱서)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -19,7 +19,7 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-class Postcodify_Parser_Extra_Info extends Postcodify_ZipReader
+class Postcodify_Parser_NewJibeon extends Postcodify_ZipReader
 {
     // 생성자에서 문자셋을 지정한다.
     
@@ -35,28 +35,41 @@ class Postcodify_Parser_Extra_Info extends Postcodify_ZipReader
         // 데이터를 읽는다.
         
         $line = parent::read_line($delimiter);
-        if ($line === false || count($line) < 9) return false;
+        if ($line === false || count($line) < 14) return false;
         
-        // 행정동명을 파악한다.
+        // 도로명주소를 정리한다.
         
-        $admin_dongri = trim($line[2]);
-        if (!preg_match('/[동리]$/u', $admin_dongri)) $admin_dongri = null;
+        $road_id = trim($line[8]);
+        $num_major = intval($line[10]);
+        $num_minor = intval($line[11]); if (!$num_minor) $num_minor = null;
+        $is_basement = intval($line[9]);
         
-        // 건물명을 정리한다.
+        // 지번주소를 정리한다.
         
-        $building_names = array();
-        if (($building = trim($line[5])) !== '') $building_names[] = Postcodify_Utility::get_canonical($building);
-        if (($building = trim($line[6])) !== '') $building_names[] = Postcodify_Utility::get_canonical($building);
-        if (($building = trim($line[7])) !== '') $building_names[] = Postcodify_Utility::get_canonical($building);
+        $dongri = trim($line[4]);
+        if ($dongri === '') $dongri = trim($line[3]);
+        $dongri = preg_replace('/\\(.+\\)/', '', $dongri);
+        
+        $jibeon_major = intval($line[6]);
+        $jibeon_minor = intval($line[7]); if (!$jibeon_minor) $jibeon_minor = null;
+        $is_mountain = intval($line[5]);
+        
+        // 변경내역을 정리한다.
+        
+        $change_reason = $line[13] === '' ? null : intval($line[13]);
         
         // 데이터를 정리하여 반환한다.
         
         return (object)array(
-            'address_id' => trim($line[0]),
-            'postcode6' => trim($line[3]),
-            'admin_dongri' => $admin_dongri,
-            'building_names' => array_unique($building_names),
-            'common_residence_name' => intval(trim($line[8])) > 0 ? trim($line[6]) : null,
+            'road_id' => $road_id,
+            'num_major' => $num_major,
+            'num_minor' => $num_minor,
+            'is_basement' => $is_basement,
+            'dongri' => $dongri,
+            'jibeon_major' => $jibeon_major,
+            'jibeon_minor' => $jibeon_minor,
+            'is_mountain' => $is_mountain,
+            'change_reason' => $change_reason,
         );
     }
 }

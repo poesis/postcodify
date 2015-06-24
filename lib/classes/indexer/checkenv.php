@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (인덱서)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -23,7 +23,7 @@ class Postcodify_Indexer_CheckEnv
 {
     // 구동 환경을 점검한다.
     
-    public function check($dry_run)
+    public function check()
     {
         // 기본적인 환경을 확인한다.
         
@@ -79,33 +79,40 @@ class Postcodify_Indexer_CheckEnv
         
         // 필요한 데이터 파일이 모두 있는지 확인한다.
         
-        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/도로명코드_전체분.zip'))
+        $data_address_file = null;
+        $data_roadlist_file = null;
+
+        $data_files = scandir(dirname(POSTCODIFY_LIB_DIR) . '/data');
+        foreach ($data_files as $filename)
         {
-            echo '[ERROR] 도로명코드_전체분.zip 파일을 찾을 수 없습니다.' . PHP_EOL;
+            if (preg_match('/^20[0-9]{4}RDNM(ADR|CODE)\.zip$/', $filename, $matches))
+            {
+                if ($matches[1] === 'ADR')
+                {
+                    $data_address_file = $filename;
+                }
+                else
+                {
+                    $data_roadlist_file = $filename;
+                }
+            }
+        }
+        
+        if (!$data_address_file)
+        {
+            echo '[ERROR] ******RDNMADR.zip 파일을 찾을 수 없습니다.' . PHP_EOL;
             exit(2);
         }
         
-        if (count(glob(dirname(POSTCODIFY_LIB_DIR) . '/data/주소_*.zip')) < 14)
+        if (!$data_roadlist_file)
         {
-            echo '[ERROR] 주소_*.zip 파일을 찾을 수 없거나 일부 누락되었습니다.' . PHP_EOL;
+            echo '[ERROR] ******RDNMCODE.zip 파일을 찾을 수 없습니다.' . PHP_EOL;
             exit(2);
         }
         
-        if (count(glob(dirname(POSTCODIFY_LIB_DIR) . '/data/지번_*.zip')) < 14)
+        if (substr($data_address_file, 0, 10) !== substr($data_roadlist_file, 0, 10))
         {
-            echo '[ERROR] 지번_*.zip 파일을 찾을 수 없거나 일부 누락되었습니다.' . PHP_EOL;
-            exit(2);
-        }
-        
-        if (count(glob(dirname(POSTCODIFY_LIB_DIR) . '/data/부가정보_*.zip')) < 14)
-        {
-            echo '[ERROR] 부가정보_*.zip 파일을 찾을 수 없거나 일부 누락되었습니다.' . PHP_EOL;
-            exit(2);
-        }
-        
-        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/상세건물명.zip'))
-        {
-            echo '[ERROR] 상세건물명.zip 파일을 찾을 수 없습니다.' . PHP_EOL;
+            echo '[ERROR] ******RDNMADR.zip 파일과 ******RDNMCODE.zip 파일의 날짜가 서로 다릅니다.' . PHP_EOL;
             exit(2);
         }
         
@@ -121,12 +128,6 @@ class Postcodify_Indexer_CheckEnv
             exit(2);
         }
         
-        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/building_numbers_DB.zip'))
-        {
-            echo '[ERROR] 아파트 동수 범위 (building_numbers_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
-            exit(2);
-        }
-        
         if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/english_aliases_DB.zip'))
         {
             echo '[ERROR] 영문 번역 (english_aliases_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
@@ -138,10 +139,6 @@ class Postcodify_Indexer_CheckEnv
             echo '[ERROR] 구 우편번호 범위 (oldaddr_zipcode_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
             exit(2);
         }
-        
-        // 시험구동인 경우 여기서 종료한다.
-        
-        if ($dry_run) return;
         
         // DB의 사양을 점검한다.
         

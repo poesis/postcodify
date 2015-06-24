@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (인덱서)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -21,37 +21,9 @@
 
 class Postcodify_Indexer_VerifyDB
 {
-    // 확인할 인덱스 목록.
+    // 확인할 데이터 정의.
     
-    protected $_indexes = array(
-        'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
-        'postcodify_addresses' => array('address_id', 'road_id', 'postcode6', 'postcode5'),
-        'postcodify_keywords' => array('address_id', 'keyword_crc32'),
-        'postcodify_english' => array('ko', 'ko_crc32', 'en', 'en_crc32'),
-        'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
-        'postcodify_buildings' => array('address_id'),
-        'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
-        'postcodify_ranges_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'road_name_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'range_type', 'postcode5'),
-        'postcodify_ranges_jibeon' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'admin_dongri', 'postcode5'),
-        'postcodify_ranges_oldcode' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'postcode6'),
-        'postcodify_settings' => array(),
-    );
-    
-    // 확인할 데이터 갯수.
-    
-    protected $_data_counts = array(
-        'postcodify_roads' => 300000,
-        'postcodify_addresses' => 5000000,
-        'postcodify_keywords' => 2000000,
-        'postcodify_english' => 100000,
-        'postcodify_numbers' => 8000000,
-        'postcodify_buildings' => 600000,
-        'postcodify_pobox' => 2000,
-        'postcodify_ranges_roads' => 200000,
-        'postcodify_ranges_jibeon' => 400000,
-        'postcodify_ranges_oldcode' => 30000,
-        'postcodify_settings' => 2,
-    );
+    protected $_schema;
     
     // 엔트리 포인트.
     
@@ -66,6 +38,7 @@ class Postcodify_Indexer_VerifyDB
             exit(1);
         }
         
+        $this->_schema = (include POSTCODIFY_LIB_DIR . '/resources/schema.php');
         $pass = true;
         
         echo '테이블 확인 중...' . PHP_EOL;
@@ -77,7 +50,8 @@ class Postcodify_Indexer_VerifyDB
         if ($pass)
         {
             echo '데이터 확인 중...' . PHP_EOL;
-            $pass = $this->check_data_count($db) && $pass;
+            $pass = $pass && $this->check_data_count($db);
+            $pass = $pass && $this->check_missing_postcodes($db);
         }
         else
         {
@@ -103,7 +77,7 @@ class Postcodify_Indexer_VerifyDB
         $tables_query = $db->query("SHOW TABLES");
         $tables = $tables_query->fetchAll(PDO::FETCH_NUM);
         
-        foreach ($this->_indexes as $table_name => $indexes)
+        foreach ($this->_schema as $table_name => $columns)
         {
             $found = false;
             foreach ($tables as $table)
@@ -130,7 +104,7 @@ class Postcodify_Indexer_VerifyDB
     {
         $pass = true;
         
-        foreach ($this->_indexes as $table_name => $indexes)
+        foreach ($this->_schema as $table_name => $columns)
         {
             try
             {
@@ -157,6 +131,10 @@ class Postcodify_Indexer_VerifyDB
                 echo '[ERROR] ' . $table_name . ' 테이블에 PRIMARY KEY가 없습니다.' . PHP_EOL;
                 $pass = false;
             }
+            
+            $indexes = array();
+            if (isset($columns['_interim'])) $indexes = array_merge($indexes, $columns['_interim']);
+            if (isset($columns['_indexes'])) $indexes = array_merge($indexes, $columns['_indexes']);
             
             foreach ($indexes as $index_name)
             {
@@ -186,14 +164,16 @@ class Postcodify_Indexer_VerifyDB
     {
         $pass = true;
         
-        foreach ($this->_data_counts as $table_name => $needed_count)
+        foreach ($this->_schema as $table_name => $columns)
         {
+            if (!isset($columns['_count'])) continue;
+            
             try
             {
                 $count_query = $db->query("SELECT COUNT(*) FROM $table_name");
                 $count = $count_query->fetchColumn();
                 
-                if ($count < $needed_count)
+                if ($count < $columns['_count'])
                 {
                     echo '[ERROR] ' . $table_name . ' 테이블의 레코드 수가 부족합니다.' . PHP_EOL;
                     $pass = false;
@@ -206,29 +186,37 @@ class Postcodify_Indexer_VerifyDB
             }
         }
         
-        if ($pass)
+        return $pass;
+    }
+    
+    // 우편번호 누락 레코드를 확인한다.
+    
+    public function check_missing_postcodes($db)
+    {
+        $pass = true;
+        
+        $pc6_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id " .
+            "WHERE (postcode6 IS NULL OR postcode6 = '000000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");
+        if ($pc6_query->rowCount())
         {
-            $pc6_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode6 IS NULL OR postcode6 = '000000' ORDER BY pa.id LIMIT 100");
-            if ($pc6_query->rowCount())
+            echo '[ERROR] 우편번호(기존번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
+            while ($entry = $pc6_query->fetch(PDO::FETCH_OBJ))
             {
-                echo '[ERROR] 우편번호(기존번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
-                while ($entry = $pc6_query->fetch(PDO::FETCH_OBJ))
-                {
-                    echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
-                }
-                $pass = false;
+                echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
             }
-            
-            $pc5_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE postcode5 IS NULL OR postcode5 = '000000' ORDER BY pa.id LIMIT 100");
-            if ($pc5_query->rowCount())
+            $pass = false;
+        }
+        
+        $pc5_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id " .
+            "WHERE (postcode5 IS NULL OR postcode5 = '000000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");
+        if ($pc5_query->rowCount())
+        {
+            echo '[ERROR] 우편번호(기초구역번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
+            while ($entry = $pc5_query->fetch(PDO::FETCH_OBJ))
             {
-                echo '[ERROR] 우편번호(기초구역번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
-                while ($entry = $pc5_query->fetch(PDO::FETCH_OBJ))
-                {
-                    echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
-                }
-                $pass = false;
+                echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
             }
+            $pass = false;
         }
         
         return $pass;

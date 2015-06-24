@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (인덱서)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -52,8 +52,8 @@ class Postcodify_Indexer_Set_Postcode
         
         // 주어진 주소가 존재하는지 확인한다.
         
-        $ps_select = $db->prepare('SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE pa.id = ? OR pa.address_id = ? ORDER BY id LIMIT 1');
-        $ps_select->execute(array($address_id, $address_id));
+        $ps_select = $db->prepare('SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id WHERE pa.id = ? ORDER BY id LIMIT 1');
+        $ps_select->execute(array($address_id));
         $entry = $ps_select->fetchObject();
         
         if (!$entry)

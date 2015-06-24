@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (인덱서)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -21,36 +21,11 @@
 
 class Postcodify_Indexer_SQLite_Convert
 {
-    // 생성할 테이블 정보.
+    // 스키마 저장소.
     
-    protected $_tables = array(
-        'postcodify_roads' => array(11, 'road_id'),
-        'postcodify_addresses' => array(17, 'id'),
-        'postcodify_keywords' => array(3, 'seq'),
-        'postcodify_english' => array(5, 'seq'),
-        'postcodify_numbers' => array(4, 'seq'),
-        'postcodify_buildings' => array(3, 'seq'),
-        'postcodify_pobox' => array(7, 'seq'),
-        'postcodify_ranges_roads' => array(18, 'seq'),
-        'postcodify_ranges_jibeon' => array(18, 'seq'),
-        'postcodify_ranges_oldcode' => array(21, 'seq'),
-        'postcodify_settings' => array(2, 'k'),
-    );
-    
-    // 생성할 인덱스 목록.
-    
-    protected $_indexes = array(
-        'postcodify_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko'),
-        'postcodify_addresses' => array('address_id', 'road_id', 'postcode6', 'postcode5'),
-        'postcodify_keywords' => array('address_id', 'keyword_crc32'),
-        'postcodify_english' => array('ko', 'ko_crc32', 'en', 'en_crc32'),
-        'postcodify_numbers' => array('address_id', 'num_major', 'num_minor'),
-        'postcodify_buildings' => array('address_id'),
-        'postcodify_pobox' => array('address_id', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor'),
-        'postcodify_ranges_roads' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'road_name_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'range_type', 'postcode5'),
-        'postcodify_ranges_jibeon' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'range_type', 'postcode5'),
-        'postcodify_ranges_oldcode' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'postcode6'),
-    );
+    protected $_tables = array();
+    protected $_columns = array();
+    protected $_indexes = array();
     
     // 엔트리 포인트.
     
@@ -123,7 +98,48 @@ class Postcodify_Indexer_SQLite_Convert
         $sqlite->exec('PRAGMA synchronous = OFF');
         $sqlite->exec('PRAGMA journal_mode = OFF');
         $sqlite->exec('PRAGMA encoding = "UTF-8"');
-        $sqlite->exec(file_get_contents(POSTCODIFY_LIB_DIR . '/resources/schema-sqlite.sql'));
+        
+        $schema = (include POSTCODIFY_LIB_DIR . '/resources/schema.php');
+        
+        foreach ($schema as $table_name => $table_definition)
+        {
+            $columns = array();
+            foreach ($table_definition as $column_name => $column_definition)
+            {
+                switch ($column_name)
+                {
+                    case '_interim':
+                    case '_indexes':
+                        foreach ($column_definition as $column)
+                        {
+                            $this->_indexes[$table_name][] = $column;
+                        }
+                        break;
+                    default:
+                        if ($column_name[0] !== '_')
+                        {
+                            $column_definition = preg_replace('/(SMALL|TINY)INT\b/', 'INT', $column_definition);
+                            $column_definition = str_replace('INT PRIMARY KEY AUTO_INCREMENT', 'INTEGER PRIMARY KEY', $column_definition);
+                            $column_definition = str_replace(' UNSIGNED', '', $column_definition);
+                            $column_definition = str_replace('NUMERIC', 'CHAR', $column_definition);
+                            $columns[] = $column_name . ' ' . $column_definition;
+                        }
+                }
+            }
+            
+            $table_query = 'CREATE TABLE ' . $table_name . ' (' . implode(', ', $columns) . ')';
+            $this->_tables[$table_name] = $table_query;
+            
+            reset($table_definition);
+            $first_column = key($table_definition);
+            $this->_columns[$table_name] = array($first_column, count($columns));
+        }
+        
+        foreach ($this->_tables as $table_query)
+        {
+            $sqlite->exec($table_query);
+        }
+        
         return $sqlite;
     }
     
@@ -131,15 +147,15 @@ class Postcodify_Indexer_SQLite_Convert
     
     public function copy_data($mysql, $sqlite)
     {
-        foreach ($this->_tables as $table_name => $table_info)
+        foreach ($this->_columns as $table_name => $table_info)
         {
             Postcodify_Utility::print_message($table_name . ' 데이터 복사 중...');
             
             $row_count_query = $mysql->query('SELECT COUNT(*) FROM ' . $table_name);
             $row_count = intval($row_count_query->fetchColumn());
             
-            $columns_placeholder = implode(', ', array_fill(0, $table_info[0], '?'));
-            $primary_key = $table_info[1];
+            $columns_placeholder = implode(', ', array_fill(0, $table_info[1], '?'));
+            $primary_key = $table_info[0];
             $last_primary_key = 0;
             $increment = 2048;
             
@@ -173,7 +189,7 @@ class Postcodify_Indexer_SQLite_Convert
                 $sqlite->commit();
             }
             
-            Postcodify_Utility::print_ok();
+            Postcodify_Utility::print_ok($row_count);
         }
     }
     
@@ -192,7 +208,7 @@ class Postcodify_Indexer_SQLite_Convert
                 $sqlite->exec('CREATE INDEX ' . $table_name . '_' . $column . ' ON ' . $table_name . ' (' . $column . ')');
             }
             
-            Postcodify_Utility::print_ok();
+            Postcodify_Utility::print_ok(count($columns));
         }
     }
     

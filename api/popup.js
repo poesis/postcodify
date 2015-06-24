@@ -2,7 +2,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (클라이언트측 팝업 API)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  *  
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -26,12 +26,15 @@
     
     // 팝업 스크립트 버전을 선언한다.
     
-    var info = { version : "2.5.1" };
+    var info = { version : "3.0.0" };
     
     // Postcodify 메인 플러그인과 팝업 레이어를 위한 스타일시트를 로딩한다.
     
     $(function() {
         var cdnPrefix = navigator.userAgent.match(/MSIE [56]\./) ? "http:" : "";
+        if (cdnPrefix === "" && !window.location.protocol.match(/^https?/)) {
+            cdnPrefix = "http:";
+        }
         var cdnStylesheet = document.createElement("link");
         cdnStylesheet.rel = "stylesheet";
         cdnStylesheet.type = "text/css";
@@ -127,7 +130,6 @@
                 layer.data("initialized", "Y");
                 layer.find("div.postcodify_results").postcodify($.extend({
                     controls : layer.find("div.postcodify_controls"),
-                    insertDbid : container.find(".postcodify_address_id"),
                     insertPostcode6 : container.find(".postcodify_postcode6"),
                     insertPostcode5 : container.find(".postcodify_postcode5"),
                     insertAddress : container.find(".postcodify_address"),
@@ -136,6 +138,10 @@
                     insertJibeonAddress : container.find(".postcodify_jibeon_address"),
                     insertEnglishAddress : container.find(".postcodify_english_address"),
                     insertEnglishJibeonAddress : container.find(".postcodify_english_jibeon_address"),
+                    insertBuildingId : container.find(".postcodify_address_id,.postcodify_building_id"),
+                    insertBuildingName : container.find(".postcodify_building_name"),
+                    insertBuildingNums : container.find(".postcodify_building_nums"),
+                    insertOtherAddresses : container.find(".postcodify_other_addresses"),
                     mapLinkProvider : "daum",
                     hideOldAddresses : false,
                     afterSelect : function(entry) {

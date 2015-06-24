@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (인덱서)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -23,6 +23,20 @@ class Postcodify_TextFileReader
 {
     protected $_charset;
     protected $_fp;
+    
+    // 새로운 텍스트 파일을 열거나, 이미 열린 파일 포인터를 삽입할 수 있다.
+    
+    public function __construct($fp = null)
+    {
+        if (is_resource($fp) || $fp === null)
+        {
+            $this->_fp = $fp;
+        }
+        elseif (file_exists($fp) && is_readable($fp))
+        {
+            $this->open($fp);
+        }
+    }
     
     // 텍스트 파일을 연다.
     
@@ -73,6 +87,17 @@ class Postcodify_TextFileReader
     
     public function close()
     {
-        if ($this->_fp) fclose($this->_fp);
+        if (is_resource($this->_fp))
+        {
+            fclose($this->_fp);
+            $this->_fp = null;
+        }
+    }
+    
+    // 파일 포인터를 반환한다.
+    
+    public function get_fp()
+    {
+        return $this->_fp;
     }
 }

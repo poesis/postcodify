@@ -3,7 +3,7 @@
 /**
  *  Postcodify - 도로명주소 우편번호 검색 프로그램 (인덱서)
  * 
- *  Copyright (c) 2014, Kijin Sung <root@poesis.kr>
+ *  Copyright (c) 2014-2015, Poesis <root@poesis.kr>
  * 
  *  이 프로그램은 자유 소프트웨어입니다. 이 소프트웨어의 피양도자는 자유
  *  소프트웨어 재단이 공표한 GNU 약소 일반 공중 사용 허가서 (GNU LGPL) 제3판
@@ -19,13 +19,13 @@
  *  만약 허가서가 누락되어 있다면 자유 소프트웨어 재단으로 문의하시기 바랍니다.
  */
 
-class Postcodify_Parser_Jibeon extends Postcodify_ZipReader
+class Postcodify_Parser_English_Aliases extends Postcodify_ZipReader
 {
     // 생성자에서 문자셋을 지정한다.
     
     public function __construct()
     {
-        $this->_charset = 'CP949';
+        $this->_charset = 'UTF-8';
     }
     
     // 한 줄을 읽어 반환한다.
@@ -35,23 +35,13 @@ class Postcodify_Parser_Jibeon extends Postcodify_ZipReader
         // 데이터를 읽는다.
         
         $line = parent::read_line($delimiter);
-        if ($line === false || count($line) < 11) return false;
-        
-        // 동·리 정보를 정리한다.
-        
-        $dongri = trim($line[6]);
-        if ($dongri === '') $dongri = trim($line[5]);
-        $dongri = preg_replace('/\\(.+\\)/', '', $dongri);
+        if ($line === false || count($line) < 2) return false;
         
         // 데이터를 정리하여 반환한다.
         
         return (object)array(
-            'address_id' => trim($line[0]),
-            'dongri' => $dongri,
-            'num_major' => $line[8] ? (int)$line[8] : null,
-            'num_minor' => $line[9] ? (int)$line[9] : null,
-            'is_mountain' => (int)$line[7],
-            'is_canonical' => (int)$line[10],
+            'ko' => trim($line[0]),
+            'en' => trim($line[1]),
         );
     }
 }
