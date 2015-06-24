@@ -323,7 +323,7 @@
                     
                     // 정상 처리되었지만 검색 서버의 버전이 맞지 않는 경우...
                     
-                    else if (typeof data.results[0].other === "undefined") {
+                    else if (typeof data.results[0].postcode5 === "undefined") {
                         if (settings.useAlert) {
                             alert(info.translations[settings.language].errorVersion);
                         } else {
@@ -352,17 +352,28 @@
                             
                             var result = data.results[i];
                             var option = $('<div></div>').postcodifyAddClass("search_result");
-                            option.data("dbid", result.dbid);
-                            option.data("code6", result.code6);
-                            option.data("code5", result.code5);
-                            option.data("address", result.address.base + " " + result.address["new"]);
-                            option.data("jibeon_address", result.address["base"] + " " + result.address["old"]);
-                            option.data("english_address", (result.english["new"] === "" ? "" : (result.english["new"] + ", ")) + result.english["base"]);
-                            option.data("english_jibeon_address", (result.english["old"] === "" ? "" : (result.english["old"] + ", ")) + result.english["base"]);
-                            option.data("extra_info_long", result.other["long"]);
-                            option.data("extra_info_short", result.other["short"]);
+                            
+                            // 구 버전과의 호환성을 위한 속성들을 입력한다.
+                            
+                            option.data("dbid", result.building_id);
+                            option.data("code6", result.postcode6);
+                            option.data("code5", result.postcode5);
+                            
+                            // 현재 버전이 공식적으로 지원하는 속성들을 입력한다.
+                            
+                            option.data("postcode6", result.postcode6);
+                            option.data("postcode5", result.postcode5);
+                            option.data("address", result.ko_common + " " + result.ko_doro);
+                            option.data("jibeon_address", result.ko_common + " " + result.ko_jibeon);
+                            option.data("english_address", (result.en_doro === "" ? "" : (result.en_doro + ", ")) + result.en_common);
+                            option.data("english_jibeon_address", (result.en_jibeon === "" ? "" : (result.en_jibeon + ", ")) + result.en_common);
+                            option.data("building_id", result.building_id);
+                            option.data("building_name", result.building_name);
+                            option.data("building_nums", result.building_nums);
+                            option.data("extra_info_long", result.ko_jibeon + (result.building_name === "" ? "" : (", " + result.building_name)));
+                            option.data("extra_info_short", result.ko_jibeon.replace(/\s.+$/, "") + (result.building_name === "" ? "" : (", " + result.building_name)));
                             option.data("extra_info_nums", data.nums);
-                            option.data("building_nums", typeof result.other["bldnum"] === "undefined" ? "" : result.other["bldnum"]);
+                            option.data("other_addresses", result.other_addresses);
                             
                             // 반환된 데이터의 언어, 정렬 방법에 따라 클릭할 링크를 생성한다.
                             
@@ -372,23 +383,23 @@
                             if (resultLanguage === "en") {
                                 if (typeof data.sort !== "undefined" && data.sort === "JIBEON") {
                                     mainText = option.data("english_jibeon_address");
-                                    extraText = result.english["new"];
+                                    extraText = result.en_doro;
                                 } else {
                                     mainText = option.data("english_address");
-                                    extraText = result.english["old"];
+                                    extraText = result.en_jibeon;
                                 }
                             } else {
                                 if (typeof data.sort !== "undefined" && data.sort === "JIBEON") {
-                                    mainText = result.address["base"] + " " + result.address["old"];
-                                    extraText = result.address["new"];
+                                    mainText = option.data("jibeon_address");
+                                    extraText = result.ko_doro;
                                 } else {
-                                    mainText = result.address["base"] + " " + result.address["new"];
-                                    extraText = result.address["old"];
+                                    mainText = option.data("address");
+                                    extraText = result.ko_jibeon;
                                 }
-                                if (result.address["building"] !== "" && result.address["building"] !== null) {
-                                    extraText += ", " + result.address["building"];
-                                    if (!settings.hideBuildingNums && result.other["bldnum"]) {
-                                        extraText += " " + result.other["bldnum"];
+                                if (result.building_name !== "" && result.building_name !== null) {
+                                    extraText += ", " + result.building_name;
+                                    if (!settings.hideBuildingNums && result.building_nums !== "") {
+                                        extraText += " " + result.building_nums;
                                     }
                                 }
                             }
@@ -402,26 +413,26 @@
                             // 우편번호, 기초구역번호, 주소 등을 항목에 추가한다.
                             
                             if (settings.forceDisplayPostcode5) {
-                                $('<div class="code"></div>').text("[\u2009" + result.code5 + "\u2009]").appendTo(option);
+                                $('<div class="code"></div>').text("[\u2009" + option.data("postcode5") + "\u2009]").appendTo(option);
                             } else {
-                                $('<div class="code6"></div>').text(result.code6).appendTo(option);
-                                $('<div class="code5"></div>').text(result.code5).appendTo(option);
+                                $('<div class="code6"></div>').text(option.data("postcode6")).appendTo(option);
+                                $('<div class="code5"></div>').text(option.data("postcode5").appendTo(option);
                             }
                             $('<div class="address"></div>').append(selector).appendTo(option);
                             
                             // 예전 주소 및 검색어 목록을 추가한다.
                             
                             if (typeof data.lang !== "undefined" && data.lang === "EN") {
-                                result.other["others"] = result.other["others"].replace(/산([0-9]+)/g, "San $1");
-                                result.other["others"] = $.trim(result.other["others"].replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " "));
+                                option.data("other_addresses") = option.data("other_addresses").replace(/산([0-9]+)/g, "San $1");
+                                option.data("other_addresses") = $.trim(option.data("other_addresses").replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " "));
                             }
                             
-                            if (result.other["others"] !== "") {
+                            if (option.data("other_addresses") !== "") {
                                 var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>');
                                 oldAddrLink.attr("title", info.translations[resultLanguage].msgShowOthers);
                                 if (!settings.hideOldAddresses) oldAddrLink.css("display", "none");
                                 oldAddrLink.appendTo(option.find("div.address"));
-                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(result.other["others"]);
+                                var oldAddrDiv = $('<div class="old_addresses"></div>').text(option.data("other_addresses"));
                                 if (settings.hideOldAddresses) oldAddrDiv.css("display", "none");
                                 oldAddrDiv.appendTo(option);
                             }
@@ -435,8 +446,8 @@
                                 } else {
                                     mapurl = settings.mapLinkProvider;
                                 }
-                                mapurl = mapurl.replace("$JUSO", encodeURIComponent(result.address["base"] + " " + result.address["new"]).replace(/%20/g, '+'));
-                                mapurl = mapurl.replace("$JIBEON", encodeURIComponent(result.address["base"] + " " + result.address["old"]).replace(/%20/g, '+'));
+                                mapurl = mapurl.replace("$JUSO", encodeURIComponent(option.data("address")).replace(/%20/g, '+'));
+                                mapurl = mapurl.replace("$JIBEON", encodeURIComponent(option.data("jibeon_address")).replace(/%20/g, '+'));
                                 var mapLinkContent = (settings.mapLinkContent !== null) ? settings.mapLinkContent : info.translations[resultLanguage].msgMap;
                                 var maplink = $('<a target="_blank"></a>').attr("href", mapurl).html(mapLinkContent);
                                 $('<div class="map_link"></div>').append(maplink).appendTo(option);
