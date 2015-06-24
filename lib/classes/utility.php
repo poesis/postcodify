@@ -428,7 +428,7 @@ class Postcodify_Utility
             if (preg_match('/(?:(?:근린생활|동\.?식물관련|노유자|발전|창고)시설|(?:단독|다세대|다가구)주택)/u', $val)) continue;
             if (preg_match('/(?:주|(?:주|부속)건축물)제?(?:[0-9a-zA-Z-]+|에이|비|씨|디|[가나다라마바사아자차카타파하])(?:호|동|호동)/u', $val)) continue;
             if (preg_match('/[0-9a-zA-Z-]+(?:블럭|로트|롯트)/u', $val)) continue;
-            if (preg_match('/^(?:[가-힣0-9]+[읍면]\s?)?[가-힣0-9]+[동리가]\s?[0-9]+(?:-[0-9]+)?번지/u', $val)) continue;
+            if (preg_match('/^(?:[가-힣0-9]+[읍면]\s?)?[가-힣0-9]+[동리가]\s?[0-9]+(?:-[0-9]+)?(?:번지|\s)/u', $val)) continue;
             if (preg_match('/\((?:[가-힣0-9]{3,}\)?$|[가-힣0-9]{0,2})$/u', $val)) continue;
             $input[] = str_replace('㈜', '(주)', $val);
         }
