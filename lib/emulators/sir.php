@@ -71,6 +71,20 @@ if (!isset($result) || !is_object($result))
 
 // 검색 결과를 juso.sir.co.kr API와 같은 포맷으로 변환한다.
 
+ob_start(); ?>
+<li class="postcodify_search_result" onclick="put_data('%1$s', '%2$s', '%5$s', '(%7$s)', '%6$s')">
+    <p style="font: 13px/1.0 'Segoe UI', Arial, sans-serif; color: #999; margin: 0; padding: 0">
+        <a href="#" style="color: black" onclick="put_data('%1$s', '%2$s', '%5$s', '(%7$s)', '%6$s'); return false;">
+        <span style="color: #b00">%1$s-%2$s</span> &nbsp;/&nbsp;
+        <span style="color: #00b">%3$s%4$s</span></a>
+    </p>
+    <p style="line-height: 1.5; margin: 8px 0 0 0; padding: 0">
+        <a href="#" style="color: black" onclick="put_data('%1$s', '%2$s', '%5$s', '(%7$s)', '%6$s'); return false;">
+        <span class="postcodify_address_line">%5$s</span> &nbsp;<span style="color:#678">(%8$s)</span></a>
+    </p>
+</li>
+<?php $template = ob_get_clean();
+
 if ($result->error)
 {
     $json = array(
@@ -82,7 +96,7 @@ else
 {
     $json = array('error' => '', 'juso' => array());
     $json['juso'][] = sprintf('<div class="result_msg">검색결과 <b>%d%s</b>' .
-        '<div class="powered_by_postcodify" style="float:right;font:10px Verdana, sans-serif;color:#bbb">' .
+        '<div class="powered_by_postcodify" style="float:right;font:11px \'Segoe UI\', sans-serif;color:#bbb">' .
         'Powered by <a style="color:#bbb" href="http://postcodify.poesis.kr/" target="_blank">Postcodify</a></div>' .
         '</div>', $result->count, ($result->count === 100) ? '+' : '');
     if (!count($result->results))
@@ -99,17 +113,24 @@ else
     foreach ($result->results as $entry)
     {
         $code6 = array(substr($entry->postcode6, 0, 3), substr($entry->postcode6, 3, 3));
+        $code5 = array(substr($entry->postcode5, 0, 3), substr($entry->postcode5, 3, 2));
         $juso = htmlspecialchars($entry->ko_common . ' ' . $entry->ko_doro, ENT_COMPAT, 'UTF-8');
         $jibeon = htmlspecialchars($entry->ko_common . ' ' . $entry->ko_jibeon, ENT_COMPAT, 'UTF-8');
-        $extra = htmlspecialchars(preg_replace('/\s.+$/', '', $entry->ko_jibeon) . ($entry_building_name === '' ? '' : (', ' . $entry->building_name)), ENT_COMPAT, 'UTF-8');
-        $json['juso'][] = sprintf('<li><span></span>' . 
-            '<a href="#" onclick="put_data(\'%s\', \'%s\', \'%s\', \'(%s)\', \'%s\'); return false;">' . 
-            '<strong>%s-%s</strong> %s (%s)</a><div>(지번주소) %s</div></li>',
-            $code6[0], $code6[1], $juso, $extra, $jibeon,
-            $code6[0], $code6[1], $juso, $extra, $jibeon
+        $extra_input = htmlspecialchars(preg_replace('/\s.+$/', '', $entry->ko_jibeon) . ($entry->building_name === '' ? '' : (', ' . $entry->building_name)), ENT_COMPAT, 'UTF-8');
+        $extra_display = htmlspecialchars($entry->ko_jibeon . ($entry->building_name === '' ? '' : (', ' . $entry->building_name)) .
+            ($entry->building_nums ? (' ' . $entry->building_nums) : ''), ENT_COMPAT, 'UTF-8');
+        $json['juso'][] = sprintf($template,
+            $code6[0], $code6[1], $code5[0], $code5[1], $juso, $jibeon, $extra_input, $extra_display
         );
     }
     $json['juso'][] = '</ul>';
+    $json['juso'][] = '<style>';
+    $json['juso'][] = 'li.postcodify_search_result { font: 13px/1.0 Dotum, sans-serif; cursor: pointer }';
+    $json['juso'][] = 'li.postcodify_search_result:hover { background: #f6f9fc; }';
+    //$json['juso'][] = 'li.postcodify_search_result:hover span.postcodify_address_line { font-weight: bold; }';
+    $json['juso'][] = 'li.postcodify_search_result a { text-decoration: none; }';
+    $json['juso'][] = 'li.postcodify_search_result a { text-decoration: none; }';
+    $json['juso'][] = '</style>';
     $json['juso'] = implode("\n", $json['juso']);
 }
 
