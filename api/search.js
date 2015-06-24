@@ -427,7 +427,7 @@
                                 $('<div class="code"></div>').text("[\u2009" + option.data("postcode5") + "\u2009]").appendTo(option);
                             } else {
                                 $('<div class="code6"></div>').text(option.data("postcode6")).appendTo(option);
-                                $('<div class="code5"></div>').text(option.data("postcode5").appendTo(option);
+                                $('<div class="code5"></div>').text(option.data("postcode5")).appendTo(option);
                             }
                             $('<div class="address"></div>').append(selector).appendTo(option);
                             
