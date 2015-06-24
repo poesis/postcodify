@@ -112,7 +112,7 @@ else
             'addr2_new' => $entry->ko_doro,
             'addr2_old' => $entry->ko_jibeon,
             'bdname' => $entry->building_name,
-            'zipcode' => $entry->code6,
+            'zipcode' => $entry->postcode6,
         );
     }
 }

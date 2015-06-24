@@ -75,8 +75,7 @@ ob_start(); ?>
 <li class="postcodify_search_result" onclick="put_data('%1$s', '%2$s', '%5$s', '(%7$s)', '%6$s')">
     <p style="font: 13px/1.0 'Segoe UI', Arial, sans-serif; color: #999; margin: 0; padding: 0">
         <a href="#" style="color: black" onclick="put_data('%1$s', '%2$s', '%5$s', '(%7$s)', '%6$s'); return false;">
-        <span style="color: #b00">%1$s-%2$s</span> &nbsp;/&nbsp;
-        <span style="color: #00b">%3$s%4$s</span></a>
+        <span style="color: #b00">%3$s</span> &nbsp;/&nbsp;<span style="color: #00b">%4$s</span></a>
     </p>
     <p style="line-height: 1.5; margin: 8px 0 0 0; padding: 0">
         <a href="#" style="color: black" onclick="put_data('%1$s', '%2$s', '%5$s', '(%7$s)', '%6$s'); return false;">
@@ -119,9 +118,14 @@ else
         $extra_input = htmlspecialchars(preg_replace('/\s.+$/', '', $entry->ko_jibeon) . ($entry->building_name === '' ? '' : (', ' . $entry->building_name)), ENT_COMPAT, 'UTF-8');
         $extra_display = htmlspecialchars($entry->ko_jibeon . ($entry->building_name === '' ? '' : (', ' . $entry->building_name)) .
             ($entry->building_nums ? (' ' . $entry->building_nums) : ''), ENT_COMPAT, 'UTF-8');
-        $json['juso'][] = sprintf($template,
-            $code6[0], $code6[1], $code5[0], $code5[1], $juso, $jibeon, $extra_input, $extra_display
-        );
+        if (isset($_GET['pc']) && $_GET['pc'] === '5')
+        {
+            $json['juso'][] = sprintf($template, $code5[0], $code5[1], $entry->postcode5, implode('-', $code6), $juso, $jibeon, $extra_input, $extra_display);
+        }
+        else
+        {
+            $json['juso'][] = sprintf($template, $code6[0], $code6[1], implode('-', $code6), $entry->postcode5, $juso, $jibeon, $extra_input, $extra_display);
+        }
     }
     $json['juso'][] = '</ul>';
     $json['juso'][] = '<style>';
