@@ -119,10 +119,10 @@ class Postcodify_Indexer_Update
             'AND is_basement = ? ORDER BY id LIMIT 1');
         $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, ' .
             'road_id, num_major, num_minor, is_basement, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' .
-            'building_id, building_name, building_num, other_addresses, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            'building_id, building_name, building_nums, other_addresses, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode5 = ?, postcode6 = ?, ' .
             'road_id = ?, num_major = ?, num_minor = ?, is_basement = ?, dongri_ko = ?, dongri_en = ?, ' .
-            'jibeon_major = ?, jibeon_minor = ?, is_mountain = ?, building_id = ?, building_name = ?, building_num = ?, ' .
+            'jibeon_major = ?, jibeon_minor = ?, is_mountain = ?, building_id = ?, building_name = ?, building_nums = ?, ' .
             'other_addresses = ?, updated = ? WHERE id = ?');
         $ps_addr_update_other = $db->prepare('UPDATE postcodify_addresses SET other_addresses = ? WHERE id = ?');
         
@@ -402,7 +402,7 @@ class Postcodify_Indexer_Update
                         $other_addresses = array();
                         if ($last_entry->admin_dongri) $other_addresses[] = $last_entry->admin_dongri;
                         $last_entry->building_names = array_unique($last_entry->building_names);
-                        $last_entry->building_names = Postcodify_Utility::consolidate_building_names($last_entry->building_names);
+                        $last_entry->building_names = Postcodify_Utility::consolidate_building_names($last_entry->building_names, $last_entry->common_residence_name);
                         natcasesort($last_entry->building_names);
                         foreach ($last_entry->building_names as $building_name)
                         {

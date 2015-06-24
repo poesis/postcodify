@@ -415,7 +415,7 @@ class Postcodify_Utility
     
     // 건물명 목록에서 불필요하거나 중복되는 것을 제거하여 반환하는 메소드.
     
-    public static function consolidate_building_names($names)
+    public static function consolidate_building_names($names, $skip_name = null)
     {
         // 불필요한 건물명을 제거한다.
         
@@ -424,6 +424,7 @@ class Postcodify_Utility
         {
             if (ctype_digit($val)) continue;
             if (self::is_ignorable_building_name($val)) continue;
+            if ($skip_name !== null && strpos($skip_name, $val) !== false) continue;
             if (preg_match('/(?:(?:근린생활|동\.?식물관련|노유자|발전|창고)시설|(?:단독|다세대|다가구)주택)/u', $val)) continue;
             if (preg_match('/(?:주|(?:주|부속)건축물)제?(?:[0-9a-zA-Z-]+|에이|비|씨|디|[가나다라마바사아자차카타파하])(?:호|동|호동)/u', $val)) continue;
             if (preg_match('/[0-9a-zA-Z-]+(?:블럭|로트|롯트)/u', $val)) continue;

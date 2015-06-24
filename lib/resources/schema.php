@@ -38,7 +38,7 @@ return array(
         'is_mountain' => 'TINYINT(1) DEFAULT 0',
         'building_id' => 'NUMERIC(25)',
         'building_name' => 'VARCHAR(80)',
-        'building_num' => 'VARCHAR(120)',
+        'building_nums' => 'VARCHAR(120)',
         'other_addresses' => 'TEXT',
         'updated' => 'NUMERIC(8)',
         '_interim' => array('road_id', 'num_major', 'num_minor'),

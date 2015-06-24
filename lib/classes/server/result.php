@@ -78,8 +78,8 @@ class Postcodify_Server_Record_v3 extends Postcodify_Server_Record
     public $en_jibeon;
     public $building_id;
     public $building_name;
-    public $building_num;
-    public $other_addrs;
+    public $building_nums;
+    public $other_addresses;
     public $road_id;
     public $internal_id;
 }

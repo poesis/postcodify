@@ -448,7 +448,7 @@ class Postcodify_Indexer_CreateDB
         $db->beginTransaction();
         $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, ' .
             'road_id, num_major, num_minor, is_basement, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' . 
-            'building_id, building_name, building_num, other_addresses) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            'building_id, building_name, building_nums, other_addresses) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
         $ps_num_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
         $ps_building_insert = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
@@ -525,7 +525,7 @@ class Postcodify_Indexer_CreateDB
                     $other_addresses = array();
                     if ($last_entry->admin_dongri) $other_addresses[] = $last_entry->admin_dongri;
                     $last_entry->building_names = array_unique($last_entry->building_names);
-                    $last_entry->building_names = Postcodify_Utility::consolidate_building_names($last_entry->building_names);
+                    $last_entry->building_names = Postcodify_Utility::consolidate_building_names($last_entry->building_names, $last_entry->common_residence_name);
                     natcasesort($last_entry->building_names);
                     foreach ($last_entry->building_names as $building_name)
                     {
