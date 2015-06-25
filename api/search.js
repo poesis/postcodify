@@ -453,10 +453,6 @@
                             // 예전 주소 및 검색어 목록을 추가한다.
                             
                             var other_addresses = option.data("other_addresses");
-                            if (typeof data.lang !== "undefined" && data.lang === "EN") {
-                                other_addresses = other_addresses.replace(/산([0-9]+)/g, "San $1");
-                                other_addresses = $.trim(other_addresses.replace(/[^0-9a-zA-Z\x20.,-]/g, "").replace(/\s+/g, " "));
-                            }
                             if (other_addresses !== "") {
                                 var oldAddrLink = $('<a href="#" class="show_old_addresses">▼</a>');
                                 oldAddrLink.attr("title", info.translations[resultLanguage].msgShowOthers);
