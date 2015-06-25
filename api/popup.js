@@ -35,15 +35,17 @@
         if (cdnPrefix === "" && !window.location.protocol.match(/^https?/)) {
             cdnPrefix = "http:";
         }
-        var cdnStylesheet = document.createElement("link");
-        cdnStylesheet.rel = "stylesheet";
-        cdnStylesheet.type = "text/css";
-        cdnStylesheet.href = cdnPrefix + "//cdn.poesis.kr/post/popup.css";
-        document.body.appendChild(cdnStylesheet);
+        if (typeof window.POSTCODIFY_NO_CSS === "undefined") {
+            var cdnStylesheet = document.createElement("link");
+            cdnStylesheet.rel = "stylesheet";
+            cdnStylesheet.type = "text/css";
+            cdnStylesheet.href = cdnPrefix + "//cdn.poesis.kr/post/popup.css?v=" + info.version;
+            document.body.appendChild(cdnStylesheet);
+        }
         if (typeof $.fn.postcodify === "undefined") {
             var cdnScript = document.createElement("script");
             cdnScript.type = "text/javascript";
-            cdnScript.src = cdnPrefix + "//cdn.poesis.kr/post/search.min.js";
+            cdnScript.src = cdnPrefix + "//cdn.poesis.kr/post/search.min.js?v=" + info.version;
             document.body.appendChild(cdnScript);
         }
     });
@@ -85,39 +87,45 @@
             
             // 기본적인 태그들을 입력한다.
             
-            layer.append('<div class="postcodify_controls"></div>');
-            layer.append('<div class="postcodify_results"></div>');
+            var controls = $('<div class="postcodify_controls"></div>').appendTo(layer);
+            var displays = $('<div class="postcodify_displays"></div>').appendTo(layer);
+            displays.append('<div class="postcodify_results"></div>');
             
-            // 닫기 버튼과 로고를 생성한다.
+            // 검색창 디자인과 닫기 버튼을 생성한다.
             
-            var close_button = $('<button class="close_button">&times;</button>');
-            var logo = $('<div class="postcodify_logo">Powered by <a href="http://postcodify.poesis.kr/">Postcodify</a></div>');
+            var curve_slice = $('<div class="postcodify_curve_slice"></div>');
+            var button_area = $('<div class="postcodify_button_area"></div>');
+            var close_button = $('<button class="close_button">&times;</button>').appendTo(button_area);
+            
+            // Powered By 로고를 생성한다.
+            
+            var logo = $('<div class="postcodify_logo">P O W E R E D &nbsp; B Y &nbsp; <a href="http://postcodify.poesis.kr/">P O S T C O D I F Y</a></div>');
+            logo.appendTo(layer);
             
             // 검색 요령 및 주의사항을 입력한다.
             
-            var help1 = $('<ul></ul>');
-            help1.append('<li>도로명주소 검색 : 도로명과 건물번호를 입력하세요. 예: <u>세종대로 110</u></li>');
-            help1.append('<li>지번주소 검색 : "동" 또는 "리" 이름과 번지수를 입력하세요. 예: <u>연산동 1000</u></li>');
-            help1.append('<li>건물명 검색 : 빌딩 또는 아파트 이름을 입력하세요. 예: <u>방배동 래미안</u>, <u>수곡동 주공3차</u></li>');
-            help1.append('<li>사서함 검색 : 사서함 이름과 번호를 입력하세요. 예: <u>광화문우체국사서함 123-4</u></li>');
+            var help1 = $('<table></table>');
+            help1.append('<tr><th>구분</th><th>사용할 검색어</th><th>검색 예</th></tr>');
+            help1.append('<tr><td>도로명주소</td><td>도로명 + 번호</td><td>세종대로 110</td></tr>');
+            help1.append('<tr><td>지번주소</td><td>동·리 + 번지</td><td>부산 연산동 1000</td></tr>');
+            help1.append('<tr class="postcodify_building_search"><td>건물명</td><td>빌딩 또는 아파트단지명</td><td>수곡동 주공3차</td></tr>');
+            help1.append('<tr><td>사서함</td><td>사서함명 + 번호</td><td>광화문우체국사서함 123-4</td></tr>');
             
             var help2 = $('<ul></ul>');
-            help2.append('<li>시·군·구·읍·면 등은 쓰지 않아도 되지만, 만약 쓰실 경우 반드시 띄어쓰기를 해 주세요.</li>');
-            help2.append('<li>도로명에 "××번길" 등이 포함되어 있는 경우에도 잊지 말고 써 주세요.</li>');
-            help2.append('<li>건물명보다는 도로명주소 또는 지번 주소로 검색하시는 것이 빠르고 정확합니다.</li>');
+            help2.append('<li><span>시·군·구·읍·면 등은 쓰지 않아도 되지만,</span> <span>쓰실 경우 반드시 띄어쓰기를 해 주세요.</span></li>');
+            help2.append('<li><span>도로명에 포함된 "××번길" 등 숫자도</span> <span>잊지 말고 써 주세요.</span></li>');
+            help2.append('<li><span>건물명보다는 번호가 포함된 정확한 주소로</span> <span>검색하는 것이 빠르고 정확합니다.</span></li>');
             
             var divhelp = $('<div class="postcodify_help"></div>');
             divhelp.append('<p>우편번호 검색 요령</p>');
             divhelp.append(help1);
-            divhelp.append('<p>더 정확하게 검색하시려면</p>');
+            divhelp.append('<p>정확한 검색을 위한 팁</p>');
             divhelp.append(help2);
-            divhelp.appendTo(layer);
+            divhelp.appendTo(displays);
             
             if (options.requireExactQuery) {
-                divhelp.find("li:contains('건물명')").remove();
+                divhelp.find("tr.postcodify_building_search").remove();
             }
-            
-            logo.appendTo(layer);
             
             // 팝업 레이어와 배경을 DOM에 추가한다.
             
@@ -151,7 +159,9 @@
                         closePopUpLayer();
                     }
                 }, options));
-                close_button.appendTo(layer.find("div.postcodify_search_controls"));
+                curve_slice.appendTo(layer.find("div.postcodify_controls"));
+                layer.find("button.search_button").detach().appendTo(button_area);
+                button_area.append(close_button).appendTo(layer.find("div.postcodify_controls"));
             };
             
             // 화면 크기에 따라 팝업 레이어의 크기를 자동으로 조절한다.
@@ -165,7 +175,7 @@
                 if ("ontouchstart" in window && (layer.hasClass("fill_horizontally") || layer.hasClass("fill_vertically"))) {
                     layer.addClass("full_screen");
                 }
-                layer.find("input.keyword").width(layer.width() - 130);
+                displays.height(layer.height() - 73);
             }).triggerHandler("resize");
             
             // 검색 단추 클릭시 팝업 레이어를 보여주도록 설정한다.
@@ -173,8 +183,7 @@
             $(this).click(function() {
                 if (layer.data("initialized") != "Y") initializePostcodify();
                 background.show();
-                layer.show();
-                layer.find("input.keyword").width(layer.width() - 130).focus();
+                layer.show().find("input.keyword").focus();
             });
             
             // 팝업 레이어를 감추는 함수.
