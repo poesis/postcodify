@@ -84,6 +84,7 @@
                 onError : function() { },
                 onComplete : function() { },
                 forceDisplayPostcode5 : false,
+                forceDisplayPostcode6 : false,
                 forceUseSSL : false,
                 focusKeyword : true,
                 focusDetails : true,
