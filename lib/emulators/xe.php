@@ -88,7 +88,7 @@ if (!isset($result) || !is_object($result))
     $server->db_port = POSTCODIFY_DB_PORT;
     $server->db_user = POSTCODIFY_DB_USER;
     $server->db_pass = POSTCODIFY_DB_PASS;
-    $result = $server->search($keywords, 'UTF-8', $client_version);
+    $result = $server->search($keywords, 'UTF-8');
 }
 
 // 검색 결과를 XE KRZIP API와 같은 포맷으로 변환한다.
