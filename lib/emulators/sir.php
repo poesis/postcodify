@@ -39,7 +39,7 @@ $keywords = isset($_GET['q']) ? trim($_GET['q']) : (isset($argv[1]) ? trim($argv
 
 // 키워드의 한글 인코딩 방식이 EUC-KR인 경우 UTF-8로 변환한다.
 
-if (isset($_GET['charset']) && stripos($_GET['charset'], 'euc') !== false && mb_check_encoding($keywords, 'CP949'))
+if ((isset($_GET['charset']) && stripos($_GET['charset'], 'euc') !== false) || !mb_check_encoding($keywords, 'UTF-8'))
 {
     $keywords = @mb_convert_encoding($keywords, 'UTF-8', 'CP949');
 }
@@ -131,7 +131,6 @@ else
     $json['juso'][] = '<style>';
     $json['juso'][] = 'li.postcodify_search_result { font: 13px/1.0 Dotum, sans-serif; cursor: pointer }';
     $json['juso'][] = 'li.postcodify_search_result:hover { background: #f6f9fc; }';
-    //$json['juso'][] = 'li.postcodify_search_result:hover span.postcodify_address_line { font-weight: bold; }';
     $json['juso'][] = 'li.postcodify_search_result a { text-decoration: none; }';
     $json['juso'][] = 'li.postcodify_search_result a { text-decoration: none; }';
     $json['juso'][] = '</style>';
@@ -140,4 +139,50 @@ else
 
 $json_options = (PHP_SAPI === 'cli' && defined('JSON_PRETTY_PRINT')) ? 384 : 0;
 echo ($callback ? ($callback . '(') : '') . json_encode($json, $json_options) . ($callback ? ');' : '') . "\n";
+
+if (isset($_GET['merge']) && $_GET['merge'] !== 'N'): ?>
+
+(function($) {
+    
+    if (typeof window.put_data_postcodify === "undefined") {
+        window.put_data_postcodify = window.put_data;
+        window.put_data = function(zip1, zip2, addr1, addr3, jibeon) {
+            $(window.opener.document).find("input.postcodify_merged_zip").val(zip1 + (zip2.length > 2 ? "-" : "") + zip2);
+            window.put_data_postcodify(zip1, zip2, addr1, addr3, jibeon);
+        };
+    }
+    
+    var form = null;
+    var form_match = window.location.search.match(/frm_name=([^&]+)/);
+    if (form_match) {
+        form = $("form[name='" + form_match[1] + "']", window.opener.document)
+    } else {
+        return;
+    }
+    
+    var container = form.find("input[name$='_zip1']").parent();
+    if (container.size() < 1) {
+        container = $(window.opener.document).find("input[name$='_zip1']").parent();
+    }
+    if (container.find("input.postcodify_merged_zip").size() > 0) {
+        return;
+    }
+    
+    var old_zip1 = container.find("input[name$='_zip1']").hide();
+    var old_zip2 = container.find("input[name$='_zip2']").hide();
+    container.find("label[for$='_zip1']").remove();
+    container.find("label[for$='_zip2']").remove();
+    container.contents().filter(function() { return this.nodeType === 3 && $.trim(this.nodeValue) === '-'; }).remove();
+    
+    var old_id = old_zip1.attr("id") ? old_zip1.attr("id") : "postcodify_replacement_zip1";
+    var new_id = old_id.replace("zip1", "zip0");
+    var new_zip = $('<input type="text" id="' + new_id + '" class="' + old_zip1.attr("class") + '" size="8" maxlength="7" />');
+    new_zip.addClass("postcodify_merged_zip").attr("readonly", "readonly");
+    new_zip.val(old_zip1.val() + (old_zip2.val().length > 2 ? "-" : "") + old_zip2.val());
+    new_zip.prependTo(container);
+    var new_label = $('<label for="' + new_id + '" class="sound_only"></label>').prependTo(container);
+    
+}(window.opener.jQuery));
+
+<?php endif;
 exit;
