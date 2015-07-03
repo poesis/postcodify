@@ -176,7 +176,7 @@
                     layer.addClass("full_screen");
                 }
                 displays.height(layer.height() - 73);
-            }).triggerHandler("resize");
+            });
             
             // 검색 단추 클릭시 팝업 레이어를 보여주도록 설정한다.
             
@@ -184,6 +184,7 @@
                 if (layer.data("initialized") != "Y") initializePostcodify();
                 background.show();
                 layer.show().find("input.keyword").focus();
+                $(window).triggerHandler("resize");
             });
             
             // 팝업 레이어를 감추는 함수.

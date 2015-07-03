@@ -23,6 +23,7 @@ div.postcodify_popup_background {
     position: fixed; left: 0; top: 0;
     background: #000; opacity: 0.55;
     z-index: 2147483646;
+    box-sizing: content-box;
     -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=55)";
     filter: alpha(opacity=70);
 }
@@ -37,6 +38,7 @@ div.postcodify_popup_layer {
     background: #fff;
     z-index: 2147483647;
     border-radius: 4px;
+    box-sizing: content-box;
     box-shadow: 0 2px 5px 4px rgba(0, 0, 0, 0.55);
     _position: absolute; _top: expression(eval(document.body.scrollTop));
 }
@@ -59,6 +61,7 @@ div.postcodify_popup_layer div.postcodify_controls {
     height: 41px; background: #36f;
     border-top-left-radius: 2px;
     border-top-right-radius: 2px;
+    box-sizing: content-box;
 }
 
 div.postcodify_popup_layer.fill_horizontally div.postcodify_controls,
@@ -72,21 +75,25 @@ div.postcodify_popup_layer div.postcodify_search_controls {
     background-color: #f0f0f0; position: relative;
     border-bottom: 1px solid #a0a0a0;
     border-top-left-radius: 2px;
+    box-sizing: content-box;
 }
 div.postcodify_popup_layer input.keyword {
     width: 100%; height: 26px; padding: 7px 0 7px 12px;
     font-family: inherit; font-size: 16px; line-height: 24px;
     background: #f0f0f0; border: 0;
     border-top-left-radius: 2px;
+    box-sizing: content-box;
 }
 div.postcodify_popup_layer div.postcodify_curve_slice {
     position: absolute; right: 80px; top: 0;
     width: 40px; height: 40px; background: #f0f0f0;
     border-bottom-right-radius: 40px;
+    box-sizing: content-box;
 }
 div.postcodify_popup_layer div.postcodify_button_area {
     position: absolute; right: 0; top: 0;
     width: 80px; height: 40px;
+    box-sizing: content-box;
 }
 
 div.postcodify_popup_layer button.search_button {
@@ -94,6 +101,7 @@ div.postcodify_popup_layer button.search_button {
     width: 45px; height: 26px; padding-bottom: 2px;
     font-family: inherit; font-weight: bold; line-height: 16px;
     border: 0; background: #36f; color: #fff;
+    box-sizing: border-box;
 }
 div.postcodify_popup_layer button.search_button:hover,
 div.postcodify_popup_layer button.search_button:active {
@@ -104,6 +112,7 @@ div.postcodify_popup_layer button.close_button {
     width: 25px; height: 26px;
     font: bold 16px/16px Tahoma, sans-serif;
     border: 0; background: #36f; color: #fff;
+    box-sizing: border-box;
 }
 div.postcodify_popup_layer button.close_button:hover,
 div.postcodify_popup_layer button.close_button:active {
@@ -113,11 +122,12 @@ div.postcodify_popup_layer button.close_button:active {
 div.postcodify_popup_layer div.postcodify_displays {
     clear: both; margin: 0; padding: 0;
     overflow-x: none; overflow-y: auto;
+    box-sizing: content-box;
 }
 
 div.postcodify_popup_layer div.postcodify_results {
     clear: both; margin: 10px 12px 20px 12px; padding: 0;
-    min-height: 48px;
+    box-sizing: content-box; min-height: 48px;
 }
 div.postcodify_popup_layer.fill_vertically div.postcodify_results {
     min-height: 0;
@@ -126,7 +136,7 @@ div.postcodify_popup_layer.fill_vertically div.postcodify_results {
 div.postcodify_popup_layer div.postcodify_search_result {
     clear: both; position: relative; width: 100%;
     padding: 4px 6px; margin: 0 0 4px -6px;
-    word-break: keep-all;
+    box-sizing: content-box; word-break: keep-all;
 }
 div.postcodify_popup_layer div.postcodify_search_result:hover { background: #f8f8f8; }
 div.postcodify_popup_layer div.postcodify_search_result:hover div.address a.selector { font-weight: bold; }
@@ -161,6 +171,7 @@ div.postcodify_popup_layer div.postcodify_search_status.too_many { color: #222; 
 div.postcodify_popup_layer div.postcodify_search_status.summary {
     clear: both; padding: 8px 12px 0 0; margin: 12px -12px 0 -12px;
     border: 0; background: none; border-top: 1px solid #cacaca; text-align: right;
+    box-sizing: content-box;
 }
 div.postcodify_popup_layer div.postcodify_search_status.summary div {
     display: inline-block; margin: 0 0 0 12px;
@@ -169,6 +180,7 @@ div.postcodify_popup_layer div.postcodify_search_status.summary div {
 
 div.postcodify_popup_layer div.postcodify_help {
     clear: both; margin: 24px 12px 24px 12px; color: #222;
+    box-sizing: content-box;
 }
 div.postcodify_popup_layer div.postcodify_help p {
     margin: 0 0 16px 0; padding: 0; font-size: 16px; color: #36f; text-align: center;
@@ -179,7 +191,7 @@ div.postcodify_popup_layer div.postcodify_help ul {
 }
 div.postcodify_popup_layer div.postcodify_help ul li {
     margin: 0 0 6px 0; padding: 0 0 6px 0; border-bottom: 1px dotted #e0e0e0;
-    text-align: center; list-style: none;
+    text-align: center; list-style: none !important;
 }
 div.postcodify_popup_layer div.postcodify_help ul li:last-child { margin-bottom: 0; border-bottom: 0; }
 div.postcodify_popup_layer div.postcodify_help ul li span {
@@ -206,6 +218,7 @@ div.postcodify_popup_layer div.postcodify_logo {
     background: #f4f4f4; border-top: 1px solid #cacaca;
     border-bottom-left-radius: 2px;
     border-bottom-right-radius: 2px;
+    box-sizing: content-box;
 }
 div.postcodify_popup_layer div.postcodify_logo a {
     color: #666; text-decoration: none;
