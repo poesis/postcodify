@@ -143,8 +143,13 @@ class Postcodify_Indexer_CreateDB
         {
             // 작업을 마친 자식 프로세스는 목록에서 삭제한다.
             
-            $pid = pcntl_wait($status, WNOHANG | WUNTRACED);
-            if ($pid) unset($children[$pid]);
+            foreach ($children as $pid => $task_key)
+            {
+                if ($pid == pcntl_waitpid($pid, $status, WNOHANG | WUNTRACED))
+                {
+                    unset($children[$pid]);
+                }
+            }
             
             // 카운터를 확인한다.
             
