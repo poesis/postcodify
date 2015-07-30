@@ -907,11 +907,13 @@ class Postcodify_Indexer_Update
         
         static $ps1 = null;
         static $ps2 = null;
+        /*
         static $ps3 = null;
         static $ps4 = null;
         static $ps5 = null;
         static $ps6 = null;
         static $ps7 = null;
+        */
         
         if ($ps1 === null)
         {
@@ -926,6 +928,7 @@ class Postcodify_Indexer_Update
                 '(eupmyeon_ko IS NULL OR eupmyeon_ko = ?) AND (dongri_ko = ? OR admin_dongri = ?) AND ' .
                 'range_start_major <= ? AND range_end_major >= ? AND ' .
                 '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)) ORDER BY seq LIMIT 1');
+            /*
             $ps3 = $db->prepare('SELECT postcode5 FROM postcodify_addresses pa ' .
                 'JOIN postcodify_keywords pk ON pa.id = pk.address_id ' .
                 'JOIN postcodify_numbers pn ON pa.id = pn.address_id ' .
@@ -940,6 +943,7 @@ class Postcodify_Indexer_Update
                 'AND num_major % 2 = ? ORDER BY ABS(? - num_major) DESC LIMIT 1');
             $ps7 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE postcode6 = ? ' . 
                 'ORDER BY ABS(? - num_major) DESC LIMIT 1');
+            */
         }
         
         // 도로명주소 범위 데이터를 사용하여 기초구역번호를 찾아본다.
@@ -991,7 +995,7 @@ class Postcodify_Indexer_Update
         }
         
         // 같은 지번에 이미 부여된 기초구역번호가 있는지 찾아본다.
-        
+        /*
         $ps3->execute(array(Postcodify_Utility::crc32_x64($dongri), $jibeon_major, $jibeon_minor));
         if ($postcode5 = $ps3->fetchColumn())
         {
@@ -1053,6 +1057,7 @@ class Postcodify_Indexer_Update
         {
             $ps7->closeCursor();
         }
+        */
         
         // 아직도 못 찾았으면 null을 반환한다.
         
