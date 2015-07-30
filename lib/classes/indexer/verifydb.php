@@ -209,7 +209,7 @@ class Postcodify_Indexer_VerifyDB
         }
         
         $pc5_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id " .
-            "WHERE (postcode5 IS NULL OR postcode5 = '000000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");
+            "WHERE (postcode5 IS NULL OR postcode5 = '00000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");
         if ($pc5_query->rowCount())
         {
             echo '[ERROR] 우편번호(기초구역번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
