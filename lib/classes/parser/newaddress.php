@@ -79,7 +79,9 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         // 우편번호를 정리한다.
         
         $postcode6 = trim($line[19]);
+        if (strlen($postcode6) !== 6) $postcode6 = null;
         $postcode5 = trim($line[27]);
+        if (strlen($postcode5) !== 5) $postcode5 = null;
         
         // 건물명을 정리한다.
         
