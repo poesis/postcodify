@@ -155,7 +155,7 @@
                     afterSelect : function(entry) {
                         container.find(".postcodify_postcode6_1").val(entry.data("code6").substr(0, 3));
                         container.find(".postcodify_postcode6_2").val(entry.data("code6").substr(4, 3));
-                        onSelect();
+                        onSelect(entry);
                         closePopUpLayer();
                     }
                 }, options));
