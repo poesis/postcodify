@@ -63,16 +63,15 @@ class Postcodify_Indexer_CreateDB
         $this->load_basic_info();
         $this->load_road_list();
         $this->load_english_aliases();
+        $this->load_new_ranges();
+        $this->load_old_ranges();
         
         $this->start_threaded_workers('load_addresses', '건물정보 데이터를 로딩하는 중...');
         $this->start_threaded_workers('interim_indexes', '중간 인덱스를 생성하는 중...');
         $this->start_threaded_workers('load_jibeon', '관련지번 데이터를 로딩하는 중...');
         
         $this->load_pobox();
-        $this->load_new_ranges();
-        $this->load_old_ranges();
         $this->fix_missing_postcodes();
-        
         $this->save_english_keywords();
         $this->start_threaded_workers('final_indexes', '최종 인덱스를 생성하는 중...');
     }
