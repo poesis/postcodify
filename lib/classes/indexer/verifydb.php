@@ -133,6 +133,7 @@ class Postcodify_Indexer_VerifyDB
             }
             
             $indexes = array();
+            if (isset($columns['_initial'])) $indexes = array_merge($indexes, $columns['_initial']);
             if (isset($columns['_interim'])) $indexes = array_merge($indexes, $columns['_interim']);
             if (isset($columns['_indexes'])) $indexes = array_merge($indexes, $columns['_indexes']);
             

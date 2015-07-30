@@ -65,6 +65,7 @@ class Postcodify_Indexer_CreateDB
         $this->load_english_aliases();
         $this->load_new_ranges();
         $this->load_old_ranges();
+        $this->start_threaded_workers('initial_indexes', '초기 인덱스를 생성하는 중...');
         
         $this->start_threaded_workers('load_addresses', '건물정보 데이터를 로딩하는 중...');
         $this->start_threaded_workers('interim_indexes', '중간 인덱스를 생성하는 중...');
@@ -96,6 +97,11 @@ class Postcodify_Indexer_CreateDB
         
         switch ($task_name)
         {
+            case 'initial_indexes':
+                $schema = $this->load_schema();
+                $tasks = $schema->initial_indexes;
+                $task_name = 'create_indexes';
+                break;
             case 'interim_indexes':
                 $schema = $this->load_schema();
                 $tasks = $schema->interim_indexes;
@@ -174,6 +180,7 @@ class Postcodify_Indexer_CreateDB
     public function load_schema()
     {
         $create_tables = array();
+        $initial_indexes = array();
         $interim_indexes = array();
         $final_indexes = array();
         
@@ -186,6 +193,9 @@ class Postcodify_Indexer_CreateDB
             {
                 switch ($column_name)
                 {
+                    case '_initial':
+                        $initial_indexes[$table_name] = $column_definition;
+                        break;
                     case '_interim':
                         $interim_indexes[$table_name] = $column_definition;
                         break;
@@ -206,6 +216,7 @@ class Postcodify_Indexer_CreateDB
         
         return (object)array(
             'create_tables' => $create_tables,
+            'initial_indexes' => $initial_indexes,
             'interim_indexes' => $interim_indexes,
             'final_indexes' => $final_indexes,
         );
