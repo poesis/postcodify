@@ -31,8 +31,8 @@ div.postcodify_search_result { clear: both; position: relative; width: 100%; pad
 div.postcodify_search_result:hover { background: #f8f8f8; }
 div.postcodify_search_result:hover div.address a.selector { font-weight: bold; }
 div.postcodify_search_result div.code { display: block; position: absolute; left: 6px; top: 4px; color: #36f; }
-div.postcodify_search_result div.code6 { display: block; position: absolute; left: 6px; top: 4px; color: #36f; }
-div.postcodify_search_result div.code5 { display: none; position: absolute; left: 6px; top: 4px; color: #36f; }
+div.postcodify_search_result div.code6 { display: none; position: absolute; left: 6px; top: 4px; color: #36f; }
+div.postcodify_search_result div.code5 { display: block; position: absolute; left: 6px; top: 4px; color: #36f; }
 div.postcodify_search_result div.address { clear: both; margin-left: 60px; position: relative; cursor: pointer; }
 div.postcodify_search_result div.address a.selector { text-decoration: none; cursor: pointer; }
 div.postcodify_search_result div.address a.selector span.address_info { color: #000; display: inline-block; margin-right: 8px; }

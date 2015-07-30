@@ -444,7 +444,9 @@
                             // 우편번호, 기초구역번호, 주소 등을 항목에 추가한다.
                             
                             if (settings.forceDisplayPostcode5) {
-                                $('<div class="code"></div>').text("[\u2009" + option.data("postcode5") + "\u2009]").appendTo(option);
+                                $('<div class="code"></div>').text(option.data("postcode5")).appendTo(option);
+                            } else if (settings.forceDisplayPostcode6) {
+                                $('<div class="code"></div>').text(option.data("postcode6")).appendTo(option);
                             } else {
                                 $('<div class="code6"></div>').text(option.data("postcode6")).appendTo(option);
                                 $('<div class="code5"></div>').text(option.data("postcode5")).appendTo(option);

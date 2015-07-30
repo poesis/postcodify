@@ -141,8 +141,8 @@ div.postcodify_popup_layer div.postcodify_search_result {
 div.postcodify_popup_layer div.postcodify_search_result:hover { background: #f8f8f8; }
 div.postcodify_popup_layer div.postcodify_search_result:hover div.address a.selector { font-weight: bold; }
 div.postcodify_popup_layer div.postcodify_search_result div.code { position: absolute; left: 6px; top: 4px; color: #c33; }
-div.postcodify_popup_layer div.postcodify_search_result div.code6 { position: absolute; left: 6px; top: 4px; color: #c33; }
-div.postcodify_popup_layer div.postcodify_search_result div.code5 { position: absolute; left: 6px; top: 4px; color: #24c; display: none; }
+div.postcodify_popup_layer div.postcodify_search_result div.code6 { position: absolute; left: 6px; top: 4px; color: #24c; display: none; }
+div.postcodify_popup_layer div.postcodify_search_result div.code5 { position: absolute; left: 6px; top: 4px; color: #c33; }
 div.postcodify_popup_layer div.postcodify_search_result div.code5:before { content: "[\2009"; }
 div.postcodify_popup_layer div.postcodify_search_result div.code5:after { content: "\2009]"; }
 div.postcodify_popup_layer div.postcodify_search_result:hover div.code { display: none; }
