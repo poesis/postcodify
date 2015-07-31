@@ -582,7 +582,7 @@ class Postcodify_Indexer_CreateDB
                     
                     if (isset(Postcodify_Utility::$road_cache[$last_entry->road_id . $last_entry->road_section]))
                     {
-                        $road_info = Postcodify_Utility::$road_cache[$last_entry->road_id . $last_entry->road_section];
+                        $road_info = explode('|', Postcodify_Utility::$road_cache[$last_entry->road_id . $last_entry->road_section]);
                         $road_info = (object)array(
                             'road_name_ko' => $road_info[0],
                             'sido_ko' => $road_info[1],
