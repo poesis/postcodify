@@ -124,7 +124,7 @@ return array(
         'range_type' => 'TINYINT(1) DEFAULT 0',
         'is_basement' => 'TINYINT(1) DEFAULT 0',
         'postcode5' => 'CHAR(5)',
-        '_indexes' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'road_name_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'range_type', 'postcode5'),
+        '_initial' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'road_name_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'range_type', 'postcode5'),
     ),
     
     // 우편번호 범위 테이블 (지번주소).
@@ -148,7 +148,7 @@ return array(
         'is_mountain' => 'TINYINT(1) DEFAULT 0',
         'admin_dongri' => 'VARCHAR(80)',
         'postcode5' => 'CHAR(5)',
-        '_indexes' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'admin_dongri', 'postcode5'),
+        '_initial' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'admin_dongri', 'postcode5'),
     ),
     
     // 우편번호 범위 테이블 (구 우편번호).
@@ -175,7 +175,7 @@ return array(
         'building_num_start' => 'SMALLINT(5) UNSIGNED',
         'building_num_end' => 'SMALLINT(5) UNSIGNED',
         'postcode6' => 'CHAR(6)',
-        '_indexes' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'postcode6'),
+        '_initial' => array('sido_ko', 'sigungu_ko', 'ilbangu_ko', 'eupmyeon_ko', 'dongri_ko', 'range_start_major', 'range_start_minor', 'range_end_major', 'range_end_minor', 'postcode6'),
     ),
     
     // 각종 설정을 저장하는 테이블.

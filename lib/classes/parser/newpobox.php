@@ -66,11 +66,18 @@ class Postcodify_Parser_NewPobox extends Postcodify_ZipReader
             $ilbangu = null;
         }
         
+        // 우편번호를 정리한다.
+        
+        $postcode6 = trim($line[9]);
+        if (strlen($postcode6) !== 6) $postcode6 = null;
+        $postcode5 = trim($line[0]);
+        if (strlen($postcode5) !== 5) $postcode5 = null;
+        
         // 데이터를 정리하여 반환한다.
         
         return (object)array(
-            'postcode6' => trim($line[9]),
-            'postcode5' => trim($line[0]),
+            'postcode6' => $postcode6,
+            'postcode5' => $postcode5,
             'sido' => $sido,
             'sigungu' => $sigungu,
             'ilbangu' => $ilbangu,

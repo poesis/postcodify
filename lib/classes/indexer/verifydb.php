@@ -24,13 +24,19 @@ class Postcodify_Indexer_VerifyDB
     // 확인할 데이터 정의.
     
     protected $_schema;
+    protected $_no_old_postcodes;
     
     // 엔트리 포인트.
     
-    public function start()
+    public function start($args)
     {
         Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
         Postcodify_Utility::print_newline();
+        
+        if (in_array('--no-old-postcodes', $args->options))
+        {
+            $this->_no_old_postcodes = true;
+        }
         
         if (!($db = Postcodify_Utility::get_db()))
         {
@@ -133,6 +139,7 @@ class Postcodify_Indexer_VerifyDB
             }
             
             $indexes = array();
+            if (isset($columns['_initial'])) $indexes = array_merge($indexes, $columns['_initial']);
             if (isset($columns['_interim'])) $indexes = array_merge($indexes, $columns['_interim']);
             if (isset($columns['_indexes'])) $indexes = array_merge($indexes, $columns['_indexes']);
             
@@ -195,20 +202,23 @@ class Postcodify_Indexer_VerifyDB
     {
         $pass = true;
         
-        $pc6_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id " .
-            "WHERE (postcode6 IS NULL OR postcode6 = '000000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");
-        if ($pc6_query->rowCount())
+        if (!$this->_no_old_postcodes)
         {
-            echo '[ERROR] 우편번호(기존번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
-            while ($entry = $pc6_query->fetch(PDO::FETCH_OBJ))
+            $pc6_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id " .
+                "WHERE (postcode6 IS NULL OR postcode6 = '000000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");
+            if ($pc6_query->rowCount())
             {
-                echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
+                echo '[ERROR] 우편번호(기존번호)가 누락된 레코드가 있습니다.' . PHP_EOL;
+                while ($entry = $pc6_query->fetch(PDO::FETCH_OBJ))
+                {
+                    echo '  #' . $entry->id . ' ' . $this->format_address($entry) . PHP_EOL;
+                }
+                $pass = false;
             }
-            $pass = false;
         }
         
         $pc5_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id " .
-            "WHERE (postcode5 IS NULL OR postcode5 = '000000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");
+            "WHERE (postcode5 IS NULL OR postcode5 = '00000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");
         if ($pc5_query->rowCount())
         {
             echo '[ERROR] 우편번호(기초구역번호)가 누락된 레코드가 있습니다.' . PHP_EOL;

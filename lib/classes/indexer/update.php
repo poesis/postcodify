@@ -31,6 +31,7 @@ class Postcodify_Indexer_Update
     
     protected $_data_dir;
     protected $_ranges_available = true;
+    protected $_no_old_postcodes;
     
     // 생성자.
     
@@ -45,6 +46,11 @@ class Postcodify_Indexer_Update
     {
         Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
         Postcodify_Utility::print_newline();
+        
+        if (in_array('--no-old-postcodes', $args->options))
+        {
+            $this->_no_old_postcodes = true;
+        }
         
         // 어디까지 업데이트했는지 찾아본다.
         
@@ -382,11 +388,15 @@ class Postcodify_Indexer_Update
                     {
                         // 우편번호가 누락된 경우, 범위 데이터를 사용하여 찾거나 기존 주소의 우편번호를 그대로 사용한다.
                         
-                        if (trim($last_entry->postcode6) === '' || $last_entry->postcode6 === '000000')
+                        if ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000')
                         {
                             if ($address_info && $address_info->postcode6 !== null)
                             {
                                 $last_entry->postcode6 = $address_info->postcode6;
+                            }
+                            elseif ($this->_no_old_postcodes)
+                            {
+                                $last_entry->postcode6 = null;
                             }
                             else
                             {
@@ -394,7 +404,7 @@ class Postcodify_Indexer_Update
                             }
                             $postcode6_is_guess = true;
                         }
-                        if (trim($last_entry->postcode5) === '' || $last_entry->postcode5 === '00000')
+                        if ($last_entry->postcode5 === null || $last_entry->postcode5 === '00000')
                         {
                             if ($address_info && $address_info->postcode5 !== null)
                             {
@@ -856,11 +866,15 @@ class Postcodify_Indexer_Update
         // Prepared Statement를 생성한다.
         
         static $ps = null;
+        
         if ($ps === null)
         {
-            $ps = $db->prepare('SELECT postcode6 FROM postcodify_ranges_oldcode WHERE sido_ko = ? AND ' .
-                '(sigungu_ko IS NULL OR sigungu_ko = ?) AND (ilbangu_ko IS NULL OR ilbangu_ko = ?) AND ' .
-                '(eupmyeon_ko IS NULL OR eupmyeon_ko = ?) AND (dongri_ko = ? OR dongri_ko = ?) AND ' .
+            $ps = $db->prepare('SELECT postcode6 FROM postcodify_ranges_oldcode WHERE ' .
+                '(sido_ko = ? OR ? IS NULL) AND ' .
+                '(sigungu_ko IS NULL OR sigungu_ko = ? OR ? IS NULL) AND ' .
+                '(ilbangu_ko IS NULL OR ilbangu_ko = ? OR ? IS NULL) AND ' .
+                '(eupmyeon_ko IS NULL OR eupmyeon_ko = ? OR ? IS NULL) AND ' .
+                '(dongri_ko = ? OR dongri_ko = ?) AND ' .
                 '(range_start_major IS NULL OR (range_start_major <= ? AND range_end_major >= ? AND ' .
                 '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)))) ORDER BY seq LIMIT 1');
         }
@@ -868,16 +882,18 @@ class Postcodify_Indexer_Update
         // 우편번호를 찾는다.
         
         $ps->execute(array(
-            $road_info->sido_ko,
-            $road_info->sigungu_ko,
-            $road_info->ilbangu_ko,
-            $road_info->eupmyeon_ko,
-            $dongri,
-            $admin_dongri,
-            $jibeon_major,
-            $jibeon_major,
-            $jibeon_minor,
-            $jibeon_minor,
+            $road_info->sido_ko ? $road_info->sido_ko : null,
+            $road_info->sido_ko ? $road_info->sido_ko : null,
+            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
+            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
+            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
+            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
+            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+            $dongri ? $dongri : null,
+            $admin_dongri ? $admin_dongri : null,
+            $jibeon_major, $jibeon_major,
+            $jibeon_minor, $jibeon_minor,
         ));
         
         // 검색 결과가 있을 경우 우편번호를 반환하고, 그렇지 않으면 null을 반환한다.
@@ -907,11 +923,13 @@ class Postcodify_Indexer_Update
         
         static $ps1 = null;
         static $ps2 = null;
+        /*
         static $ps3 = null;
         static $ps4 = null;
         static $ps5 = null;
         static $ps6 = null;
         static $ps7 = null;
+        */
         
         if ($ps1 === null)
         {
@@ -926,6 +944,7 @@ class Postcodify_Indexer_Update
                 '(eupmyeon_ko IS NULL OR eupmyeon_ko = ?) AND (dongri_ko = ? OR admin_dongri = ?) AND ' .
                 'range_start_major <= ? AND range_end_major >= ? AND ' .
                 '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)) ORDER BY seq LIMIT 1');
+            /*
             $ps3 = $db->prepare('SELECT postcode5 FROM postcodify_addresses pa ' .
                 'JOIN postcodify_keywords pk ON pa.id = pk.address_id ' .
                 'JOIN postcodify_numbers pn ON pa.id = pn.address_id ' .
@@ -940,6 +959,7 @@ class Postcodify_Indexer_Update
                 'AND num_major % 2 = ? ORDER BY ABS(? - num_major) DESC LIMIT 1');
             $ps7 = $db->prepare('SELECT postcode5 FROM postcodify_addresses WHERE postcode6 = ? ' . 
                 'ORDER BY ABS(? - num_major) DESC LIMIT 1');
+            */
         }
         
         // 도로명주소 범위 데이터를 사용하여 기초구역번호를 찾아본다.
@@ -991,7 +1011,7 @@ class Postcodify_Indexer_Update
         }
         
         // 같은 지번에 이미 부여된 기초구역번호가 있는지 찾아본다.
-        
+        /*
         $ps3->execute(array(Postcodify_Utility::crc32_x64($dongri), $jibeon_major, $jibeon_minor));
         if ($postcode5 = $ps3->fetchColumn())
         {
@@ -1053,6 +1073,7 @@ class Postcodify_Indexer_Update
         {
             $ps7->closeCursor();
         }
+        */
         
         // 아직도 못 찾았으면 null을 반환한다.
         

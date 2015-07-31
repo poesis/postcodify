@@ -237,6 +237,7 @@ class Postcodify_Utility
         }
         fwrite($stderr, 'Valid options:' . PHP_EOL);
         fwrite($stderr, '  filename (only with `sqlite-convert`)' . PHP_EOL);
+        fwrite($stderr, '  --no-old-postcodes (supported since 3.1.0)' . PHP_EOL);
         fwrite($stderr, 'Invalid options:' . PHP_EOL);
         fwrite($stderr, '  --dry-run (not supported since 3.0.0)' . PHP_EOL);
         fclose($stderr);
