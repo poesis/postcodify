@@ -394,7 +394,7 @@ class Postcodify_Indexer_Update
                             {
                                 $last_entry->postcode6 = $address_info->postcode6;
                             }
-                            elseif (!$this->_no_old_postcodes)
+                            elseif ($this->_no_old_postcodes)
                             {
                                 $last_entry->postcode6 = null;
                             }
