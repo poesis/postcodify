@@ -375,7 +375,7 @@ class Postcodify_Indexer_CreateDB
         {
             // 도로 정보를 캐시에 저장한다.
             
-            Postcodify_Utility::$road_cache[$entry->road_id] = implode('|', array(
+            Postcodify_Utility::$road_cache[$entry->road_id . $entry->road_section] = implode('|', array(
                 $entry->road_name_ko,
                 $entry->sido_ko,
                 $entry->sigungu_ko,
@@ -580,9 +580,9 @@ class Postcodify_Indexer_CreateDB
                     
                     // 도로 정보를 구한다.
                     
-                    if (isset(Postcodify_Utility::$road_cache[$last_entry->road_id]))
+                    if (isset(Postcodify_Utility::$road_cache[$last_entry->road_id . $last_entry->road_section]))
                     {
-                        $road_info = Postcodify_Utility::$road_cache[$last_entry->road_id];
+                        $road_info = Postcodify_Utility::$road_cache[$last_entry->road_id . $last_entry->road_section];
                         $road_info = (object)array(
                             'road_name_ko' => $road_info[0],
                             'sido_ko' => $road_info[1],
@@ -630,14 +630,11 @@ class Postcodify_Indexer_CreateDB
                     
                     // 도로명 키워드를 입력한다.
                     
-                    if ($road_info !== null)
+                    $road_name_array = Postcodify_Utility::get_variations_of_road_name($road_info->road_name_ko);
+                    foreach ($road_name_array as $keyword)
                     {
-                        $road_name_array = Postcodify_Utility::get_variations_of_road_name($road_info->road_name_ko);
-                        foreach ($road_name_array as $keyword)
-                        {
-                            if (!$keyword) continue;
-                            $ps_kwd_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($keyword)));
-                        }
+                        if (!$keyword) continue;
+                        $ps_kwd_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($keyword)));
                     }
                     
                     // 동·리 키워드를 입력한다.
