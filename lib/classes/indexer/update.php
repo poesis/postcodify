@@ -404,7 +404,7 @@ class Postcodify_Indexer_Update
                             }
                             $postcode6_is_guess = true;
                         }
-                        if ($last_entry->postcode5) === null || $last_entry->postcode5 === '00000')
+                        if ($last_entry->postcode5 === null || $last_entry->postcode5 === '00000')
                         {
                             if ($address_info && $address_info->postcode5 !== null)
                             {

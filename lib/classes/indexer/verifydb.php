@@ -28,7 +28,7 @@ class Postcodify_Indexer_VerifyDB
     
     // 엔트리 포인트.
     
-    public function start()
+    public function start($args)
     {
         Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
         Postcodify_Utility::print_newline();
