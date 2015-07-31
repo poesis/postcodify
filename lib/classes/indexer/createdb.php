@@ -367,9 +367,15 @@ class Postcodify_Indexer_CreateDB
         
         while ($entry = $zip->read_line())
         {
-            // 도로명을 캐시에 저장한다.
+            // 도로 정보를 캐시에 저장한다.
             
-            Postcodify_Utility::$road_cache[$entry->road_id] = $entry->road_name_ko;
+            Postcodify_Utility::$road_cache[$entry->road_id] = implode('|', array(
+                $entry->road_name_ko,
+                $entry->sido_ko,
+                $entry->sigungu_ko,
+                $entry->ilbangu_ko,
+                $entry->eupmyeon_ko,
+            ));
             
             // 영문 행정구역명을 캐시에 저장한다.
             
@@ -566,6 +572,24 @@ class Postcodify_Indexer_CreateDB
                         }
                     }
                     
+                    // 도로 정보를 구한다.
+                    
+                    if (isset(Postcodify_Utility::$road_cache[$last_entry->road_id]))
+                    {
+                        $road_info = Postcodify_Utility::$road_cache[$last_entry->road_id];
+                        $road_info = (object)array(
+                            'road_name_ko' => $road_info[0],
+                            'sido_ko' => $road_info[1],
+                            'sigungu_ko' => $road_info[2],
+                            'ilbangu_ko' => $road_info[3],
+                            'eupmyeon_ko' => $road_info[4],
+                        );
+                    }
+                    else
+                    {
+                        $road_info = null;
+                    }
+                    
                     // 우편번호가 누락된 경우, 범위 데이터를 사용하여 찾는다.
                     
                     if ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000')
@@ -600,12 +624,14 @@ class Postcodify_Indexer_CreateDB
                     
                     // 도로명 키워드를 입력한다.
                     
-                    $road_name = Postcodify_Utility::$road_cache[$last_entry->road_id];
-                    $road_name_array = Postcodify_Utility::get_variations_of_road_name($road_name);
-                    foreach ($road_name_array as $keyword)
+                    if ($road_info !== null)
                     {
-                        if (!$keyword) continue;
-                        $ps_kwd_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($keyword)));
+                        $road_name_array = Postcodify_Utility::get_variations_of_road_name($road_info->road_name_ko);
+                        foreach ($road_name_array as $keyword)
+                        {
+                            if (!$keyword) continue;
+                            $ps_kwd_insert->execute(array($proxy_id, Postcodify_Utility::crc32_x64($keyword)));
+                        }
                     }
                     
                     // 동·리 키워드를 입력한다.
@@ -638,7 +664,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 불필요한 변수들을 unset한다.
                     
-                    unset($road_name, $road_name_array, $dongri_array1, $dongri_array2, $dongri_array);
+                    unset($road_info, $road_name_array, $dongri_array1, $dongri_array2, $dongri_array);
                     unset($keyword, $building_names, $building_names_str, $proxy_id);
                     unset($last_entry, $last_nums);
                     
