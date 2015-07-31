@@ -118,13 +118,13 @@ else
         $extra_input = htmlspecialchars(preg_replace('/\s.+$/', '', $entry->ko_jibeon) . ($entry->building_name === '' ? '' : (', ' . $entry->building_name)), ENT_COMPAT, 'UTF-8');
         $extra_display = htmlspecialchars($entry->ko_jibeon . ($entry->building_name === '' ? '' : (', ' . $entry->building_name)) .
             ($entry->building_nums ? (' ' . $entry->building_nums) : ''), ENT_COMPAT, 'UTF-8');
-        if (isset($_GET['pc']) && $_GET['pc'] === '5')
+        if (isset($_GET['pc']) && $_GET['pc'] === '6')
         {
-            $json['juso'][] = sprintf($template, $code5[0], $code5[1], $entry->postcode5, implode('-', $code6), $juso, $jibeon, $extra_input, $extra_display);
+            $json['juso'][] = sprintf($template, $code6[0], $code6[1], implode('-', $code6), $entry->postcode5, $juso, $jibeon, $extra_input, $extra_display);
         }
         else
         {
-            $json['juso'][] = sprintf($template, $code6[0], $code6[1], implode('-', $code6), $entry->postcode5, $juso, $jibeon, $extra_input, $extra_display);
+            $json['juso'][] = sprintf($template, $code5[0], $code5[1], $entry->postcode5, implode('-', $code6), $juso, $jibeon, $extra_input, $extra_display);
         }
     }
     $json['juso'][] = '</ul>';
