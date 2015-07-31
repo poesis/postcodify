@@ -26,6 +26,7 @@ class Postcodify_Indexer_CreateDB
     protected $_data_dir;
     protected $_data_date;
     protected $_shmop_key;
+    protected $_no_old_postcodes;
     
     // 쓰레드별로 작업을 분할하는 데 사용하는 시도 목록.
     // 건물정보 파일 기준으로 각각 200MB 내외가 되도록 나누었다.
@@ -55,6 +56,11 @@ class Postcodify_Indexer_CreateDB
     {
         Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
         Postcodify_Utility::print_newline();
+        
+        if (in_array('--no-old-postcodes', $args->options))
+        {
+            $this->_no_old_postcodes = true;
+        }
         
         $checkenv = new Postcodify_Indexer_CheckEnv;
         $checkenv->check();
@@ -592,7 +598,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 우편번호가 누락된 경우, 범위 데이터를 사용하여 찾는다.
                     
-                    if ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000')
+                    if (!$this->_no_old_postcodes && ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000'))
                     {
                         $last_entry->postcode6 = $update_class->find_postcode6($db, $road_info, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor);
                     }

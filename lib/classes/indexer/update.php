@@ -31,6 +31,7 @@ class Postcodify_Indexer_Update
     
     protected $_data_dir;
     protected $_ranges_available = true;
+    protected $_no_old_postcodes;
     
     // 생성자.
     
@@ -45,6 +46,11 @@ class Postcodify_Indexer_Update
     {
         Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
         Postcodify_Utility::print_newline();
+        
+        if (in_array('--no-old-postcodes', $args->options))
+        {
+            $this->_no_old_postcodes = true;
+        }
         
         // 어디까지 업데이트했는지 찾아본다.
         
@@ -382,11 +388,15 @@ class Postcodify_Indexer_Update
                     {
                         // 우편번호가 누락된 경우, 범위 데이터를 사용하여 찾거나 기존 주소의 우편번호를 그대로 사용한다.
                         
-                        if (trim($last_entry->postcode6) === '' || $last_entry->postcode6 === '000000')
+                        if ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000')
                         {
                             if ($address_info && $address_info->postcode6 !== null)
                             {
                                 $last_entry->postcode6 = $address_info->postcode6;
+                            }
+                            elseif (!$this->_no_old_postcodes)
+                            {
+                                $last_entry->postcode6 = null;
                             }
                             else
                             {
@@ -394,7 +404,7 @@ class Postcodify_Indexer_Update
                             }
                             $postcode6_is_guess = true;
                         }
-                        if (trim($last_entry->postcode5) === '' || $last_entry->postcode5 === '00000')
+                        if ($last_entry->postcode5) === null || $last_entry->postcode5 === '00000')
                         {
                             if ($address_info && $address_info->postcode5 !== null)
                             {
