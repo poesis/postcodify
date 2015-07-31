@@ -145,9 +145,6 @@ div.postcodify_popup_layer div.postcodify_search_result div.code6 { position: ab
 div.postcodify_popup_layer div.postcodify_search_result div.code5 { position: absolute; left: 6px; top: 4px; color: #c33; }
 div.postcodify_popup_layer div.postcodify_search_result div.code5:before { content: "[\2009"; }
 div.postcodify_popup_layer div.postcodify_search_result div.code5:after { content: "\2009]"; }
-div.postcodify_popup_layer div.postcodify_search_result:hover div.code { display: none; }
-div.postcodify_popup_layer div.postcodify_search_result:hover div.code6 { display: none; }
-div.postcodify_popup_layer div.postcodify_search_result:hover div.code5 { display: block; }
 div.postcodify_popup_layer div.postcodify_search_result div.address { clear: both; margin-left: 60px; margin-right: 30px; position: relative; cursor: pointer; }
 div.postcodify_popup_layer div.postcodify_search_result div.address a.selector { text-decoration: none; cursor: pointer; }
 div.postcodify_popup_layer div.postcodify_search_result div.address a.selector span.address_info { color: #000; display: inline-block; margin-right: 8px; }
