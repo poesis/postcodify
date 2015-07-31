@@ -866,11 +866,15 @@ class Postcodify_Indexer_Update
         // Prepared Statement를 생성한다.
         
         static $ps = null;
+        
         if ($ps === null)
         {
-            $ps = $db->prepare('SELECT postcode6 FROM postcodify_ranges_oldcode WHERE sido_ko = ? AND ' .
-                '(sigungu_ko IS NULL OR sigungu_ko = ?) AND (ilbangu_ko IS NULL OR ilbangu_ko = ?) AND ' .
-                '(eupmyeon_ko IS NULL OR eupmyeon_ko = ?) AND (dongri_ko = ? OR dongri_ko = ?) AND ' .
+            $ps = $db->prepare('SELECT postcode6 FROM postcodify_ranges_oldcode WHERE ' .
+                '(sido_ko = ? OR ? IS NULL) AND ' .
+                '(sigungu_ko IS NULL OR sigungu_ko = ? OR ? IS NULL) AND ' .
+                '(ilbangu_ko IS NULL OR ilbangu_ko = ? OR ? IS NULL) AND ' .
+                '(eupmyeon_ko IS NULL OR eupmyeon_ko = ? OR ? IS NULL) AND ' .
+                '(dongri_ko = ? OR dongri_ko = ?) AND ' .
                 '(range_start_major IS NULL OR (range_start_major <= ? AND range_end_major >= ? AND ' .
                 '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)))) ORDER BY seq LIMIT 1');
         }
@@ -878,16 +882,18 @@ class Postcodify_Indexer_Update
         // 우편번호를 찾는다.
         
         $ps->execute(array(
-            $road_info->sido_ko,
-            $road_info->sigungu_ko,
-            $road_info->ilbangu_ko,
-            $road_info->eupmyeon_ko,
-            $dongri,
-            $admin_dongri,
-            $jibeon_major,
-            $jibeon_major,
-            $jibeon_minor,
-            $jibeon_minor,
+            $road_info->sido_ko ? $road_info->sido_ko : null,
+            $road_info->sido_ko ? $road_info->sido_ko : null,
+            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
+            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
+            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
+            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
+            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+            $dongri ? $dongri : null,
+            $admin_dongri ? $admin_dongri : null,
+            $jibeon_major, $jibeon_major,
+            $jibeon_minor, $jibeon_minor,
         ));
         
         // 검색 결과가 있을 경우 우편번호를 반환하고, 그렇지 않으면 null을 반환한다.
