@@ -962,8 +962,8 @@ class Postcodify_Indexer_CreateDB
             'sido_ko, sido_en, sigungu_ko, sigungu_en, ilbangu_ko, ilbangu_en, eupmyeon_ko, eupmyeon_en) ' .
             'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (road_id, postcode6, postcode5, ' .
-            'dongri_ko, dongri_en, jibeon_major, jibeon_minor, other_addresses) ' .
-            'VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+            'dongri_ko, dongri_en, jibeon_major, jibeon_minor, building_id, other_addresses) ' .
+            'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $ps_pobox_insert = $db->prepare('INSERT INTO postcodify_pobox (address_id, keyword, ' .
             'range_start_major, range_start_minor, range_end_major, range_end_minor) ' .
             'VALUES (?, ?, ?, ?, ?, ?)');
@@ -1029,6 +1029,7 @@ class Postcodify_Indexer_CreateDB
                 'P.O.Box',
                 $entry->range_start_major,
                 $entry->range_start_minor,
+                '',
                 $startnum . ($endnum === null ? '' : (' ~ ' . $endnum)),
             ));
             
