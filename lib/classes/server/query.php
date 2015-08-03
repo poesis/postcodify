@@ -53,7 +53,7 @@ class Postcodify_Server_Query
         
         // 검색어에서 불필요한 문자를 제거한다.
         
-        $keywords = str_replace(array('.', ',', '(', '|', ')'), ' ', $keywords);
+        $keywords = str_replace(array(',', '(', '|', ')'), ' ', $keywords);
         $keywords = preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9@-]/u', '', strtolower($keywords));
         
         // 쿼리 객체를 초기화한다.

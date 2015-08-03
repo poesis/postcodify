@@ -256,6 +256,7 @@ class Postcodify_Utility
     
     public static function get_variations_of_road_name($str)
     {
+        $str = preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9]/u', '', $str);
         $keywords = array($str);
         
         if (preg_match('/^(.+)([동서남북]?)([0-9-]+)번?로$/uU', $str, $matches))
@@ -276,6 +277,7 @@ class Postcodify_Utility
             {
                 $keywords[] = $matches[1];
                 $keywords[] = $matches[1] . $matches[3];
+                $keywords[] = $matches[1] . $matches[3] . '길';
             }
             else
             {
