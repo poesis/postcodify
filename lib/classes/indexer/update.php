@@ -876,7 +876,8 @@ class Postcodify_Indexer_Update
                 '(eupmyeon_ko IS NULL OR eupmyeon_ko = ? OR ? IS NULL) AND ' .
                 '(dongri_ko = ? OR dongri_ko = ?) AND ' .
                 '(range_start_major IS NULL OR (range_start_major <= ? AND range_end_major >= ? AND ' .
-                '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)))) ORDER BY seq LIMIT 1');
+                '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)))) ' .
+                'ORDER BY range_start_major DESC LIMIT 1');
         }
         
         // 우편번호를 찾는다.
