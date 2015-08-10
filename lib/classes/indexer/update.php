@@ -874,10 +874,10 @@ class Postcodify_Indexer_Update
                 '(sigungu_ko IS NULL OR sigungu_ko = ? OR ? IS NULL) AND ' .
                 '(ilbangu_ko IS NULL OR ilbangu_ko = ? OR ? IS NULL) AND ' .
                 '(eupmyeon_ko IS NULL OR eupmyeon_ko = ? OR ? IS NULL) AND ' .
-                '(dongri_ko = ? OR dongri_ko = ?) AND ' .
+                '(dongri_ko = ? OR dongri_ko = ? OR dongri_ko IS NULL) AND ' .
                 '(range_start_major IS NULL OR (range_start_major <= ? AND range_end_major >= ? AND ' .
                 '(range_start_minor IS NULL OR (range_start_minor <= ? AND range_end_minor >= ?)))) ' .
-                'ORDER BY range_start_major DESC LIMIT 1');
+                'ORDER BY dongri_ko DESC, range_start_major DESC LIMIT 1');
         }
         
         // 우편번호를 찾는다.
