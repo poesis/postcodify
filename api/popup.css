@@ -25,7 +25,7 @@ div.postcodify_popup_background {
     z-index: 2147483646;
     box-sizing: content-box;
     -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=55)";
-    filter: alpha(opacity=70);
+    filter: alpha(opacity=55);
 }
 div.postcodify_popup_background.ie6fix {
     display: none;
