@@ -684,9 +684,15 @@ class Postcodify_Indexer_Update
                 
                 foreach ($entries as $key => $jibeons)
                 {
-                    // 이 주소에 해당하는 도로명주소 레코드를 가져온다.
+                    // 분류에 사용했던 키를 분해하여 원래의 도로명주소를 구한다.
                     
                     list($road_id, $num_major, $num_minor, $is_basement) = explode('|', $key);
+                    $num_major = intval($num_major);
+                    $num_minor = intval($num_minor); if (!$num_minor) $num_minor = null;
+                    $is_basement = intval($is_basement);
+                    
+                    // 이 주소에 해당하는 도로명주소 레코드를 가져온다.
+                    
                     $ps_addr_select->execute(array($road_id . '00', $road_id . '99', $num_major, $num_minor, $num_minor, $is_basement));
                     $address_info = $ps_addr_select->fetchObject();
                     $ps_addr_select->closeCursor();
