@@ -72,7 +72,7 @@ return array(
     'postcodify_buildings' => array(
         'seq' => 'INT PRIMARY KEY AUTO_INCREMENT',
         'address_id' => 'INT NOT NULL',
-        'keyword' => 'VARCHAR(120)',
+        'keyword' => 'VARCHAR(5000)',
         '_indexes' => array('address_id'),
         '_count' => 600000,
     ),
