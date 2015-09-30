@@ -93,6 +93,7 @@
             
             // 검색창 디자인과 닫기 버튼을 생성한다.
             
+            var placeholder = $('<div class="postcodify_placeholder"></div>').text('검색할 주소를 여기에 입력해 주세요');
             var curve_slice = $('<div class="postcodify_curve_slice"></div>');
             var button_area = $('<div class="postcodify_button_area"></div>');
             var close_button = $('<button class="close_button">&times;</button>').appendTo(button_area);
@@ -159,9 +160,21 @@
                         closePopUpLayer();
                     }
                 }, options));
+                
+                placeholder.prependTo(layer.find("div.postcodify_search_controls")).on("click", function() {
+                    layer.find("input.keyword").focus();
+                });
+                layer.find("input.keyword").on("focusin focusout keydown keyup keypress input", function() {
+                    if ($(this).val() === "") {
+                        placeholder.show();
+                    } else {
+                        placeholder.hide();
+                    }
+                });
+                
                 curve_slice.appendTo(layer.find("div.postcodify_controls"));
-                layer.find("button.search_button").detach().appendTo(button_area);
-                button_area.append(close_button).appendTo(layer.find("div.postcodify_controls"));
+                button_area.appendTo(layer.find("div.postcodify_controls"));
+                layer.find("button.search_button").detach().prependTo(button_area);
             };
             
             // 화면 크기에 따라 팝업 레이어의 크기를 자동으로 조절한다.
