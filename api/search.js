@@ -830,6 +830,7 @@
                 if ("ontouchstart" in window && (layer.hasClass("fill_horizontally") || layer.hasClass("fill_vertically"))) {
                     layer.addClass("full_screen");
                 }
+                placeholder.text(width >= 540 ? "검색할 주소를 여기에 입력해 주세요" : "검색할 주소 입력");
                 displays.height(layer.height() - 73);
             });
             
