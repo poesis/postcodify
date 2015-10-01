@@ -265,6 +265,7 @@ class Postcodify_Indexer_Update
             
             // 이전 주소를 초기화한다.
             
+            $is_first_entry = true;
             $last_entry = null;
             $last_nums = array();
             
@@ -275,6 +276,8 @@ class Postcodify_Indexer_Update
                 // 읽어온 줄을 분석한다.
                 
                 $entry = $zip->read_line();
+                if ($is_first_entry && $entry === false) break;
+                $is_first_entry = false;
                 
                 // 이전 주소가 없다면 방금 읽어온 줄을 이전 주소로 설정한다.
                 
