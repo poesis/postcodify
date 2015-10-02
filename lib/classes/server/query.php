@@ -99,10 +99,12 @@ class Postcodify_Server_Query
         
         foreach ($keywords as $id => $keyword)
         {
-            // 키워드가 "산", "지하", 한글 1글자인 경우 건너뛴다.
+            // 키워드가 "지하" 또는 한글 1글자인 경우 건너뛴다. ("읍", "면"은 예외)
             
-            if (!ctype_alnum($keyword) && mb_strlen($keyword, 'UTF-8') < 2) continue;
-            if ($keyword === '지하') continue;
+            if ($keyword !== '읍' && $keyword !== '면' && ($keyword === '지하' || (mb_strlen($keyword, 'UTF-8') < 2 && !ctype_alnum($keyword))))
+            {
+                continue;
+            }
             
             // 첫 번째 구성요소가 시도인지 확인한다.
             
