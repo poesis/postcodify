@@ -42,6 +42,28 @@ class Postcodify_Indexer_CreateDB
         '강원도|대구광역시|세종특별자치시|제주특별자치도',
     );
     
+    // 시도 파일명이 영어로 제공되는 경우를 위한 매핑 목록.
+    
+    protected $_sido_filenames = array(
+        '경기도' => array('gyunggi', 'gyeonggi'),
+        '강원도' => 'gangwon',
+        '경상북도' => 'gyeongbuk',
+        '경상남도' => 'gyeongnam',
+        '전라북도' => 'jeonbuk',
+        '전라남도' => 'jeonnam',
+        '충청북도' => 'chungbuk',
+        '충청남도' => 'chungnam',
+        '제주특별자치도' => 'jeju',
+        '서울특별시' => 'seoul',
+        '부산광역시' => 'busan',
+        '대구광역시' => 'daegu',
+        '대전광역시' => 'daejeon',
+        '인천광역시' => 'incheon',
+        '광주광역시' => 'gwangju',
+        '울산광역시' => 'ulsan',
+        '세종특별자치시' => 'sejong',
+    );
+    
     // 생성자.
     
     public function __construct()
@@ -362,8 +384,12 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Parser_Road_List;
         $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'RDNMCODE.zip');
-        $open_status = $zip->open_named_file('전체분');
-        if (!$open_status) throw new Exception('Failed to open 도로명코드_전체분');
+        $open_status = $zip->open_named_file('road_code_total.txt');
+        if (!$open_status)
+        {
+            $open_status = $zip->open_named_file('전체분');
+            if (!$open_status) throw new Exception('Failed to open road codes');
+        }
         
         // 카운터를 초기화한다.
         
@@ -502,8 +528,19 @@ class Postcodify_Indexer_CreateDB
         {
             // 시·도 데이터 파일을 연다.
             
-            $open_status = $zip->open_named_file('건물정보_' . $sido);
-            if (!$open_status) throw new Exception('Failed to open 건물정보_' . $sido);
+            $open_status = false;
+            $sido_filenames = $this->_sido_filenames[$sido];
+            if (!is_array($sido_filenames)) $sido_filenames = array($sido_filenames);
+            foreach ($sido_filenames as $sido_filename)
+            {
+                $open_status = $zip->open_named_file('build_' . $sido_filename);
+                if ($open_status) break;
+            }
+            if (!$open_status)
+            {
+                $open_status = $zip->open_named_file('건물정보_' . $sido);
+                if (!$open_status) throw new Exception('Failed to open building info for ' . $sido);
+            }
             
             // 이전 주소를 초기화한다.
             
@@ -782,8 +819,19 @@ class Postcodify_Indexer_CreateDB
         {
             // 시·도 데이터 파일을 연다.
             
-            $open_status = $zip->open_named_file('관련지번_' . $sido);
-            if (!$open_status) throw new Exception('Failed to open 관련지번_' . $sido);
+            $open_status = false;
+            $sido_filenames = $this->_sido_filenames[$sido];
+            if (!is_array($sido_filenames)) $sido_filenames = array($sido_filenames);
+            foreach ($sido_filenames as $sido_filename)
+            {
+                $open_status = $zip->open_named_file('jibun_' . $sido_filename);
+                if ($open_status) break;
+            }
+            if (!$open_status)
+            {
+                $open_status = $zip->open_named_file('관련지번_' . $sido);
+                if (!$open_status) throw new Exception('Failed to open jibeon info for ' . $sido);
+            }
             
             // 이전 주소를 초기화한다.
             

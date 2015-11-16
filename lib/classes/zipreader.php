@@ -82,7 +82,7 @@ class Postcodify_ZipReader
         for ($i = 0; $i < $count; $i++)
         {
             $filename = $this->_zip->getNameIndex($i);
-            if (strpos($filename, $str) !== false || strpos($filename, $str1) !== false || strpos($filename, $str2) !== false)
+            if (stripos($filename, $str) !== false || stripos($filename, $str1) !== false || stripos($filename, $str2) !== false)
             {
                 $this->_fp = $this->_zip->getStream($filename);
                 return $filename;
