@@ -545,6 +545,10 @@ class Postcodify_Indexer_Update
                             array($last_entry->num_major, $last_entry->num_minor),
                             array($last_entry->jibeon_major, $last_entry->jibeon_minor),
                         );
+                        if (preg_match('/([0-9]+)번?길$/u', $road_info->road_name_ko, $road_name_matches))
+                        {
+                            $numbers[] = array(intval($road_name_matches[1]), null);
+                        }
                         foreach ($numbers as $number)
                         {
                             $number_key = implode('-', $number);
@@ -587,7 +591,7 @@ class Postcodify_Indexer_Update
                     
                     // 불필요한 변수들을 unset한다.
                     
-                    unset($address_info, $road_info, $existing_keywords, $existing_numbers, $existing_buildings);
+                    unset($address_info, $road_info, $road_name_matches, $existing_keywords, $existing_numbers, $existing_buildings);
                     unset($keywords, $numbers, $building_names, $building_names_str);
                     unset($last_entry, $last_nums);
                     
