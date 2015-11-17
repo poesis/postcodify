@@ -892,7 +892,7 @@ class Postcodify_Indexer_Update
                 '(dongri_ko = ? OR dongri_ko = ? OR dongri_ko IS NULL) AND ' .
                 '(range_start_major IS NULL OR (range_start_major <= ? AND (range_end_major IS NULL OR range_end_major >= ?) AND ' .
                 '(range_start_minor IS NULL OR (range_start_minor <= ? AND (range_end_minor IS NULL OR range_end_minor >= ?))))) AND ' .
-                '(building_name IS NULL OR building_name = ? OR ? IS NULL) ' .
+                '(building_name = ? OR ? IS NULL) ' .
                 'ORDER BY dongri_ko DESC, building_name ASC, range_start_major DESC');
         }
         

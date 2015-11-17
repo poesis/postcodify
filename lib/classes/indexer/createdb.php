@@ -637,7 +637,7 @@ class Postcodify_Indexer_CreateDB
                     
                     if (!$this->_no_old_postcodes && ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000'))
                     {
-                        $last_entry->postcode6 = $update_class->find_postcode6($db, $road_info, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor, $last_entry->common_residence_name);
+                        $last_entry->postcode6 = $update_class->find_postcode6($db, $road_info, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor);
                     }
                     if ($last_entry->postcode5 === null || $last_entry->postcode5 === '00000')
                     {
