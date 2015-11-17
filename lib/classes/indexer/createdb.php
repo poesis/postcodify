@@ -637,7 +637,7 @@ class Postcodify_Indexer_CreateDB
                     
                     if (!$this->_no_old_postcodes && ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000'))
                     {
-                        $last_entry->postcode6 = $update_class->find_postcode6($db, $road_info, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor);
+                        $last_entry->postcode6 = $update_class->find_postcode6($db, $road_info, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor, $last_entry->common_residence_name);
                     }
                     if ($last_entry->postcode5 === null || $last_entry->postcode5 === '00000')
                     {
@@ -1027,6 +1027,10 @@ class Postcodify_Indexer_CreateDB
         $open_status = $zip->open_named_file('사서함');
         if (!$open_status) throw new Exception('Failed to open areacd_pobox_DB');
         
+        // Update 클래스의 인스턴스를 생성한다. (누락된 우편번호 입력에 사용된다.)
+        
+        $update_class = new Postcodify_Indexer_Update;
+        
         // 행정구역 캐시와 카운터를 초기화한다.
         
         $region_cache = array();
@@ -1063,6 +1067,23 @@ class Postcodify_Indexer_CreateDB
                     $entry->eupmyeon,
                     $entry->eupmyeon ? Postcodify_Utility::$english_cache[$entry->eupmyeon] : null,
                 ));
+            }
+            
+            // 우편번호가 누락된 경우 찾아서 입력한다.
+            
+            if ($entry->postcode6 === null)
+            {
+                $road_info = (object)array(
+                    'sido_ko' => $entry->sido,
+                    'sigungu_ko' => $entry->sigungu,
+                    'ilbangu_ko' => $entry->ilbangu,
+                    'eupmyeon_ko' => $entry->eupmyeon,
+                );
+                $entry->postcode6 = $update_class->find_postcode6(
+                    $db, $road_info, null, null,
+                    $entry->range_start_major, $entry->range_start_minor,
+                    $entry->pobox_name
+                );
             }
             
             // 시작번호와 끝번호를 정리한다.
