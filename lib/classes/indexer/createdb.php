@@ -1071,7 +1071,7 @@ class Postcodify_Indexer_CreateDB
             
             // 우편번호가 누락된 경우 찾아서 입력한다.
             
-            if ($entry->postcode6 === null)
+            if (!$this->_no_old_postcodes && $entry->postcode6 === null)
             {
                 $road_info = (object)array(
                     'sido_ko' => $entry->sido,
