@@ -545,10 +545,12 @@ class Postcodify_Indexer_Update
                             array($last_entry->num_major, $last_entry->num_minor),
                             array($last_entry->jibeon_major, $last_entry->jibeon_minor),
                         );
+                        /*
                         if (preg_match('/([0-9]+)번?길$/u', $road_info->road_name_ko, $road_name_matches))
                         {
                             $numbers[] = array(intval($road_name_matches[1]), null);
                         }
+                        */
                         foreach ($numbers as $number)
                         {
                             $number_key = implode('-', $number);

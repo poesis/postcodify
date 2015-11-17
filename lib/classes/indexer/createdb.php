@@ -689,10 +689,12 @@ class Postcodify_Indexer_CreateDB
                     
                     $ps_num_insert->execute(array($proxy_id, $last_entry->num_major, $last_entry->num_minor));
                     $ps_num_insert->execute(array($proxy_id, $last_entry->jibeon_major, $last_entry->jibeon_minor));
+                    /*
                     if (preg_match('/([0-9]+)번?길$/u', $road_info->road_name_ko, $road_name_matches))
                     {
                         $ps_num_insert->execute(array($proxy_id, intval($road_name_matches[1]), null));
                     }
+                    */
                     
                     // 건물명 키워드를 입력한다.
                     
