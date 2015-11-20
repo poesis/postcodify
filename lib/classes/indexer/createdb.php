@@ -1360,6 +1360,12 @@ class Postcodify_Indexer_CreateDB
         $zip->close();
         unset($zip);
         
+        // 특수번호 파일을 연다.
+        
+        $zip = new Postcodify_Parser_Ranges_OldCode_Special;
+        $zip->open_archive($this->_data_dir . '/oldaddr_special_DB.zip');
+        $zip->open_next_file();
+        
         // 데이터를 한 줄씩 읽는다.
         
         while ($entry = $zip->read_line())
@@ -1391,12 +1397,6 @@ class Postcodify_Indexer_CreateDB
         
         $db->commit();
         unset($db);
-        
-        // 특수번호 파일을 연다.
-        
-        $zip = new Postcodify_Parser_Ranges_OldCode_Special;
-        $zip->open_archive($this->_data_dir . '/oldaddr_special_DB.zip');
-        $zip->open_next_file();
         
         // 압축 파일을 닫는다.
         
