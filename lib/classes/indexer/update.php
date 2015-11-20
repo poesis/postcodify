@@ -872,7 +872,7 @@ class Postcodify_Indexer_Update
     
     // 주어진 주소와 가장 근접한 기존 우편번호를 찾는 함수.
     
-    public function find_postcode6($db, $road_info, $dongri, $admin_dongri, $jibeon_major = null, $jibeon_minor = null, $building_name = null)
+    public function find_postcode6($db, $road_info, $dongri, $admin_dongri, $jibeon_major = null, $jibeon_minor = null)
     {
         // 범위 데이터를 사용할 수 없는 경우 null을 반환한다.
         
@@ -891,9 +891,8 @@ class Postcodify_Indexer_Update
                 '(eupmyeon_ko IS NULL OR eupmyeon_ko = ? OR ? IS NULL) AND ' .
                 '(dongri_ko = ? OR dongri_ko = ? OR dongri_ko IS NULL) AND ' .
                 '(range_start_major IS NULL OR (range_start_major <= ? AND (range_end_major IS NULL OR range_end_major >= ?) AND ' .
-                '(range_start_minor IS NULL OR (range_start_minor <= ? AND (range_end_minor IS NULL OR range_end_minor >= ?))))) AND ' .
-                '(building_name = ? OR ? IS NULL) ' .
-                'ORDER BY dongri_ko DESC, building_name ASC, range_start_major DESC');
+                '(range_start_minor IS NULL OR (range_start_minor <= ? AND (range_end_minor IS NULL OR range_end_minor >= ?))))) ' .
+                'ORDER BY dongri_ko DESC, range_start_major DESC LIMIT 1');
         }
         
         // 우편번호를 찾는다.
@@ -911,23 +910,13 @@ class Postcodify_Indexer_Update
             $admin_dongri ? $admin_dongri : null,
             $jibeon_major, $jibeon_major,
             $jibeon_minor, $jibeon_minor,
-            $building_name, $building_name,
         ));
         
         // 검색 결과가 있을 경우 우편번호를 반환하고, 그렇지 않으면 null을 반환한다.
         
-        if ($building_name === null)
-        {
-            $postcode6 = $ps->fetchColumn();
-            $ps->closeCursor();
-            return $postcode6 ? $postcode6 : null;
-        }
-        else
-        {
-            $postcode6 = null;
-            while (($postcode6 = $ps->fetchColumn()) !== false) { }
-            return $postcode6 ? $postcode6 : null;
-        }
+        $postcode6 = $ps->fetchColumn();
+        $ps->closeCursor();
+        return $postcode6 ? $postcode6 : null;
     }
     
     // 주어진 주소와 가장 근접한 기초구역번호(새우편번호)를 찾는 함수.

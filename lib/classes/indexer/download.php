@@ -32,7 +32,8 @@ class Postcodify_Indexer_Download
     const POBOX_URL = 'http://www.epost.go.kr/search/areacd/areacd_pobox_DB.zip';
     const RANGES_URL = 'http://www.epost.go.kr/search/areacd/areacd_rangeaddr_DB.zip';
     const ENGLISH_URL = 'http://cdn.poesis.kr/archives/english_aliases_DB.zip';
-    const OLDADDR_URL = 'http://cdn.poesis.kr/archives/oldaddr_zipcode_DB.zip';
+    const OLDADDR_ZIPCODE_URL = 'http://cdn.poesis.kr/archives/oldaddr_zipcode_DB.zip';
+    const OLDADDR_SPECIAL_URL = 'http://cdn.poesis.kr/archives/oldaddr_special_DB.zip';
     
     // 엔트리 포인트.
     
@@ -176,9 +177,23 @@ class Postcodify_Indexer_Download
         
         // 구 우편번호 범위 데이터를 다운로드한다.
         
-        Postcodify_Utility::print_message('다운로드: ' . basename(self::OLDADDR_URL));
-        $filepath = $download_path . '/' . basename(self::OLDADDR_URL);
-        $result = Postcodify_Utility::download(self::OLDADDR_URL, $filepath, array(__CLASS__, 'progress'));
+        Postcodify_Utility::print_message('다운로드: ' . basename(self::OLDADDR_ZIPCODE_URL));
+        $filepath = $download_path . '/' . basename(self::OLDADDR_ZIPCODE_URL);
+        $result = Postcodify_Utility::download(self::OLDADDR_ZIPCODE_URL, $filepath, array(__CLASS__, 'progress'));
+        if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
+        {
+            Postcodify_Utility::print_error();
+            exit(2);
+        }
+        else
+        {
+            Postcodify_Utility::print_ok(filesize($filepath));
+            $downloaded_files++;
+        }
+        
+        Postcodify_Utility::print_message('다운로드: ' . basename(self::OLDADDR_SPECIAL_URL));
+        $filepath = $download_path . '/' . basename(self::OLDADDR_SPECIAL_URL);
+        $result = Postcodify_Utility::download(self::OLDADDR_SPECIAL_URL, $filepath, array(__CLASS__, 'progress'));
         if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
         {
             Postcodify_Utility::print_error();
@@ -192,7 +207,7 @@ class Postcodify_Indexer_Download
         
         // 파일 수가 맞는지 확인한다.
         
-        if ($downloaded_files < 6)
+        if ($downloaded_files < 7)
         {
             echo '[ERROR] 다운로드한 파일 수가 일치하지 않습니다.' . PHP_EOL;
             exit(2);

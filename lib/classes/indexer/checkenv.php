@@ -23,7 +23,7 @@ class Postcodify_Indexer_CheckEnv
 {
     // 구동 환경을 점검한다.
     
-    public function check()
+    public function check($no_old_postcodes)
     {
         // 기본적인 환경을 확인한다.
         
@@ -134,10 +134,19 @@ class Postcodify_Indexer_CheckEnv
             exit(2);
         }
         
-        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/oldaddr_zipcode_DB.zip'))
+        if (!$no_old_postcodes)
         {
-            echo '[ERROR] 구 우편번호 범위 (oldaddr_zipcode_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
-            exit(2);
+            if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/oldaddr_zipcode_DB.zip'))
+            {
+                echo '[ERROR] 구 우편번호 범위 (oldaddr_zipcode_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
+                exit(2);
+            }
+            
+            if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/oldaddr_special_DB.zip'))
+            {
+                echo '[ERROR] 구 우편번호 범위 (oldaddr_special_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
+                exit(2);
+            }
         }
         
         // DB의 사양을 점검한다.

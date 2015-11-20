@@ -39,6 +39,7 @@ class Postcodify_Utility
     public static $building_cache = array();
     public static $building_number_cache = array();
     public static $english_cache = array();
+    public static $oldcode_cache = array();
     
     // DB에 연결하는 함수.
     

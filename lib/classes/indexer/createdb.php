@@ -85,7 +85,7 @@ class Postcodify_Indexer_CreateDB
         }
         
         $checkenv = new Postcodify_Indexer_CheckEnv;
-        $checkenv->check();
+        $checkenv->check($this->_no_old_postcodes);
         
         $this->create_tables();
         $this->load_basic_info();
@@ -637,7 +637,14 @@ class Postcodify_Indexer_CreateDB
                     
                     if (!$this->_no_old_postcodes && ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000'))
                     {
-                        $last_entry->postcode6 = $update_class->find_postcode6($db, $road_info, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor);
+                        if (isset(Postcodify_Utility::$oldcode_cache[$last_entry->building_id]))
+                        {
+                            $last_entry->postcode6 = Postcodify_Utility::$oldcode_cache[$last_entry->building_id];
+                        }
+                        else
+                        {
+                            $last_entry->postcode6 = $update_class->find_postcode6($db, $road_info, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor);
+                        }
                     }
                     if ($last_entry->postcode5 === null || $last_entry->postcode5 === '00000')
                     {
@@ -1029,10 +1036,6 @@ class Postcodify_Indexer_CreateDB
         $open_status = $zip->open_named_file('사서함');
         if (!$open_status) throw new Exception('Failed to open areacd_pobox_DB');
         
-        // Update 클래스의 인스턴스를 생성한다. (누락된 우편번호 입력에 사용된다.)
-        
-        $update_class = new Postcodify_Indexer_Update;
-        
         // 행정구역 캐시와 카운터를 초기화한다.
         
         $region_cache = array();
@@ -1071,28 +1074,20 @@ class Postcodify_Indexer_CreateDB
                 ));
             }
             
-            // 우편번호가 누락된 경우 찾아서 입력한다.
-            
-            if (!$this->_no_old_postcodes && $entry->postcode6 === null)
-            {
-                $road_info = (object)array(
-                    'sido_ko' => $entry->sido,
-                    'sigungu_ko' => $entry->sigungu,
-                    'ilbangu_ko' => $entry->ilbangu,
-                    'eupmyeon_ko' => $entry->eupmyeon,
-                );
-                $entry->postcode6 = $update_class->find_postcode6(
-                    $db, $road_info, null, null,
-                    $entry->range_start_major, $entry->range_start_minor,
-                    $entry->pobox_name
-                );
-            }
-            
             // 시작번호와 끝번호를 정리한다.
             
             $startnum = $entry->range_start_major . ($entry->range_start_minor ? ('-' . $entry->range_start_minor) : '');
             $endnum = $entry->range_end_major . ($entry->range_end_minor ? ('-' . $entry->range_end_minor) : '');
             if ($endnum === '' || $endnum === '-') $endnum = null;
+            $pobox_numbers = $startnum . ($endnum === null ? '' : (' ~ ' . $endnum));
+            
+            // 우편번호가 누락된 경우 찾아서 입력한다.
+            
+            if (!$this->_no_old_postcodes && $entry->postcode6 === null)
+            {
+                $cache_key = implode(' ', array($entry->sido, $entry->sigungu, $entry->ilbangu, $entry->eupmyeon, $entry->pobox_name, $pobox_numbers));
+                $entry->postcode6 = Postcodify_Utility::$oldcode_cache[$cache_key];
+            }
             
             // 주소 레코드를 저장한다.
             
@@ -1105,7 +1100,7 @@ class Postcodify_Indexer_CreateDB
                 $entry->range_start_major,
                 $entry->range_start_minor,
                 '',
-                $startnum . ($endnum === null ? '' : (' ~ ' . $endnum)),
+                $pobox_numbers,
             ));
             
             $proxy_id = $db->lastInsertId();
@@ -1365,8 +1360,48 @@ class Postcodify_Indexer_CreateDB
         $zip->close();
         unset($zip);
         
+        // 데이터를 한 줄씩 읽는다.
+        
+        while ($entry = $zip->read_line())
+        {
+            // 불필요한 줄은 건너뛴다.
+            
+            if ($entry === true) continue;
+            
+            // 캐시에 저장한다.
+            
+            if ($entry->building_id !== null)
+            {
+                Postcodify_Utility::$oldcode_cache[$entry->building_id] = $entry->postcode6;
+            }
+            else
+            {
+                $cache_key = implode(' ', array($entry->sido, $entry->sigungu, $entry->ilbangu, $entry->eupmyeon, $entry->pobox_name, $entry->pobox_range));
+                Postcodify_Utility::$oldcode_cache[$cache_key] = $entry->postcode6;
+            }
+            
+            // 카운터를 표시한다.
+            
+            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
+            
+            // 메모리 누수를 방지하기 위해 모든 배열을 unset한다.
+            
+            unset($entry);
+        }
+        
         $db->commit();
         unset($db);
+        
+        // 특수번호 파일을 연다.
+        
+        $zip = new Postcodify_Parser_Ranges_OldCode_Special;
+        $zip->open_archive($this->_data_dir . '/oldaddr_special_DB.zip');
+        $zip->open_next_file();
+        
+        // 압축 파일을 닫는다.
+        
+        $zip->close();
+        unset($zip);
         
         Postcodify_Utility::print_ok($count);
     }
