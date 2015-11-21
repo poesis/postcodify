@@ -1085,8 +1085,12 @@ class Postcodify_Indexer_CreateDB
             
             if (!$this->_no_old_postcodes && $entry->postcode6 === null)
             {
-                $cache_key = implode(' ', array($entry->sido, $entry->sigungu, $entry->ilbangu, $entry->eupmyeon, $entry->pobox_name, $pobox_numbers));
-                $entry->postcode6 = Postcodify_Utility::$oldcode_cache[$cache_key];
+                $pobox_numbers_short = trim(preg_replace('/\[-~].+$/', '', $pobox_numbers));
+                $cache_key = implode(' ', array($entry->sido, $entry->sigungu, $entry->ilbangu, $entry->eupmyeon, $entry->pobox_name, $pobox_numbers_short));
+                if (isset(Postcodify_Utility::$oldcode_cache[$cache_key]))
+                {
+                    $entry->postcode6 = Postcodify_Utility::$oldcode_cache[$cache_key];
+                }
             }
             
             // 주소 레코드를 저장한다.
@@ -1382,6 +1386,7 @@ class Postcodify_Indexer_CreateDB
             }
             else
             {
+                $entry->pobox_range = trim(preg_replace('/\[-~].+$/', '', $entry->pobox_range));
                 $cache_key = implode(' ', array($entry->sido, $entry->sigungu, $entry->ilbangu, $entry->eupmyeon, $entry->pobox_name, $entry->pobox_range));
                 Postcodify_Utility::$oldcode_cache[$cache_key] = $entry->postcode6;
             }
