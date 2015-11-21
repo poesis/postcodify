@@ -236,8 +236,16 @@ class Postcodify_Indexer_VerifyDB
     
     public function format_address($entry)
     {
-        $result = $entry->sido_ko . ' ' . $entry->sigungu_ko . ' ' . $entry->ilbangu_ko . ' ' . $entry->eupmyeon_ko . ' ' .
-            $entry->road_name_ko . ' ' . $entry->num_major . ($entry->num_minor ? ('-' . $entry->num_minor) : '');
+        if (preg_match('/사서함$/u', $entry->dongri_ko))
+        {
+            $result = $entry->sido_ko . ' ' . $entry->sigungu_ko . ' ' . $entry->ilbangu_ko . ' ' . $entry->eupmyeon_ko . ' ' .
+                $entry->dongri_ko . ' ' . $entry->other_addresses;
+        }
+        else
+        {
+            $result = $entry->sido_ko . ' ' . $entry->sigungu_ko . ' ' . $entry->ilbangu_ko . ' ' . $entry->eupmyeon_ko . ' ' .
+                $entry->road_name_ko . ' ' . $entry->num_major . ($entry->num_minor ? ('-' . $entry->num_minor) : '');
+        }
         return preg_replace('/\s+/', ' ', $result);
     }
 }

@@ -1091,6 +1091,10 @@ class Postcodify_Indexer_CreateDB
                 {
                     $entry->postcode6 = Postcodify_Utility::$oldcode_cache[$cache_key];
                 }
+                else
+                {
+                    $entry->postcode6 = '000000';
+                }
             }
             
             // 주소 레코드를 저장한다.
