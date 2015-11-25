@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "3.2.0", location : "" };
+    var info = { version : "3.3.0", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -77,6 +77,7 @@
                 mapLinkContent : null,
                 overrideDomain : null,
                 insertDbid : null,
+                insertPostcode : null,
                 insertPostcode5 : null,
                 insertPostcode6 : null,
                 insertAddress : null,
@@ -638,6 +639,7 @@
                 
                 if (settings.insertPostcode6) $(settings.insertPostcode6).val(entry.data("code6"));
                 if (settings.insertPostcode5) $(settings.insertPostcode5).val(entry.data("code5"));
+                if (settings.insertPostcode) $(settings.insertPostcode).val(entry.data("code5"));
                 if (settings.insertAddress) $(settings.insertAddress).val(koAddrNew);
                 if (settings.insertJibeonAddress) $(settings.insertJibeonAddress).val(koAddrOld);
                 if (settings.insertEnglishAddress) $(settings.insertEnglishAddress).val(enAddrNew);
@@ -786,6 +788,7 @@
                     controls : layer.find("div.postcodify_controls"),
                     insertPostcode6 : container.find(".postcodify_postcode6"),
                     insertPostcode5 : container.find(".postcodify_postcode5"),
+                    insertPostcode : container.find(".postcodify_postcode"),
                     insertAddress : container.find(".postcodify_address"),
                     insertDetails : container.find(".postcodify_details"),
                     insertExtraInfo : container.find(".postcodify_extra_info"),
