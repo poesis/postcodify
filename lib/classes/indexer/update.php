@@ -31,7 +31,7 @@ class Postcodify_Indexer_Update
     
     protected $_data_dir;
     protected $_ranges_available = true;
-    protected $_no_old_postcodes;
+    protected $_add_old_postcodes = false;
     
     // 생성자.
     
@@ -47,9 +47,9 @@ class Postcodify_Indexer_Update
         Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
         Postcodify_Utility::print_newline();
         
-        if (in_array('--no-old-postcodes', $args->options))
+        if (in_array('--add-old-postcodes', $args->options))
         {
-            $this->_no_old_postcodes = true;
+            $this->_add_old_postcodes = true;
         }
         
         // 어디까지 업데이트했는지 찾아본다.
@@ -397,15 +397,11 @@ class Postcodify_Indexer_Update
                             {
                                 $last_entry->postcode6 = $address_info->postcode6;
                             }
-                            elseif ($this->_no_old_postcodes)
-                            {
-                                $last_entry->postcode6 = null;
-                            }
-                            else
+                            elseif ($this->_add_old_postcodes)
                             {
                                 $last_entry->postcode6 = $this->find_postcode6($db, $road_info, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor);
+                                $postcode6_is_guess = true;
                             }
-                            $postcode6_is_guess = true;
                         }
                         if ($last_entry->postcode5 === null || $last_entry->postcode5 === '00000')
                         {
@@ -416,8 +412,8 @@ class Postcodify_Indexer_Update
                             else
                             {
                                 $last_entry->postcode5 = $this->find_postcode5($db, $road_info, $last_entry->num_major, $last_entry->num_minor, $last_entry->dongri, $last_entry->admin_dongri, $last_entry->jibeon_major, $last_entry->jibeon_minor, $last_entry->postcode6);
+                                $postcode5_is_guess = true;
                             }
-                            $postcode5_is_guess = true;
                         }
                         
                         // 영문 동·리를 구한다.

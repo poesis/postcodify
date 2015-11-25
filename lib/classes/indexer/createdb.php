@@ -26,7 +26,7 @@ class Postcodify_Indexer_CreateDB
     protected $_data_dir;
     protected $_data_date;
     protected $_shmop_key;
-    protected $_no_old_postcodes;
+    protected $_add_old_postcodes = false;
     
     // 쓰레드별로 작업을 분할하는 데 사용하는 시도 목록.
     // 건물정보 파일 기준으로 각각 200MB 내외가 되도록 나누었다.
@@ -79,13 +79,13 @@ class Postcodify_Indexer_CreateDB
         Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
         Postcodify_Utility::print_newline();
         
-        if (in_array('--no-old-postcodes', $args->options))
+        if (in_array('--add-old-postcodes', $args->options))
         {
-            $this->_no_old_postcodes = true;
+            $this->_add_old_postcodes = true;
         }
         
         $checkenv = new Postcodify_Indexer_CheckEnv;
-        $checkenv->check($this->_no_old_postcodes);
+        $checkenv->check($this->_add_old_postcodes);
         
         $this->create_tables();
         $this->load_basic_info();
@@ -635,7 +635,7 @@ class Postcodify_Indexer_CreateDB
                     
                     // 우편번호가 누락된 경우, 범위 데이터를 사용하여 찾는다.
                     
-                    if (!$this->_no_old_postcodes && ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000'))
+                    if ($this->_add_old_postcodes && ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000'))
                     {
                         if (isset(Postcodify_Utility::$oldcode_cache[$last_entry->building_id]))
                         {
@@ -1083,7 +1083,7 @@ class Postcodify_Indexer_CreateDB
             
             // 우편번호가 누락된 경우 찾아서 입력한다.
             
-            if (!$this->_no_old_postcodes && $entry->postcode6 === null)
+            if ($this->_add_old_postcodes && $entry->postcode6 === null)
             {
                 $pobox_numbers_short = trim(preg_replace('/\[-~].+$/', '', $pobox_numbers));
                 $cache_key = implode(' ', array($entry->sido, $entry->sigungu, $entry->ilbangu, $entry->eupmyeon, $entry->pobox_name, $pobox_numbers_short));

@@ -24,7 +24,7 @@ class Postcodify_Indexer_VerifyDB
     // 확인할 데이터 정의.
     
     protected $_schema;
-    protected $_no_old_postcodes;
+    protected $_add_old_postcodes = false;
     
     // 엔트리 포인트.
     
@@ -33,9 +33,9 @@ class Postcodify_Indexer_VerifyDB
         Postcodify_Utility::print_message('Postcodify Indexer ' . POSTCODIFY_VERSION);
         Postcodify_Utility::print_newline();
         
-        if (in_array('--no-old-postcodes', $args->options))
+        if (in_array('--add-old-postcodes', $args->options))
         {
-            $this->_no_old_postcodes = true;
+            $this->_add_old_postcodes = true;
         }
         
         if (!($db = Postcodify_Utility::get_db()))
@@ -202,7 +202,7 @@ class Postcodify_Indexer_VerifyDB
     {
         $pass = true;
         
-        if (!$this->_no_old_postcodes)
+        if ($this->_add_old_postcodes)
         {
             $pc6_query = $db->query("SELECT pa.*, pr.* FROM postcodify_addresses pa JOIN postcodify_roads pr ON pa.road_id = pr.road_id " .
                 "WHERE (postcode6 IS NULL OR postcode6 = '000000') AND building_id IS NOT NULL ORDER BY pa.id LIMIT 100");

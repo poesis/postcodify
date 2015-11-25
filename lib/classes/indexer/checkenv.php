@@ -23,7 +23,7 @@ class Postcodify_Indexer_CheckEnv
 {
     // 구동 환경을 점검한다.
     
-    public function check($no_old_postcodes)
+    public function check($add_old_postcodes)
     {
         // 기본적인 환경을 확인한다.
         
@@ -134,7 +134,7 @@ class Postcodify_Indexer_CheckEnv
             exit(2);
         }
         
-        if (!$no_old_postcodes)
+        if ($add_old_postcodes)
         {
             if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/oldaddr_zipcode_DB.zip'))
             {
