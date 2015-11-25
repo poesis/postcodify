@@ -393,6 +393,9 @@
                                 result.other_addresses = result.other.others;
                                 result.road_id = result.other.roadid;
                             }
+                            if (!result.postcode6) {
+                                result.postcode6 = "000000";
+                            }
                             
                             // 검색 결과 항목을 작성한다.
                             
