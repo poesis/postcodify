@@ -216,7 +216,7 @@ class Postcodify_Indexer_Download
     
     // 다운로드 진행 상황 표시 콜백 함수.
     
-    public static function progress($ch, $fd, $size)
+    public static function progress($ch, $fd = null, $size = null)
     {
         if ($size <= 0) return;
         Postcodify_Utility::print_progress($size);
