@@ -342,11 +342,15 @@ class Postcodify_Utility
             $keywords[] = $str = $matches[1] . '동';
             $keywords[] = $str = $matches[1] . '동' . $matches[2] . '가';
         }
-        elseif (preg_match('/^([가-힣]+)동?([0-9]+)가$/uU', $str, $matches))
+        elseif (preg_match('/^([가-힣]+)([동로])([0-9]+)가$/uU', $str, $matches))
         {
-            $keywords[] = $str = $matches[1] . '동';
-            $keywords[] = $str = $matches[1] . '동' . $matches[2] . '가';
-            $keywords[] = $str = $matches[1] . $matches[2] . '가동';
+            $keywords[] = $str = $matches[1] . $matches[2];
+            $keywords[] = $str = $matches[1] . $matches[2] . $matches[3] . '가';
+            $keywords[] = $str = $matches[1] . $matches[3] . '가동';
+            if ($matches[2] === '로')
+            {
+                $keywords[] = $str = $matches[1] . '로' . $matches[3] . '가동';
+            }
         }
         
         if (strlen($str) > 9 && substr($str, strlen($str) - 6) === '본동')
