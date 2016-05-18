@@ -88,7 +88,7 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         $is_common_residence = intval($line[26]);
         if ($is_common_residence && trim($line[13]))
         {
-            $common_residence_name = trim(preg_replace('/\s제?[a-zA-Z0-9]+동$/u', '', trim($line[13])));
+            $common_residence_name = trim(preg_replace('/(?:\s|아파트|빌라|연립)제?[a-zA-Z0-9]+동$/u', '', trim($line[13])));
         }
         else
         {
