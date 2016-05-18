@@ -66,6 +66,17 @@ class Postcodify_Indexer_Update
             exit(3);
         }
         
+        // 구 우편번호를 사용하도록 설정되어 있는지 확인한다.
+        $oldpostcodes_query = $db->query('SELECT v FROM postcodify_settings WHERE k = \'oldpostcodes\'');
+        $oldpostcodes = $oldpostcodes_query->fetchColumn();
+        $oldpostcodes_query->closeCursor();
+        unset($oldpostcodes_query);
+        
+        if ($oldpostcodes == 1)
+        {
+            $this->_add_old_postcodes = true;
+        }
+        
         // 범위 데이터를 사용할 수 있는지 확인한다.
         
         $tables_query = $db->query("SHOW TABLES LIKE 'postcodify_ranges_roads'");

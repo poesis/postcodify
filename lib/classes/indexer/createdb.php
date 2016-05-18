@@ -361,6 +361,7 @@ class Postcodify_Indexer_CreateDB
         $db = Postcodify_Utility::get_db();
         $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('version', '" . POSTCODIFY_VERSION . "')");
         $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('updated', '" . $this->_data_date . "')");
+        $db->exec("INSERT INTO postcodify_settings (k, v) VALUES ('oldpostcodes', '" . ($this->_add_old_postcodes ? '1' : '0') . "')");
         unset($db);
         Postcodify_Utility::print_ok();
     }
