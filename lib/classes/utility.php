@@ -254,6 +254,25 @@ class Postcodify_Utility
         return preg_replace('/[^ㄱ-ㅎ가-힣a-z0-9-]/uU', '', strtolower($str));
     }
     
+    // 주소를 영문으로 변환하는 함수.
+    
+    public static function get_english($str)
+    {
+        if (isset(self::$english_cache[$str]))
+        {
+            return self::$english_cache[$str];
+        }
+        
+        static $romaja_loaded = false;
+        if (!$romaja_loaded)
+        {
+            include_once POSTCODIFY_LIB_DIR . '/resources/romaja.php';
+            $romaja_loaded = true;
+        }
+        
+        return self::$english_cache[$str] = Hangeul_Romaja::convert($str, Hangeul_Romaja::TYPE_ADDRESS);
+    }
+    
     // 도로명의 일반적인 변형들을 구하는 함수.
     
     public static function get_variations_of_road_name($str)

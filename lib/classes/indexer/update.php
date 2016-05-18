@@ -1088,8 +1088,10 @@ class Postcodify_Indexer_Update
     
     public function find_english_name($db, $korean_name)
     {
-        // Prepared Statement를 생성한다.
+        return Postcodify_Utility::get_english($korean_name);
         
+        // Prepared Statement를 생성한다.
+        /*
         static $ps = null;
         if ($ps === null)
         {
@@ -1109,6 +1111,7 @@ class Postcodify_Indexer_Update
             $ps->closeCursor();
             return null;
         }
+        */
     }
     
     // 디버깅을 위해 주소를 포맷하는 메소드.

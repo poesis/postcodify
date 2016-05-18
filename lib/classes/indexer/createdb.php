@@ -661,7 +661,7 @@ class Postcodify_Indexer_CreateDB
                         $last_entry->num_minor,
                         $last_entry->is_basement,
                         $last_entry->dongri,
-                        Postcodify_Utility::$english_cache[$last_entry->dongri],
+                        Postcodify_Utility::get_english($last_entry->dongri),
                         $last_entry->jibeon_major,
                         $last_entry->jibeon_minor,
                         $last_entry->is_mountain,
@@ -1064,13 +1064,13 @@ class Postcodify_Indexer_CreateDB
                 $ps_road_insert->execute(array(
                     $road_id,
                     $entry->sido,
-                    $entry->sido ? Postcodify_Utility::$english_cache[$entry->sido] : null,
+                    $entry->sido ? Postcodify_Utility::get_english($entry->sido) : null,
                     $entry->sigungu,
-                    $entry->sigungu ? Postcodify_Utility::$english_cache[$entry->sigungu] : null,
+                    $entry->sigungu ? Postcodify_Utility::get_english($entry->sigungu) : null,
                     $entry->ilbangu,
-                    $entry->ilbangu ? Postcodify_Utility::$english_cache[$entry->ilbangu] : null,
+                    $entry->ilbangu ? Postcodify_Utility::get_english($entry->ilbangu) : null,
                     $entry->eupmyeon,
-                    $entry->eupmyeon ? Postcodify_Utility::$english_cache[$entry->eupmyeon] : null,
+                    $entry->eupmyeon ? Postcodify_Utility::get_english($entry->eupmyeon) : null,
                 ));
             }
             
@@ -1333,15 +1333,15 @@ class Postcodify_Indexer_CreateDB
             
             $ps_insert->execute(array(
                 $entry->sido,
-                $entry->sido ? Postcodify_Utility::$english_cache[$entry->sido] : null,
+                $entry->sido ? Postcodify_Utility::get_english($entry->sido) : null,
                 $entry->sigungu,
-                $entry->sigungu ? Postcodify_Utility::$english_cache[$entry->sigungu] : null,
+                $entry->sigungu ? Postcodify_Utility::get_english($entry->sigungu) : null,
                 $entry->ilbangu,
-                $entry->ilbangu ? Postcodify_Utility::$english_cache[$entry->ilbangu] : null,
+                $entry->ilbangu ? Postcodify_Utility::get_english($entry->ilbangu) : null,
                 $entry->eupmyeon,
-                $entry->eupmyeon ? Postcodify_Utility::$english_cache[$entry->eupmyeon] : null,
+                $entry->eupmyeon ? Postcodify_Utility::get_english($entry->eupmyeon) : null,
                 $entry->dongri,
-                $entry->dongri ? Postcodify_Utility::$english_cache[Postcodify_Utility::get_canonical($entry->dongri)] : null,
+                $entry->dongri ? Postcodify_Utility::get_english(Postcodify_Utility::get_canonical($entry->dongri)) : null,
                 $entry->range_start_major,
                 $entry->range_start_minor,
                 $entry->range_end_major,
