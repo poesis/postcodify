@@ -25,9 +25,8 @@ class Postcodify_Indexer_Download
     
     const RELATIVE_DOMAIN = 'http://www.juso.go.kr';
     const LIST_URL = '/support/AddressBuild.do';
-    const LIST_REGEXP1 = '#<li><a href="javascript:downloadAll\(\'([0-9]+)\', \'([0-9]+)\'\)"#';
-    const LIST_REGEXP2 = '#<li><a href="javascript:downloadRoad\(\'([0-9]+)\', \'([0-9]+)\'\)#';
-    const DOWNLOAD_URL = '/dn.do?reqType=%3$s&fileName=%1$04d%2$02d%3$s.zip&realFileName=%1$04d%2$02d%3$s.zip&regYmd=%1$04d';
+    const MONTH_REGEXP = '#href="javascript:monthChangeFileInfo\(\'(20[0-9]{2})\', \'([0-9]{1,2})\', \'RDNM\'\)#';
+    const DOWNLOAD_URL = '/dn.do?reqType=%3$s&fileName=%1$04d%2$02d%3$s.zip&realFileName=%1$04d%2$02d%3$s.zip&regYmd=%1$04d&ctprvnCd=00&gubun=RDNM&stdde=%1$04d%2$02d';
     
     const POBOX_URL = 'http://www.epost.go.kr/search/areacd/areacd_pobox_DB.zip';
     const RANGES_URL = 'http://www.epost.go.kr/search/areacd/areacd_rangeaddr_DB.zip';
@@ -59,31 +58,18 @@ class Postcodify_Indexer_Download
         
         // 데이터가 존재하는 가장 최근 년월을 찾는다.
         
-        $address_maxdate = null;
-        $code_maxdate = null;
-        
-        preg_match_all(self::LIST_REGEXP1, $html, $address_links, PREG_SET_ORDER);
-        foreach ($address_links as $address_link)
+        $maxdate = null;
+        if (preg_match(self::MONTH_REGEXP, $html, $matches))
         {
-            $address_maxdate = max($address_maxdate, intval(sprintf('%04d%02d', $address_link[1], $address_link[2])));
+            $data_year = intval($matches[1], 10);
+            $data_month = intval($matches[2], 10);
+            $data_day = intval(date('t', mktime(12, 0, 0, $data_month, 1, $data_year)));
         }
-        
-        preg_match_all(self::LIST_REGEXP2, $html, $code_links, PREG_SET_ORDER);
-        foreach ($code_links as $code_link)
+        else
         {
-            $code_maxdate = max($code_maxdate, intval(sprintf('%04d%02d', $code_link[1], $code_link[2])));
-        }
-        
-        $data_maxdate = min($address_maxdate, $code_maxdate);
-        if (strlen($data_maxdate) !== 6)
-        {
-            echo '[ERROR] 다운로드할 데이터를 찾을 수 없습니다.' . PHP_EOL;
+            echo '[ERROR] 다운로드할 데이터를 찾을 수 없습니다.sdfdsfsdf' . PHP_EOL;
             exit(2);
         }
-        
-        $data_year = intval(substr($data_maxdate, 0, 4), 10);
-        $data_month = intval(substr($data_maxdate, 4, 2), 10);
-        $data_day = intval(date('t', mktime(12, 0, 0, $data_month, 1, $data_year)));
         
         // 데이터 기준일을 YYYYMMDD 포맷으로 정리한다.
         
