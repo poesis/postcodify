@@ -128,12 +128,6 @@ class Postcodify_Indexer_CheckEnv
             exit(2);
         }
         
-        if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/english_aliases_DB.zip'))
-        {
-            echo '[ERROR] 영문 번역 (english_aliases_DB.zip) 파일을 찾을 수 없습니다.' . PHP_EOL;
-            exit(2);
-        }
-        
         if ($add_old_postcodes)
         {
             if (!file_exists(dirname(POSTCODIFY_LIB_DIR) . '/data/oldaddr_zipcode_DB.zip'))
