@@ -90,7 +90,6 @@ class Postcodify_Indexer_CreateDB
         $this->create_tables();
         $this->load_basic_info();
         $this->load_road_list();
-        $this->load_english_aliases();
         $this->load_new_ranges();
         $this->load_old_ranges();
         $this->start_threaded_workers('initial_indexes', '초기 인덱스를 생성하는 중...');
@@ -447,45 +446,6 @@ class Postcodify_Indexer_CreateDB
         
         $db->commit();
         unset($db);
-        
-        Postcodify_Utility::print_ok($count);
-    }
-    
-    // 영문 행정구역명을 로딩한다.
-    
-    public function load_english_aliases()
-    {
-        Postcodify_Utility::print_message('영문 행정구역명을 로딩하는 중...');
-        
-        // Zip 파일을 연다.
-        
-        $zip = new Postcodify_Parser_English_Aliases;
-        $zip->open_archive($this->_data_dir . '/english_aliases_DB.zip');
-        $open_status = $zip->open_next_file();
-        if (!$open_status) throw new Exception('Failed to open english_aliases_DB');
-        
-        // 카운터를 초기화한다.
-        
-        $count = 0;
-        
-        // 데이터를 한 줄씩 읽는다.
-        
-        while ($entry = $zip->read_line())
-        {
-            // 영문 행정구역명을 캐시에 저장한다.
-            
-            Postcodify_Utility::$english_cache[$entry->ko] = $entry->en;
-            
-            // 카운터를 표시한다.
-            
-            if (++$count % 512 === 0) Postcodify_Utility::print_progress($count);
-            unset($entry);
-        }
-        
-        // 뒷정리.
-        
-        $zip->close();
-        unset($zip);
         
         Postcodify_Utility::print_ok($count);
     }
