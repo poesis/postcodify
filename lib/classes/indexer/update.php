@@ -910,7 +910,7 @@ class Postcodify_Indexer_Update
                 '(dongri_ko = ? OR dongri_ko = ? OR dongri_ko IS NULL) AND ' .
                 '(range_start_major IS NULL OR (range_start_major <= ? AND (range_end_major IS NULL OR range_end_major >= ?) AND ' .
                 '(range_start_minor IS NULL OR (range_start_minor <= ? AND (range_end_minor IS NULL OR range_end_minor >= ?))))) ' .
-                'ORDER BY dongri_ko DESC, range_start_major DESC, range_start_minor DESC LIMIT 1');
+                'ORDER BY dongri_ko DESC, range_start_major ASC, range_start_minor ASC LIMIT 1');
         }
         
         // 우편번호를 찾는다.
@@ -918,16 +918,16 @@ class Postcodify_Indexer_Update
         $ps1->execute(array(
             $road_info->sido_ko ? $road_info->sido_ko : null,
             $road_info->sido_ko ? $road_info->sido_ko : null,
-            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
-            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
-            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
-            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
-            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
-            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+            (isset($road_info->sigungu_ko) && $road_info->sigungu_ko) ? $road_info->sigungu_ko : null,
+            (isset($road_info->sigungu_ko) && $road_info->sigungu_ko) ? $road_info->sigungu_ko : null,
+            (isset($road_info->ilbangu_ko) && $road_info->ilbangu_ko) ? $road_info->ilbangu_ko : null,
+            (isset($road_info->ilbangu_ko) && $road_info->ilbangu_ko) ? $road_info->ilbangu_ko : null,
+            (isset($road_info->eupmyeon_ko) && $road_info->eupmyeon_ko) ? $road_info->eupmyeon_ko : null,
+            (isset($road_info->eupmyeon_ko) && $road_info->eupmyeon_ko) ? $road_info->eupmyeon_ko : null,
             $dongri ? $dongri : null,
             $admin_dongri ? $admin_dongri : null,
-            preg_match('/^(.+)(동|리)$/u', $dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($dongri ? $dongri : ''),
-            preg_match('/^(.+)(동|리)$/u', $admin_dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($admin_dongri ? $admin_dongri : ''),
+            preg_match('/^(.+?)[0-9](동|리)$/u', $dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($dongri ? $dongri : ''),
+            preg_match('/^(.+?)[0-9](동|리)$/u', $admin_dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($admin_dongri ? $admin_dongri : ''),
             $jibeon_major, $jibeon_major,
             $jibeon_minor, $jibeon_minor,
         ));
@@ -944,12 +944,12 @@ class Postcodify_Indexer_Update
         $ps2->execute(array(
             $road_info->sido_ko ? $road_info->sido_ko : null,
             $road_info->sido_ko ? $road_info->sido_ko : null,
-            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
-            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
-            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
-            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
-            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
-            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+            (isset($road_info->sigungu_ko) && $road_info->sigungu_ko) ? $road_info->sigungu_ko : null,
+            (isset($road_info->sigungu_ko) && $road_info->sigungu_ko) ? $road_info->sigungu_ko : null,
+            (isset($road_info->ilbangu_ko) && $road_info->ilbangu_ko) ? $road_info->ilbangu_ko : null,
+            (isset($road_info->ilbangu_ko) && $road_info->ilbangu_ko) ? $road_info->ilbangu_ko : null,
+            (isset($road_info->eupmyeon_ko) && $road_info->eupmyeon_ko) ? $road_info->eupmyeon_ko : null,
+            (isset($road_info->eupmyeon_ko) && $road_info->eupmyeon_ko) ? $road_info->eupmyeon_ko : null,
             $dongri ? $dongri : null,
             $admin_dongri ? $admin_dongri : null,
             $jibeon_major, $jibeon_major,

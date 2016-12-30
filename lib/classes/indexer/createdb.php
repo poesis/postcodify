@@ -598,7 +598,7 @@ class Postcodify_Indexer_CreateDB
                     
                     if ($this->_add_old_postcodes && ($last_entry->postcode6 === null || $last_entry->postcode6 === '000000'))
                     {
-                        if (isset(Postcodify_Utility::$oldcode_cache[$last_entry->building_id]))
+                        if (isset(Postcodify_Utility::$oldcode_cache[$last_entry->building_id]) && !is_array(Postcodify_Utility::$oldcode_cache[$last_entry->building_id]))
                         {
                             $last_entry->postcode6 = Postcodify_Utility::$oldcode_cache[$last_entry->building_id];
                         }
@@ -997,6 +997,10 @@ class Postcodify_Indexer_CreateDB
         $open_status = $zip->open_named_file('사서함');
         if (!$open_status) throw new Exception('Failed to open areacd_pobox_DB');
         
+        // Update 클래스의 인스턴스를 생성한다. (누락된 우편번호 입력에 사용된다.)
+        
+        $update_class = new Postcodify_Indexer_Update;
+        
         // 행정구역 캐시와 카운터를 초기화한다.
         
         $region_cache = array();
@@ -1046,11 +1050,32 @@ class Postcodify_Indexer_CreateDB
             
             if ($this->_add_old_postcodes && $entry->postcode6 === null)
             {
-                $pobox_numbers_short = trim(preg_replace('/\[-~].+$/', '', $pobox_numbers));
-                $cache_key = implode(' ', array($entry->sido, $entry->sigungu, $entry->ilbangu, $entry->eupmyeon, $entry->pobox_name, $pobox_numbers_short));
-                if (isset(Postcodify_Utility::$oldcode_cache[$cache_key]))
+                $cache_key = implode(' ', array($entry->sido, $entry->sigungu, $entry->ilbangu, $entry->eupmyeon, $entry->pobox_name));
+                if (isset(Postcodify_Utility::$oldcode_cache[$cache_key]) && is_array(Postcodify_Utility::$oldcode_cache[$cache_key]))
                 {
-                    $entry->postcode6 = Postcodify_Utility::$oldcode_cache[$cache_key];
+                    foreach (Postcodify_Utility::$oldcode_cache[$cache_key] as $pobox_range => $postcode6)
+                    {
+                        $pobox_range = array_map('trim', explode('~', $pobox_range));
+                        if (count($pobox_range) < 2) $pobox_range[1] = $pobox_range[0];
+                        $pobox_range_start = explode('-', $pobox_range[0]);
+                        $pobox_range_end = explode('-', $pobox_range[1]);
+                        if ($pobox_range_start[0] <= $entry->range_start_major && (!isset($pobox_range_start[1]) || !$entry->range_start_minor || $pobox_range_start[1] <= $entry->range_start_minor))
+                        {
+                            if ($pobox_range_end[0] >= $entry->range_start_major && (!isset($pobox_range_end[1]) || !$entry->range_start_minor || $pobox_range_end[1] <= $entry->range_start_minor))
+                            {
+                                $entry->postcode6 = $postcode6;
+                                break;
+                            }
+                        }
+                    }
+                    if ($entry->postcode6 === null)
+                    {
+                        $entry->postcode6 = $update_class->find_postcode6($db, $entry, null, null, null, null);
+                        if ($entry->postcode6 === null)
+                        {
+                            $entry->postcode6 = '000000';
+                        }
+                    }
                 }
                 else
                 {
@@ -1351,9 +1376,8 @@ class Postcodify_Indexer_CreateDB
             }
             else
             {
-                $entry->pobox_range = trim(preg_replace('/\[-~].+$/', '', $entry->pobox_range));
-                $cache_key = implode(' ', array($entry->sido, $entry->sigungu, $entry->ilbangu, $entry->eupmyeon, $entry->pobox_name, $entry->pobox_range));
-                Postcodify_Utility::$oldcode_cache[$cache_key] = $entry->postcode6;
+                $cache_key = implode(' ', array($entry->sido, $entry->sigungu, $entry->ilbangu, $entry->eupmyeon, $entry->pobox_name));
+                Postcodify_Utility::$oldcode_cache[$cache_key][$entry->pobox_range] = $entry->postcode6;
             }
             
             // 카운터를 표시한다.
