@@ -887,24 +887,35 @@ class Postcodify_Indexer_Update
         
         // Prepared Statement를 생성한다.
         
-        static $ps = null;
+        static $ps1 = null;
+        static $ps2 = null;
         
-        if ($ps === null)
+        if ($ps1 === null)
         {
-            $ps = $db->prepare('SELECT postcode6 FROM postcodify_ranges_oldcode WHERE ' .
+            $ps1 = $db->prepare('SELECT postcode6 FROM postcodify_ranges_oldcode WHERE ' .
                 '(sido_ko = ? OR ? IS NULL) AND ' .
                 '(sigungu_ko IS NULL OR sigungu_ko = ? OR ? IS NULL) AND ' .
                 '(ilbangu_ko IS NULL OR ilbangu_ko = ? OR ? IS NULL) AND ' .
                 '(eupmyeon_ko IS NULL OR eupmyeon_ko = ? OR ? IS NULL) AND ' .
                 '(dongri_ko = ? OR dongri_ko = ? OR dongri_ko LIKE ? OR dongri_ko LIKE ? OR dongri_ko IS NULL) AND ' .
+                'range_start_major <= ? AND (range_end_major IS NULL OR range_end_major >= ?) AND ' .
+                '(range_start_minor IS NULL OR (range_start_minor <= ? AND (range_end_minor IS NULL OR range_end_minor >= ?))) ' .
+                'ORDER BY dongri_ko DESC, range_start_major DESC, range_start_minor DESC LIMIT 1');
+                
+            $ps2 = $db->prepare('SELECT postcode6 FROM postcodify_ranges_oldcode WHERE ' .
+                '(sido_ko = ? OR ? IS NULL) AND ' .
+                '(sigungu_ko IS NULL OR sigungu_ko = ? OR ? IS NULL) AND ' .
+                '(ilbangu_ko IS NULL OR ilbangu_ko = ? OR ? IS NULL) AND ' .
+                '(eupmyeon_ko IS NULL OR eupmyeon_ko = ? OR ? IS NULL) AND ' .
+                '(dongri_ko = ? OR dongri_ko = ? OR dongri_ko IS NULL) AND ' .
                 '(range_start_major IS NULL OR (range_start_major <= ? AND (range_end_major IS NULL OR range_end_major >= ?) AND ' .
                 '(range_start_minor IS NULL OR (range_start_minor <= ? AND (range_end_minor IS NULL OR range_end_minor >= ?))))) ' .
-                'ORDER BY dongri_ko DESC, range_start_major DESC LIMIT 1');
+                'ORDER BY dongri_ko DESC, range_start_major DESC, range_start_minor DESC LIMIT 1');
         }
         
         // 우편번호를 찾는다.
         
-        $ps->execute(array(
+        $ps1->execute(array(
             $road_info->sido_ko ? $road_info->sido_ko : null,
             $road_info->sido_ko ? $road_info->sido_ko : null,
             $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
@@ -915,16 +926,40 @@ class Postcodify_Indexer_Update
             $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
             $dongri ? $dongri : null,
             $admin_dongri ? $admin_dongri : null,
-            preg_match('/^(.+)(동|리)$/u', $dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : null,
-            preg_match('/^(.+)(동|리)$/u', $admin_dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : null,
+            preg_match('/^(.+)(동|리)$/u', $dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($dongri ? $dongri : ''),
+            preg_match('/^(.+)(동|리)$/u', $admin_dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($admin_dongri ? $admin_dongri : ''),
+            $jibeon_major, $jibeon_major,
+            $jibeon_minor, $jibeon_minor,
+        ));
+        
+        // 검색 결과가 있을 경우 우편번호를 반환하고, 그렇지 않으면 다음 쿼리로 넘어간다.
+        
+        $postcode6 = $ps1->fetchColumn();
+        $ps1->closeCursor();
+        if ($postcode6)
+        {
+            return $postcode6;
+        }
+        
+        $ps2->execute(array(
+            $road_info->sido_ko ? $road_info->sido_ko : null,
+            $road_info->sido_ko ? $road_info->sido_ko : null,
+            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
+            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
+            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
+            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
+            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+            $dongri ? $dongri : null,
+            $admin_dongri ? $admin_dongri : null,
             $jibeon_major, $jibeon_major,
             $jibeon_minor, $jibeon_minor,
         ));
         
         // 검색 결과가 있을 경우 우편번호를 반환하고, 그렇지 않으면 null을 반환한다.
         
-        $postcode6 = $ps->fetchColumn();
-        $ps->closeCursor();
+        $postcode6 = $ps2->fetchColumn();
+        $ps2->closeCursor();
         return $postcode6 ? $postcode6 : null;
     }
     
