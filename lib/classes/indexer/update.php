@@ -897,7 +897,7 @@ class Postcodify_Indexer_Update
                 '(sigungu_ko IS NULL OR sigungu_ko = ? OR ? IS NULL) AND ' .
                 '(ilbangu_ko IS NULL OR ilbangu_ko = ? OR ? IS NULL) AND ' .
                 '(eupmyeon_ko IS NULL OR eupmyeon_ko = ? OR ? IS NULL) AND ' .
-                '(dongri_ko = ? OR dongri_ko = ? OR dongri_ko LIKE ? OR dongri_ko LIKE ? OR dongri_ko IS NULL) AND ' .
+                '(dongri_ko = ? OR dongri_ko = ? OR dongri_ko LIKE ? OR dongri_ko LIKE ? OR dongri_ko LIKE ? OR dongri_ko LIKE ? OR dongri_ko IS NULL) AND ' .
                 'range_start_major <= ? AND (range_end_major IS NULL OR range_end_major >= ?) AND ' .
                 '(range_start_minor IS NULL OR (range_start_minor <= ? AND (range_end_minor IS NULL OR range_end_minor >= ?))) ' .
                 'ORDER BY dongri_ko DESC, range_start_major DESC, range_start_minor DESC LIMIT 1');
@@ -928,6 +928,8 @@ class Postcodify_Indexer_Update
             $admin_dongri ? $admin_dongri : null,
             preg_match('/^(.+?)[0-9](동|리)$/u', $dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($dongri ? $dongri : ''),
             preg_match('/^(.+?)[0-9](동|리)$/u', $admin_dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($admin_dongri ? $admin_dongri : ''),
+            preg_match('/^(.+?)제[0-9](동|리)$/u', $dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($dongri ? $dongri : ''),
+            preg_match('/^(.+?)제[0-9](동|리)$/u', $admin_dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($admin_dongri ? $admin_dongri : ''),
             $jibeon_major, $jibeon_major,
             $jibeon_minor, $jibeon_minor,
         ));
