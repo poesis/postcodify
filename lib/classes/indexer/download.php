@@ -24,8 +24,6 @@ class Postcodify_Indexer_Download
     // 상수 선언 부분.
     
     const RELATIVE_DOMAIN = 'http://www.juso.go.kr';
-    const LIST_URL = '/support/AddressBuild.do';
-    const MONTH_REGEXP = '#href="javascript:monthChangeFileInfo\(\'(20[0-9]{2})\', \'([0-9]{1,2})\', \'RDNM\'\)#';
     const DOWNLOAD_URL = '/dn.do?reqType=%3$s&fileName=%1$04d%2$02d%3$s.zip&realFileName=%1$04d%2$02d%3$s.zip&regYmd=%1$04d&ctprvnCd=00&gubun=RDNM&stdde=%1$04d%2$02d';
     
     const POBOX_URL = 'http://www.epost.go.kr/search/areacd/areacd_pobox_DB.zip';
@@ -51,26 +49,12 @@ class Postcodify_Indexer_Download
             exit(2);
         }
         
-        // 게시물 목록을 다운로드한다.
-        
-        $html = Postcodify_Utility::download(self::RELATIVE_DOMAIN . self::LIST_URL);
-        
         // 데이터가 존재하는 가장 최근 년월을 찾는다.
         
-        $maxdate = null;
-        if (preg_match(self::MONTH_REGEXP, $html, $matches))
-        {
-            $data_year = intval($matches[1], 10);
-            $data_month = intval($matches[2], 10);
-            $data_day = intval(date('t', mktime(12, 0, 0, $data_month, 1, $data_year)));
-        }
-        else
-        {
-            echo '[ERROR] 다운로드할 데이터를 찾을 수 없습니다.sdfdsfsdf' . PHP_EOL;
-            exit(2);
-        }
-        
-        // 데이터 기준일을 YYYYMMDD 포맷으로 정리한다.
+        $current_day = intval(date('d'));
+        $data_year = intval(date('Y', time() - (86400 * ($current_day > 15 ? 35 : 50))));
+        $data_month = intval(date('m', time() - (86400 * ($current_day > 15 ? 35 : 50))));
+        $data_day = intval(date('t', mktime(12, 0, 0, $data_month, 1, $data_year)));
         
         Postcodify_Utility::print_message('데이터 기준일은 ' . $data_year . '년 ' . $data_month . '월 ' . $data_day . '일입니다.');
         

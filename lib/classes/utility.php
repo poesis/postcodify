@@ -109,7 +109,7 @@ class Postcodify_Utility
         }
         else
         {
-            if (!preg_match('/charset=utf-?8/i', $result))
+            if (!preg_match('/charset="?utf-?8"?/i', $result))
             {
                 $result = iconv('CP949', 'UTF-8', $result);
             }
