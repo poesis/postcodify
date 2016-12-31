@@ -8,7 +8,7 @@ Postcodify는 웹 페이지에서 도로명주소, 지번주소, 영문주소 �
 
     <div id="postcodify"></div>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
-    <script src="//cdn.poesis.kr/post/search.min.js"></script>
+    <script src="//d1p7wdleee1q2z.cloudfront.net/post/search.min.js"></script>
     <script type="text/javascript">
             $("#postcodify").postcodify();
     </script>
