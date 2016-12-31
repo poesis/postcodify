@@ -913,45 +913,48 @@ class Postcodify_Indexer_Update
                 'ORDER BY dongri_ko DESC, range_start_major ASC, range_start_minor ASC LIMIT 1');
         }
         
-        // 우편번호를 찾는다.
+        // 지번이 주어진 경우 지번 범위를 기준으로 먼저 찾는다.
         
-        $ps1->execute(array(
-            $road_info->sido_ko ? $road_info->sido_ko : null,
-            $road_info->sido_ko ? $road_info->sido_ko : null,
-            (isset($road_info->sigungu_ko) && $road_info->sigungu_ko) ? $road_info->sigungu_ko : null,
-            (isset($road_info->sigungu_ko) && $road_info->sigungu_ko) ? $road_info->sigungu_ko : null,
-            (isset($road_info->ilbangu_ko) && $road_info->ilbangu_ko) ? $road_info->ilbangu_ko : null,
-            (isset($road_info->ilbangu_ko) && $road_info->ilbangu_ko) ? $road_info->ilbangu_ko : null,
-            (isset($road_info->eupmyeon_ko) && $road_info->eupmyeon_ko) ? $road_info->eupmyeon_ko : null,
-            (isset($road_info->eupmyeon_ko) && $road_info->eupmyeon_ko) ? $road_info->eupmyeon_ko : null,
-            $dongri ? $dongri : null,
-            $admin_dongri ? $admin_dongri : null,
-            preg_match('/^(.+?)[0-9](동|리)$/u', $dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($dongri ? $dongri : ''),
-            preg_match('/^(.+?)[0-9](동|리)$/u', $admin_dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($admin_dongri ? $admin_dongri : ''),
-            preg_match('/^(.+?)제[0-9](동|리)$/u', $dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($dongri ? $dongri : ''),
-            preg_match('/^(.+?)제[0-9](동|리)$/u', $admin_dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($admin_dongri ? $admin_dongri : ''),
-            $jibeon_major, $jibeon_major,
-            $jibeon_minor, $jibeon_minor,
-        ));
-        
-        // 검색 결과가 있을 경우 우편번호를 반환하고, 그렇지 않으면 다음 쿼리로 넘어간다.
-        
-        $postcode6 = $ps1->fetchColumn();
-        $ps1->closeCursor();
-        if ($postcode6)
+        if ($jibeon_major)
         {
-            return $postcode6;
+            $ps1->execute(array(
+                $road_info->sido_ko ? $road_info->sido_ko : null,
+                $road_info->sido_ko ? $road_info->sido_ko : null,
+                $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
+                $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
+                $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
+                $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
+                $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+                $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+                $dongri ? $dongri : null,
+                $admin_dongri ? $admin_dongri : null,
+                preg_match('/^(.+?)[0-9](동|리)$/u', $dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($dongri ? $dongri : ''),
+                preg_match('/^(.+?)[0-9](동|리)$/u', $admin_dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($admin_dongri ? $admin_dongri : ''),
+                preg_match('/^(.+?)제[0-9](동|리)$/u', $dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($dongri ? $dongri : ''),
+                preg_match('/^(.+?)제[0-9](동|리)$/u', $admin_dongri, $matches) ? ($matches[1] . '_' . $matches[2]) : ($admin_dongri ? $admin_dongri : ''),
+                $jibeon_major, $jibeon_major,
+                $jibeon_minor, $jibeon_minor,
+            ));
+            
+            $postcode6 = $ps1->fetchColumn();
+            $ps1->closeCursor();
+            if ($postcode6)
+            {
+                return $postcode6;
+            }
         }
+        
+        // 지번이 주어지지 않았거나, 지번 기준 검색결과가 없는 경우 읍면동리를 기준으로 찾아본다.
         
         $ps2->execute(array(
             $road_info->sido_ko ? $road_info->sido_ko : null,
             $road_info->sido_ko ? $road_info->sido_ko : null,
-            (isset($road_info->sigungu_ko) && $road_info->sigungu_ko) ? $road_info->sigungu_ko : null,
-            (isset($road_info->sigungu_ko) && $road_info->sigungu_ko) ? $road_info->sigungu_ko : null,
-            (isset($road_info->ilbangu_ko) && $road_info->ilbangu_ko) ? $road_info->ilbangu_ko : null,
-            (isset($road_info->ilbangu_ko) && $road_info->ilbangu_ko) ? $road_info->ilbangu_ko : null,
-            (isset($road_info->eupmyeon_ko) && $road_info->eupmyeon_ko) ? $road_info->eupmyeon_ko : null,
-            (isset($road_info->eupmyeon_ko) && $road_info->eupmyeon_ko) ? $road_info->eupmyeon_ko : null,
+            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
+            $road_info->sigungu_ko ? $road_info->sigungu_ko : null,
+            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
+            $road_info->ilbangu_ko ? $road_info->ilbangu_ko : null,
+            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
+            $road_info->eupmyeon_ko ? $road_info->eupmyeon_ko : null,
             $dongri ? $dongri : null,
             $admin_dongri ? $admin_dongri : null,
             $jibeon_major, $jibeon_major,

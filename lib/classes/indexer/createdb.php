@@ -1070,6 +1070,10 @@ class Postcodify_Indexer_CreateDB
                     }
                     if ($entry->postcode6 === null)
                     {
+                        $entry->sido_ko = $entry->sido;
+                        $entry->sigungu_ko = $entry->sigungu;
+                        $entry->ilbangu_ko = $entry->ilbangu;
+                        $entry->eupmyeon_ko = $entry->eupmyeon;
                         $entry->postcode6 = $update_class->find_postcode6($db, $entry, null, null, null, null);
                         if ($entry->postcode6 === null)
                         {
