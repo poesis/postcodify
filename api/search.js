@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "3.4.0", location : "" };
+    var info = { version : "3.4.1", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -42,7 +42,7 @@
         if (typeof window.POSTCODIFY_NO_CSS === "undefined") {
             var cdnProtocol = navigator.userAgent.match(/MSIE [56]\./) ? "http:" : "";
             if (cdnProtocol === "" && !window.location.protocol.match(/^https?/)) cdnProtocol = "http:";
-            var cdnHostname = info.location.match(/\.(poesis\.kr|cloudfront\.net)$/) ? info.location : "cdn.poesis.kr";
+            var cdnHostname = info.location.match(/\.(poesis\.kr|cloudfront\.net)$/) ? info.location : "d1p7wdleee1q2z.cloudfront.net";
             var cdnStylesheet = document.createElement("link");
             cdnStylesheet.rel = "stylesheet";
             cdnStylesheet.type = "text/css";
