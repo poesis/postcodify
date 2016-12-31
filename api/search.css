@@ -38,14 +38,12 @@ div.postcodify_search_result:hover div.address a.selector { font-weight: bold; }
 div.postcodify_search_result div.code { position: absolute; left: 6px; top: 4px; color: #c33; }
 div.postcodify_search_result div.code6 { position: absolute; left: 6px; top: 4px; color: #24c; display: none; }
 div.postcodify_search_result div.code5 { position: absolute; left: 6px; top: 4px; color: #c33; }
-div.postcodify_search_result div.code5:before { content: "[\2009"; }
-div.postcodify_search_result div.code5:after { content: "\2009]"; }
-div.postcodify_search_result div.address { clear: both; margin-left: 60px; margin-right: 30px; position: relative; cursor: pointer; }
+div.postcodify_search_result div.address { clear: both; margin-left: 46px; margin-right: 30px; position: relative; cursor: pointer; }
 div.postcodify_search_result div.address a.selector { text-decoration: none; cursor: pointer; }
 div.postcodify_search_result div.address a.selector span.address_info { color: #000; display: inline-block; margin-right: 8px; }
 div.postcodify_search_result div.address a.selector span.extra_info { color: #444; display: inline-block; }
 div.postcodify_search_result div.address a.show_old_addresses { display: none; }
-div.postcodify_search_result div.old_addresses { clear: both; color: #888; margin: 1px 0 0 60px; font-size: 12px; cursor: pointer; }
+div.postcodify_search_result div.old_addresses { clear: both; color: #888; margin: 1px 0 0 46px; font-size: 12px; cursor: pointer; }
 div.postcodify_search_result div.map_link { position: absolute; right: 6px; top: 4px; }
 div.postcodify_search_result div.map_link a { color: #444; font-size: 11px; text-decoration: none; }
 div.postcodify_search_result div.map_link a:hover { text-decoration: underline; }
