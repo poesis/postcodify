@@ -24,7 +24,7 @@ class Postcodify_Indexer_Download_Updates
     // 상수 선언 부분.
     
     const RELATIVE_DOMAIN = 'http://www.juso.go.kr';
-    const DOWNLOAD_URL = '/dn.do?reqType=DC&stdde=%s';
+    const DOWNLOAD_URL = '/dn.do?reqType=DC&stdde=%s&indutyCd=101&purpsCd=104&indutyRm=&purpsRm=';
     
     // 엔트리 포인트.
     
