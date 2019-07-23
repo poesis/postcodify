@@ -57,9 +57,9 @@ class Postcodify_Indexer_Download_Updates
         
         $current_time = mktime(12, 0, 0, date('m'), date('d'), date('Y'));
         $updated_time = mktime(12, 0, 0, substr($updated, 4, 2), substr($updated, 6, 2), substr($updated, 0, 4));
-        if ($updated_time < $current_time - (86400 * 60))
+        if ($updated_time < $current_time - (86400 * 180))
         {
-            echo '[ERROR] 마지막 업데이트로부터 60일 이상이 경과하였습니다. DB를 새로 생성하시기 바랍니다.' . PHP_EOL;
+            echo '[ERROR] 마지막 업데이트로부터 180일 이상이 경과하였습니다. DB를 새로 생성하시기 바랍니다.' . PHP_EOL;
             exit(3);
         }
         if ($updated_time >= $current_time)
