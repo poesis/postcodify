@@ -338,7 +338,7 @@ class Postcodify_Indexer_CreateDB
         $data_files = scandir(dirname(POSTCODIFY_LIB_DIR) . '/data');
         foreach ($data_files as $filename)
         {
-            if (preg_match('/^(20[0-9]{2})([0-9]{2})RDNM(ADR|CODE)\.zip$/', $filename, $matches))
+            if (preg_match('/^(20[0-9]{2})([0-9]{2})ALLRDNM\.zip$/', $filename, $matches))
             {
                 $year = intval($matches[1], 10);
                 $month = intval($matches[2], 10);
@@ -383,12 +383,11 @@ class Postcodify_Indexer_CreateDB
         // Zip 파일을 연다.
         
         $zip = new Postcodify_Parser_Road_List;
-        $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'RDNMCODE.zip');
+        $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'ALLRDNM.zip');
         $open_status = $zip->open_named_file('road_code_total.txt');
         if (!$open_status)
         {
-            $open_status = $zip->open_named_file('전체분');
-            if (!$open_status) throw new Exception('Failed to open road codes');
+            throw new Exception('Failed to open road codes');
         }
         
         // 카운터를 초기화한다.
@@ -473,7 +472,7 @@ class Postcodify_Indexer_CreateDB
         // Zip 파일을 연다.
         
         $zip = new Postcodify_Parser_NewAddress;
-        $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'RDNMADR.zip');
+        $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'ALLRDNM.zip');
         
         // Update 클래스의 인스턴스를 생성한다. (누락된 우편번호 입력에 사용된다.)
         
@@ -496,11 +495,6 @@ class Postcodify_Indexer_CreateDB
             {
                 $open_status = $zip->open_named_file('build_' . $sido_filename);
                 if ($open_status) break;
-            }
-            if (!$open_status)
-            {
-                $open_status = $zip->open_named_file('건물정보_' . $sido);
-                if (!$open_status) throw new Exception('Failed to open building info for ' . $sido);
             }
             
             // 이전 주소를 초기화한다.
@@ -777,7 +771,7 @@ class Postcodify_Indexer_CreateDB
         // Zip 파일을 연다.
         
         $zip = new Postcodify_Parser_NewJibeon;
-        $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'RDNMADR.zip');
+        $zip->open_archive($this->_data_dir . '/' . substr($this->_data_date, 0, 6) . 'ALLRDNM.zip');
         
         // 카운터를 초기화한다.
         
@@ -796,11 +790,6 @@ class Postcodify_Indexer_CreateDB
             {
                 $open_status = $zip->open_named_file('jibun_' . $sido_filename);
                 if ($open_status) break;
-            }
-            if (!$open_status)
-            {
-                $open_status = $zip->open_named_file('관련지번_' . $sido);
-                if (!$open_status) throw new Exception('Failed to open jibeon info for ' . $sido);
             }
             
             // 이전 주소를 초기화한다.

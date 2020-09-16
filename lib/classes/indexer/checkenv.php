@@ -80,39 +80,18 @@ class Postcodify_Indexer_CheckEnv
         // 필요한 데이터 파일이 모두 있는지 확인한다.
         
         $data_address_file = null;
-        $data_roadlist_file = null;
-
         $data_files = scandir(dirname(POSTCODIFY_LIB_DIR) . '/data');
         foreach ($data_files as $filename)
         {
-            if (preg_match('/^20[0-9]{4}RDNM(ADR|CODE)\.zip$/', $filename, $matches))
+            if (preg_match('/^20[0-9]{4}ALLRDNM\.zip$/', $filename, $matches))
             {
-                if ($matches[1] === 'ADR')
-                {
-                    $data_address_file = $filename;
-                }
-                else
-                {
-                    $data_roadlist_file = $filename;
-                }
+                $data_address_file = $filename;
             }
         }
         
         if (!$data_address_file)
         {
-            echo '[ERROR] ******RDNMADR.zip 파일을 찾을 수 없습니다.' . PHP_EOL;
-            exit(2);
-        }
-        
-        if (!$data_roadlist_file)
-        {
-            echo '[ERROR] ******RDNMCODE.zip 파일을 찾을 수 없습니다.' . PHP_EOL;
-            exit(2);
-        }
-        
-        if (substr($data_address_file, 0, 10) !== substr($data_roadlist_file, 0, 10))
-        {
-            echo '[ERROR] ******RDNMADR.zip 파일과 ******RDNMCODE.zip 파일의 날짜가 서로 다릅니다.' . PHP_EOL;
+            echo '[ERROR] ******ALLRDNM.zip 파일을 찾을 수 없습니다.' . PHP_EOL;
             exit(2);
         }
         

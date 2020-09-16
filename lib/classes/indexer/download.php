@@ -24,8 +24,7 @@ class Postcodify_Indexer_Download
     // 상수 선언 부분.
     
     const RELATIVE_DOMAIN = 'http://www.juso.go.kr';
-    const DOWNLOAD_URL = '/dn.do?reqType=%3$s&fileName=%1$04d%2$02d%3$s.zip&realFileName=%1$04d%2$02d%3$s.zip&regYmd=%1$04d&ctprvnCd=00&gubun=RDNM&stdde=%1$04d%2$02d';
-    
+    const DOWNLOAD_URL = '/dn.do?reqType=ALLRDNM&regYmd=%1$04d&ctprvnCd=00&gubun=RDNM&stdde=%1$04d%2$02d&fileName=%1$04d%2$02d_%%EA%%B1%%B4%%EB%%AC%%BCDB_%%EC%%A0%%84%%EC%%B2%%B4%%EB%%B6%%84.zip&realFileName=%1$04d%2$02dALLRDNM00.zip&indutyCd=999&purpsCd=999&indutyRm=%%EC%%88%%98%%EC%%A7%%91%%EC%%A2%%85%%EB%%A3%%8C&purpsRm=%%EC%%88%%98%%EC%%A7%%91%%EC%%A2%%85%%EB%%A3%%8C';
     const POBOX_URL = 'http://www.epost.go.kr/search/areacd/areacd_pobox_DB.zip';
     const RANGES_URL = 'http://www.epost.go.kr/search/areacd/areacd_rangeaddr_DB.zip';
     const OLDADDR_ZIPCODE_URL = 'http://cdn.poesis.kr/archives/oldaddr_zipcode_DB.zip';
@@ -60,27 +59,8 @@ class Postcodify_Indexer_Download
         
         // 주소 데이터를 다운로드한다.
         
-        $download_url = self::RELATIVE_DOMAIN . sprintf(self::DOWNLOAD_URL, $data_year, $data_month, 'RDNMADR');
-        $filename = sprintf('%04d%02d%s.zip', $data_year, $data_month, 'RDNMADR');
-        $filepath = $download_path . '/' . $filename;
-        
-        Postcodify_Utility::print_message('다운로드: ' . $filename);
-        $result = Postcodify_Utility::download($download_url, $filepath, array(__CLASS__, 'progress'));
-        if (!$result || !file_exists($filepath) || filesize($filepath) < 1024)
-        {
-            Postcodify_Utility::print_error();
-            exit(2);
-        }
-        else
-        {
-            Postcodify_Utility::print_ok(filesize($filepath));
-            $downloaded_files++;
-        }
-        
-        // 도로명코드 데이터를 다운로드한다.
-        
-        $download_url = self::RELATIVE_DOMAIN . sprintf(self::DOWNLOAD_URL, $data_year, $data_month, 'RDNMCODE');
-        $filename = sprintf('%04d%02d%s.zip', $data_year, $data_month, 'RDNMCODE');
+        $download_url = self::RELATIVE_DOMAIN . sprintf(self::DOWNLOAD_URL, $data_year, $data_month);
+        $filename = sprintf('%04d%02d%s.zip', $data_year, $data_month, 'ALLRDNM');
         $filepath = $download_path . '/' . $filename;
         
         Postcodify_Utility::print_message('다운로드: ' . $filename);
@@ -160,7 +140,7 @@ class Postcodify_Indexer_Download
         
         // 파일 수가 맞는지 확인한다.
         
-        if ($downloaded_files < 6)
+        if ($downloaded_files < 5)
         {
             echo '[ERROR] 다운로드한 파일 수가 일치하지 않습니다.' . PHP_EOL;
             exit(2);

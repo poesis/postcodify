@@ -100,6 +100,7 @@ class Postcodify_Utility
         
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Compatible; Postcodify Downloader)');
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 3);
         
         $result = curl_exec($ch);
         curl_close($ch);
