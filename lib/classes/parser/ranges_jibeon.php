@@ -25,7 +25,7 @@ class Postcodify_Parser_Ranges_Jibeon extends Postcodify_ZipReader
     
     public function __construct()
     {
-        $this->_charset = 'CP949';
+        $this->_charset = 'UTF-8';
     }
     
     // 한 줄을 읽어 반환한다.
