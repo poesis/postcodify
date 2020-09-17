@@ -983,7 +983,7 @@ class Postcodify_Indexer_CreateDB
         
         $zip = new Postcodify_Parser_NewPobox;
         $zip->open_archive($this->_data_dir . '/areacd_pobox_DB.zip');
-        $open_status = $zip->open_named_file('사서함');
+        $open_status = $zip->open_named_file('사서함.txt');
         if (!$open_status) throw new Exception('Failed to open areacd_pobox_DB');
         
         // Update 클래스의 인스턴스를 생성한다. (누락된 우편번호 입력에 사용된다.)
