@@ -244,6 +244,23 @@ class Postcodify_Server
             $result->count++;
         }
         
+        // 정확한 주소만 반환하는 옵션을 처리한다.
+        
+        if (isset($_GET['exact']) && $_GET['exact'] === 'Y' && in_array($result->type, array('JUSO+NUMS', 'JIBEON+NUMS')))
+        {
+            foreach ($result->results as $record)
+            {
+                if ($record instanceof Postcodify_Server_Record_v3 &&
+                    (($result->type === 'JUSO+NUMS' && preg_match('/\\s' . $result->nums . '$/', $record->ko_doro)) ||
+                    ($result->type === 'JIBEON+NUMS' && preg_match('/\\s' . $result->nums . '$/', $record->ko_jibeon))))
+                {
+                    $result->results = array($record);
+                    $result->count = 1;
+                    break;
+                }
+            }
+        }
+        
         // 검색 소요 시간을 기록한다.
         
         $result->time = number_format(microtime(true) - $start_time, 3);
