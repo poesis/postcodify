@@ -250,16 +250,20 @@ class Postcodify_Server
         
         if (isset($_GET['exact']) && $_GET['exact'] === 'Y' && in_array($result->type, array('JUSO+NUMS', 'JIBEON+NUMS')))
         {
+            $matches = array();
             foreach ($result->results as $record)
             {
-                if ($record instanceof Postcodify_Server_Record_v3 &&
-                    (($result->type === 'JUSO+NUMS' && preg_match('/\\s' . $result->nums . '$/', $record->ko_doro)) ||
-                    ($result->type === 'JIBEON+NUMS' && preg_match('/\\s' . $result->nums . '$/', $record->ko_jibeon))))
+                if ($record instanceof Postcodify_Server_Record_v3 && (isset($q->road) || isset($q->dongri)) &&
+                    (($result->type === 'JUSO+NUMS' && preg_match('/' . preg_quote($q->road . ' ' . $result->nums, '/') . '$/', $record->ko_doro)) ||
+                    ($result->type === 'JIBEON+NUMS' && preg_match('/' . preg_quote($q->dongri . ' ' . $result->nums, '/') . '$/', $record->ko_jibeon))))
                 {
-                    $result->results = array($record);
-                    $result->count = 1;
-                    break;
+                    $matches[] = $record;
                 }
+            }
+            if (count($matches) == 1)
+            {
+                $result->results = $matches;
+                $result->count = 1;
             }
         }
         
