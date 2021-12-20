@@ -68,7 +68,7 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         $dongri = trim($line[4]);
         if ($dongri === '') $dongri = trim($line[3]);
         $dongri = preg_replace('/\\(.+\\)/', '', $dongri);
-        
+        $dongri_id = trim($line[0]);
         $admin_dongri = trim($line[18]);
         if (!$admin_dongri || !preg_match('/.+동$/u', $admin_dongri)) $admin_dongri = null;
         
@@ -128,6 +128,7 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
             'num_minor' => $num_minor,
             'is_basement' => $is_basement,
             'dongri' => $dongri,
+            'dongri_id' => $dongri_id,
             'admin_dongri' => $admin_dongri,
             'jibeon_major' => $jibeon_major,
             'jibeon_minor' => $jibeon_minor,

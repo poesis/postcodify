@@ -459,8 +459,8 @@ class Postcodify_Indexer_CreateDB
         $db = Postcodify_Utility::get_db();
         $db->beginTransaction();
         $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, ' .
-            'road_id, num_major, num_minor, is_basement, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' . 
-            'building_id, building_name, building_nums, other_addresses) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            'road_id, num_major, num_minor, is_basement, dongri_id, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' . 
+            'building_id, building_name, building_nums, other_addresses) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $ps_kwd_insert = $db->prepare('INSERT INTO postcodify_keywords (address_id, keyword_crc32) VALUES (?, ?)');
         $ps_num_insert = $db->prepare('INSERT INTO postcodify_numbers (address_id, num_major, num_minor) VALUES (?, ?, ?)');
         $ps_building_insert = $db->prepare('INSERT INTO postcodify_buildings (address_id, keyword) VALUES (?, ?)');
@@ -615,6 +615,7 @@ class Postcodify_Indexer_CreateDB
                         $last_entry->num_major,
                         $last_entry->num_minor,
                         $last_entry->is_basement,
+                        $last_entry->dongri_id,
                         $last_entry->dongri,
                         Postcodify_Utility::get_english($last_entry->dongri),
                         $last_entry->jibeon_major,
