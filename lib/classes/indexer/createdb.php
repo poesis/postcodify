@@ -757,7 +757,8 @@ class Postcodify_Indexer_CreateDB
         
         $db = Postcodify_Utility::get_db();
         $db->beginTransaction();
-        $ps_addr_select = $db->prepare('SELECT * FROM postcodify_addresses WHERE road_id >= ? AND road_id <= ? AND ' .
+        $ps_addr_select = $db->prepare('SELECT * FROM postcodify_addresses USE INDEX (postcodify_addresses_road_id) ' .
+            'WHERE road_id >= ? AND road_id <= ? AND ' .
             'num_major = ? AND (num_minor = ? OR (? IS NULL AND num_minor IS NULL))' .
             'AND is_basement = ? ORDER BY id LIMIT 1');
         $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET other_addresses = ? WHERE id = ?');
