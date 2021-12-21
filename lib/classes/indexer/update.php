@@ -135,13 +135,14 @@ class Postcodify_Indexer_Update
             'num_major = ? AND (num_minor = ? OR (? IS NULL AND num_minor IS NULL))' .
             'AND is_basement = ? ORDER BY id LIMIT 1');
         $ps_addr_insert = $db->prepare('INSERT INTO postcodify_addresses (postcode5, postcode6, ' .
-            'road_id, num_major, num_minor, is_basement, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' .
-            'building_id, building_name, building_nums, other_addresses, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            'road_id, num_major, num_minor, is_basement, dongri_id, dongri_ko, dongri_en, jibeon_major, jibeon_minor, is_mountain, ' .
+            'building_id, building_name, building_nums, other_addresses, updated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
         $ps_addr_update = $db->prepare('UPDATE postcodify_addresses SET postcode5 = ?, postcode6 = ?, ' .
-            'road_id = ?, num_major = ?, num_minor = ?, is_basement = ?, dongri_ko = ?, dongri_en = ?, ' .
+            'road_id = ?, num_major = ?, num_minor = ?, is_basement = ?, dongri_id = ?, dongri_ko = ?, dongri_en = ?, ' .
             'jibeon_major = ?, jibeon_minor = ?, is_mountain = ?, building_id = ?, building_name = ?, building_nums = ?, ' .
-            'other_addresses = ?, updated = ? WHERE id = ?');
+            'other_addresses = ?, updated = ?, deleted = NULL WHERE id = ?');
         $ps_addr_update_other = $db->prepare('UPDATE postcodify_addresses SET other_addresses = ? WHERE id = ?');
+        $ps_addr_delete = $db->prepare('UPDATE postcodify_addresses SET deleted = ? WHERE id = ?');
         
         // 도로명 및 동·리 키워드 관련 쿼리들.
         
@@ -488,6 +489,7 @@ class Postcodify_Indexer_Update
                                 $last_entry->num_major,
                                 $last_entry->num_minor,
                                 $last_entry->is_basement,
+                                $last_entry->dongri_id,
                                 $last_entry->dongri,
                                 $dongri_en,
                                 $last_entry->jibeon_major,
@@ -515,6 +517,7 @@ class Postcodify_Indexer_Update
                                 $last_entry->num_major,
                                 $last_entry->num_minor,
                                 $last_entry->is_basement,
+                                $last_entry->dongri_id,
                                 $last_entry->dongri,
                                 $dongri_en,
                                 $last_entry->jibeon_major,
@@ -591,6 +594,10 @@ class Postcodify_Indexer_Update
                         // 주소가 폐지된 것으로 나오더라도 DB에는 그대로 두는 것이 좋다.
                         // 나중에 다시 추가될 경우 위의 코드에 따라 업데이트로 처리하면 그만이다.
                         
+                        $ps_addr_delete->execute(array(
+                            $last_entry->updated,
+                            $address_info->id,
+                        ));
                         $update_type = 'D';
                     }
                     
