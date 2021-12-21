@@ -594,10 +594,13 @@ class Postcodify_Indexer_Update
                         // 주소가 폐지된 것으로 나오더라도 DB에는 그대로 두는 것이 좋다.
                         // 나중에 다시 추가될 경우 위의 코드에 따라 업데이트로 처리하면 그만이다.
                         
-                        $ps_addr_delete->execute(array(
-                            $last_entry->updated,
-                            $address_info->id,
-                        ));
+                        if ($address_info)
+                        {
+                            $ps_addr_delete->execute(array(
+                                $last_entry->updated,
+                                $address_info->id,
+                            ));
+                        }
                         $update_type = 'D';
                     }
                     
