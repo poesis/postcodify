@@ -76,6 +76,7 @@ class Postcodify_Server_Record_v3 extends Postcodify_Server_Record
     public $en_common;
     public $en_doro;
     public $en_jibeon;
+    public $address_id;
     public $building_id;
     public $building_name;
     public $building_nums;
