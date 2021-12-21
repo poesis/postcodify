@@ -194,7 +194,7 @@ class Postcodify_Server
                 $record->other_addresses = $other_addresses;
                 $record->road_id = ($result->sort === 'POBOX') ? '' : substr($row->road_id, 0, 12);
                 $record->internal_id = strval($row->id);
-                $record->address_id = substr($row->building_id, 0, 10) . ($row->is_mountain ? '2' : '1') .
+                $record->address_id = substr($row->dongri_id ?: $row->building_id, 0, 10) . ($row->is_mountain ? '2' : '1') .
                     str_pad($row->jibeon_major, 4, '0', STR_PAD_LEFT) . str_pad($row->jibeon_minor, 4, '0', STR_PAD_LEFT);
             }
             elseif (version_compare($version, '1.8', '>='))
