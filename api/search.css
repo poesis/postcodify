@@ -81,6 +81,7 @@ div.postcodify_popup_layer {
     z-index: 2147483647;
     border-radius: 4px;
     box-sizing: content-box;
+    overflow: hidden;
     box-shadow: 0 2px 5px 4px rgba(0, 0, 0, 0.55);
     _position: absolute; _top: expression(eval(document.body.scrollTop));
 }
@@ -100,7 +101,7 @@ div.postcodify_popup_layer.ie6fix {
 
 div.postcodify_popup_layer div.postcodify_controls {
     clear: both; margin: 0; padding: 0; position: relative;
-    height: 41px; background: #36f;
+    height: 41px; background: #78909C;
     border-top-left-radius: 2px;
     border-top-right-radius: 2px;
     box-sizing: content-box;
@@ -124,12 +125,19 @@ div.postcodify_popup_layer div.postcodify_placeholder {
     font-family: inherit; font-size: 16px; line-height: 24px;
     border: 0; color: #bbb;
 }
+div.postcodify_popup_layer label.keyword_label {
+    position: absolute; top: -24px;
+    font-size: 16px; color: transparent;
+}
 div.postcodify_popup_layer input.keyword {
     width: 100%; height: 26px; padding: 7px 0 7px 12px;
     font-family: inherit; font-size: 16px; line-height: 24px;
     background: transparent; border: 0;
     border-top-left-radius: 2px;
     box-sizing: content-box;
+}
+div.postcodify_popup_layer input.keyword:focus {
+    outline: none;
 }
 div.postcodify_popup_layer div.postcodify_curve_slice {
     position: absolute; right: 80px; top: 0;
@@ -147,23 +155,23 @@ div.postcodify_popup_layer button.search_button {
     position: absolute; right: 30px; top: 7px;
     width: 45px; height: 26px; padding-bottom: 2px;
     font-family: inherit; font-weight: bold; line-height: 16px;
-    border: 0; background: #36f; color: #fff;
+    border: 0; background: #78909C; color: #fff;
     box-sizing: border-box;
 }
 div.postcodify_popup_layer button.search_button:hover,
 div.postcodify_popup_layer button.search_button:active {
-    background: #f33;
+    background: #546E7A;
 }
 div.postcodify_popup_layer button.close_button {
     position: absolute; right: 5px; top: 7px;
     width: 25px; height: 26px;
     font: bold 16px/16px Tahoma, sans-serif;
-    border: 0; background: #36f; color: #fff;
+    border: 0; background: #78909C; color: #fff;
     box-sizing: border-box;
 }
 div.postcodify_popup_layer button.close_button:hover,
 div.postcodify_popup_layer button.close_button:active {
-    background: #f33;
+    background: #546E7A;
 }
 
 div.postcodify_popup_layer div.postcodify_displays {

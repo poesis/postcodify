@@ -26,7 +26,7 @@
     
     // API 클라이언트 버전을 선언한다.
     
-    var info = { version : "3.4.1", location : "" };
+    var info = { version : "3.5.0", location : "" };
     
     // API 클라이언트를 로딩한 경로를 파악한다.
     
@@ -146,7 +146,7 @@
             var results = $(settings.results).postcodifyAddClass("search_form");
             var controls = $('<div></div>').postcodifyAddClass("search_controls");
             var uniqueId = "postcodify_" + new Date().getTime().toString() + Math.random().toString().substr(2, 4);
-            var keywordLabel = $('<label></label>').attr("for", uniqueId).text(info.translations[settings.language].msgKeywords).hide().appendTo(controls);
+            var keywordLabel = $('<label class="keyword_label"></label>').attr("for", uniqueId).text(info.translations[settings.language].msgKeywords).appendTo(controls);
             var keywordInput = $('<input type="text" class="keyword" value="" />').attr("id", uniqueId).appendTo(controls);
             var searchButton = $('<button type="button" class="search_button"></button>').attr("id", uniqueId + "_button").html(settings.searchButtonContent).appendTo(controls);
             controls.prependTo(settings.controls);
