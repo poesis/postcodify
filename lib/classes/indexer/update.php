@@ -777,6 +777,7 @@ class Postcodify_Indexer_Update
                             $num_major,
                             $num_minor,
                             $is_basement,
+                            null,
                             $jibeons[0][0],
                             $this->find_english_name($db, $jibeons[0][0]),
                             $jibeons[0][1],
