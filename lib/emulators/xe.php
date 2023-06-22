@@ -29,7 +29,7 @@ if (isset($_GET['request']) && $_GET['request'] === 'addr1')
 {
     $sido = array_unique(Postcodify_Server_Areas::$sido);
     sort($sido);
-    echo $_GET['callback'] . '(' . json_encode(array(
+    echo preg_replace('/[^a-zA-Z0-9_.]/', '', $_GET['callback']) . '(' . json_encode(array(
         'result' => true,
         'values' => $sido,
     )) . ');' . "\n";
@@ -40,7 +40,7 @@ if (isset($_GET['request']) && $_GET['request'] === 'addr1')
 
 if (isset($_GET['request']) && $_GET['request'] === 'addr2')
 {
-    echo $_GET['callback'] . '(' . json_encode(array(
+    echo preg_replace('/[^a-zA-Z0-9_.]/', '', $_GET['callback']) . '(' . json_encode(array(
         'result' => true,
         'values' => array(''),
     )) . ');' . "\n";
