@@ -730,7 +730,7 @@ class Postcodify_Indexer_Update
                         // 기존의 건물명 및 지번 목록을 파싱한다.
                         
                         $other_addresses = array('b' => array(), 'j' => array());
-                        $other_addresses_raw = explode('; ', $address_info->other_addresses);
+                        $other_addresses_raw = explode('; ', $address_info->other_addresses ?: '');
                         foreach ($other_addresses_raw as $i => $other_address)
                         {
                             if (preg_match('/^(.+[동리로가])\s(산?[0-9-]+(?:,\s산?[0-9-]+)*)$/u', $other_address, $matches))

@@ -178,7 +178,10 @@ class Postcodify_Indexer_SQLite_Convert
                 }
                 
                 $query = $mysql->prepare('SELECT * FROM ' . $table_name . $cond);
-                $query->bindParam(1, $last_primary_key, PDO::PARAM_INT);
+                if ($table_name !== 'postcodify_settings')
+                {
+                    $query->bindParam(1, $last_primary_key, PDO::PARAM_INT);
+                }
                 $query->execute();
                 
                 while ($row = $query->fetch(PDO::FETCH_NUM))
