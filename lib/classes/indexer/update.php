@@ -471,7 +471,7 @@ class Postcodify_Indexer_Update
                         
                         if ($last_entry->is_common_residence && $last_entry->common_residence_name === null)
                         {
-                            if (strpos($other_addresses, '; ') === false)
+                            if ($other_addresses !== null && strpos($other_addresses, '; ') === false)
                             {
                                 $last_entry->common_residence_name = $other_addresses;
                                 $other_addresses = null;
@@ -619,7 +619,7 @@ class Postcodify_Indexer_Update
                     if ($entry !== false)
                     {
                         $last_entry = $entry;
-                        if (($entry->has_detail || $entry->is_common_residence) && preg_match('/.+동$/u', $entry->building_detail))
+                        if (($entry->has_detail || $entry->is_common_residence) && $entry->building_detail && preg_match('/.+동$/u', $entry->building_detail))
                         {
                             $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
                         }
@@ -644,7 +644,7 @@ class Postcodify_Indexer_Update
                         $last_entry->building_names = array_merge($last_entry->building_names, $entry->building_names);
                     }
                     
-                    if (($entry->has_detail || $entry->is_common_residence) && preg_match('/.+동$/u', $entry->building_detail))
+                    if (($entry->has_detail || $entry->is_common_residence) && $entry->building_detail && preg_match('/.+동$/u', $entry->building_detail))
                     {
                         $last_nums[] = preg_replace('/동$/u', '', $entry->building_detail);
                     }

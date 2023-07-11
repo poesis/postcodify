@@ -29,7 +29,7 @@ $keywords = isset($_GET['q']) ? trim($_GET['q']) : (isset($argv[1]) ? trim($argv
 $callback = isset($_GET['callback']) ? $_GET['callback'] : null;
 $client_version = isset($_GET['v']) ? trim($_GET['v']) : POSTCODIFY_VERSION;
 if (function_exists('get_magic_quotes_gpc') && @get_magic_quotes_gpc()) $keywords = stripslashes($keywords);
-if (preg_match('/[^a-zA-Z0-9_.]/', $callback)) $callback = null;
+if (preg_match('/[^a-zA-Z0-9_.]/', $callback ?: '')) $callback = null;
 
 // 검색 서버를 설정한다.
 

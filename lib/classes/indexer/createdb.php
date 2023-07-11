@@ -195,7 +195,7 @@ class Postcodify_Indexer_CreateDB
         // 공유 메모리를 닫는다.
         
         $count = current(unpack('L', shmop_read($shmop, 0, 4)));
-        shmop_close($shmop);
+        @shmop_close($shmop);
         
         // 작업 완료 메시지를 화면에 표시한다.
         
@@ -317,7 +317,7 @@ class Postcodify_Indexer_CreateDB
             $shmop = shmop_open($this->_shmop_key, 'w', 0, 0);
             $prev = current(unpack('L', shmop_read($shmop, 0, 4)));
             shmop_write($shmop, pack('L', $prev + 1), 0);
-            shmop_close($shmop);
+            @shmop_close($shmop);
         }
         
         $db = Postcodify_Utility::get_db();
@@ -563,7 +563,7 @@ class Postcodify_Indexer_CreateDB
                     
                     if ($last_entry->is_common_residence && $last_entry->common_residence_name === null)
                     {
-                        if (strpos($other_addresses, '; ') === false)
+                        if ($other_addresses && strpos($other_addresses, '; ') === false)
                         {
                             $last_entry->common_residence_name = $other_addresses;
                             $other_addresses = null;
@@ -682,7 +682,7 @@ class Postcodify_Indexer_CreateDB
                     if ($entry !== false)
                     {
                         $last_entry = $entry;
-                        if (($entry->has_detail || $entry->is_common_residence) && preg_match('/.+동$/u', $entry->building_detail))
+                        if (($entry->has_detail || $entry->is_common_residence) && $entry->building_detail && preg_match('/.+동$/u', $entry->building_detail))
                         {
                             $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
                         }
@@ -707,7 +707,7 @@ class Postcodify_Indexer_CreateDB
                         $last_entry->building_names = array_merge($last_entry->building_names, $entry->building_names);
                     }
                     
-                    if (($entry->has_detail || $entry->is_common_residence) && preg_match('/.+동$/u', $entry->building_detail))
+                    if (($entry->has_detail || $entry->is_common_residence) && $entry->building_detail && preg_match('/.+동$/u', $entry->building_detail))
                     {
                         $last_nums[] = preg_replace('/동$/u', '', $entry->building_detail);
                     }
@@ -724,7 +724,7 @@ class Postcodify_Indexer_CreateDB
                     $shmop = shmop_open($this->_shmop_key, 'w', 0, 0);
                     $prev = current(unpack('L', shmop_read($shmop, 0, 4)));
                     shmop_write($shmop, pack('L', $prev + 512), 0);
-                    shmop_close($shmop);
+                    @shmop_close($shmop);
                 }
                 
                 // 더이상 데이터가 없는 경우 루프를 탈출한다.
@@ -840,7 +840,7 @@ class Postcodify_Indexer_CreateDB
                         // 기타 주소 목록에 지번들을 추가한다.
                         
                         $other_addresses = array('a' => null, 'b' => array(), 'j' => array());
-                        $other_addresses_raw = explode('; ', $address_info->other_addresses);
+                        $other_addresses_raw = explode('; ', strval($address_info->other_addresses));
                         foreach ($other_addresses_raw as $i => $other_address)
                         {
                             if ($i === 0 && preg_match('/[동리]$/u', $other_address))
@@ -935,7 +935,7 @@ class Postcodify_Indexer_CreateDB
                     $shmop = shmop_open($this->_shmop_key, 'w', 0, 0);
                     $prev = current(unpack('L', shmop_read($shmop, 0, 4)));
                     shmop_write($shmop, pack('L', $prev + 512), 0);
-                    shmop_close($shmop);
+                    @shmop_close($shmop);
                 }
                 
                 // 더이상 데이터가 없는 경우 루프를 탈출한다.

@@ -47,7 +47,7 @@ class Postcodify_Parser_NewAddress extends Postcodify_ZipReader
         {
             $eupmyeon = null;
         }
-        if (($pos = strpos($sigungu, ' ')) !== false)
+        if ($sigungu && ($pos = strpos($sigungu, ' ')) !== false)
         {
             $ilbangu = substr($sigungu, $pos + 1);
             $sigungu = substr($sigungu, 0, $pos);

@@ -57,7 +57,7 @@ class Postcodify_Parser_Ranges_Jibeon extends Postcodify_ZipReader
         
         // 특별시/광역시 아래의 자치구와 행정시 아래의 일반구를 구분한다.
         
-        if (($pos = strpos($sigungu_ko, ' ')) !== false)
+        if ($sigungu_ko && ($pos = strpos($sigungu_ko, ' ')) !== false)
         {
             $ilbangu_ko = substr($sigungu_ko, $pos + 1);
             $sigungu_ko = substr($sigungu_ko, 0, $pos);

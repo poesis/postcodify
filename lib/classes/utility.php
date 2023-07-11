@@ -167,7 +167,7 @@ class Postcodify_Utility
     
     public static function print_negative_spaces($count)
     {
-        echo "\033[${count}D";
+        echo "\033[{$count}D";
     }
     
     // 터미널에 메시지를 출력하고 커서를 오른쪽 끝으로 이동한다.
@@ -251,6 +251,7 @@ class Postcodify_Utility
     
     public static function get_canonical($str)
     {
+        $str = strval($str);
         $str = str_replace(array('(주)', '(유)', '(사)', '(재)', '(아)', '㈜'), '', $str);
         return preg_replace('/[^ㄱ-ㅎ가-힣a-z0-9-]/uU', '', strtolower($str));
     }
@@ -259,6 +260,7 @@ class Postcodify_Utility
     
     public static function get_english($str)
     {
+        $str = strval($str);
         if (isset(self::$english_cache[$str]))
         {
             return self::$english_cache[$str];
@@ -278,6 +280,7 @@ class Postcodify_Utility
     
     public static function get_variations_of_road_name($str)
     {
+        $str = strval($str);
         $str = preg_replace('/[^\\sㄱ-ㅎ가-힣a-z0-9]/u', '', $str);
         $keywords = array($str);
         
@@ -327,6 +330,7 @@ class Postcodify_Utility
     
     public static function get_variations_of_dongri($str)
     {
+        $str = strval($str);
         $keywords = preg_match('/[.,-]/', $str) ? array() : array($str);
         
         if (preg_match('/^(.+)제?([0-9.,-]+)([동리])$/uU', $str, $matches))
@@ -499,7 +503,7 @@ class Postcodify_Utility
         foreach ($names as $key => $val)
         {
             $val = self::get_canonical($val);
-            if (trim($val) === '') unset($names[$key]);
+            if (empty($val) || trim($val) === '') unset($names[$key]);
         }
         
         // 하나로 합쳐서 반환한다.

@@ -49,7 +49,7 @@ class Postcodify_Parser_Ranges_OldCode extends Postcodify_ZipReader
         
         // 특별시/광역시 아래의 자치구와 행정시 아래의 일반구를 구분한다.
         
-        if (($pos = strpos($sigungu, ' ')) !== false)
+        if ($sigungu && ($pos = strpos($sigungu, ' ')) !== false)
         {
             $ilbangu = substr($sigungu, $pos + 1);
             $sigungu = substr($sigungu, 0, $pos);
@@ -61,7 +61,7 @@ class Postcodify_Parser_Ranges_OldCode extends Postcodify_ZipReader
         
         // 읍면과 동을 구분한다.
         
-        if (preg_match('/[동로가]$/u', $eupmyeon) && $dongri === null)
+        if ($eupmyeon && preg_match('/[동로가]$/u', $eupmyeon) && $dongri === null)
         {
             $dongri = $eupmyeon;
             $eupmyeon = null;
