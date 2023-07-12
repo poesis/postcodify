@@ -203,7 +203,7 @@ class Postcodify_Server_Query
             
             // 동리+지번을 확인한다.
             
-            if (preg_match('/^(.{1,5}(?:[0-9]가|[동리가]))(산?([0-9]+(?:-[0-9]+)?)(?:번지?)?)?$/u', $keyword, $matches))
+            if (preg_match('/^(.{1,5}(?:[0-9]가|[동리가]))(산?([0-9]+(?:-[0-9]+)?)(?:번지?)?)?$/u', $keyword, $matches) && empty($q->dongri))
             {
                 $q->dongri = $matches[1];
                 $q->sort = 'JIBEON';
