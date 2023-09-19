@@ -500,7 +500,7 @@ class Postcodify_Utility
     {
         // 검색어에 포함될 수 없는 문자를 모두 제거한다.
         
-        foreach ($names as $key => $val)
+        foreach ($names as $key => &$val)
         {
             $val = self::get_canonical($val);
             if (empty($val) || trim($val) === '') unset($names[$key]);
