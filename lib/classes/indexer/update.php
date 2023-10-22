@@ -296,7 +296,7 @@ class Postcodify_Indexer_Update
                 if ($last_entry === null)
                 {
                     $last_entry = $entry;
-                    if (($entry->has_detail || $entry->is_common_residence) && preg_match('/.+동$/u', $entry->building_detail))
+                    if (($entry->has_detail || $entry->is_common_residence) && preg_match('/.+동$/u', $entry->building_detail ?? ''))
                     {
                         $last_nums = array(preg_replace('/동$/u', '', $entry->building_detail));
                     }
