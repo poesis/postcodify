@@ -253,7 +253,7 @@ class Postcodify_Utility
     {
         $str = strval($str);
         $str = str_replace(array('(주)', '(유)', '(사)', '(재)', '(아)', '㈜'), '', $str);
-        return preg_replace('/[^ㄱ-ㅎ가-힣a-z0-9-]/uU', '', strtolower($str));
+        return preg_replace('/[^ㄱ-ㅎ가-힣a-z0-9.-]/uU', '', strtolower($str));
     }
     
     // 주소를 영문으로 변환하는 함수.
@@ -500,15 +500,17 @@ class Postcodify_Utility
     {
         // 검색어에 포함될 수 없는 문자를 모두 제거한다.
         
+        $result = array();
         foreach ($names as $key => $val)
         {
             $val = self::get_canonical($val);
             if (empty($val) || trim($val) === '') unset($names[$key]);
+            $result[] = $val;
         }
         
         // 하나로 합쳐서 반환한다.
         
-        return implode(',', $names);
+        return implode(',', $result);
     }
     
     // 건물명의 길이를 비교하는 메소드. 중복 건물명 제거를 위한 콜백 메소드이다.
