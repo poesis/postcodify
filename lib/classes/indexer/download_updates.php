@@ -23,9 +23,9 @@ class Postcodify_Indexer_Download_Updates
 {
     // 상수 선언 부분.
     
-    const RELATIVE_DOMAIN = 'http://www.juso.go.kr';
-    const DOWNLOAD_URL = '/dn.do?reqType=DC&stdde=%s&indutyCd=999&purpsCd=999&indutyRm=%%EC%%88%%98%%EC%%A7%%91%%EC%%A2%%85%%EB%%A3%%8C&purpsRm=%%EC%%88%%98%%EC%%A7%%91%%EC%%A2%%85%%EB%%A3%%8C';
-    
+    const RELATIVE_DOMAIN = 'https://business.juso.go.kr';
+    const DOWNLOAD_URL = '/api/jst/download?regYmd=%1$s&reqType=DC&stdde=%1$s%2$s&fileName=%1$s%2$s_dailynoticedata.zip&realFileName=%1$s%2$s_dailynoticedata.zip';
+
     // 엔트리 포인트.
     
     public function start()
@@ -89,7 +89,7 @@ class Postcodify_Indexer_Download_Updates
             
             Postcodify_Utility::print_message('다운로드: ' . $date . '_dailynoticedata.zip');
             
-            $link = self::RELATIVE_DOMAIN . sprintf(self::DOWNLOAD_URL, $date);
+            $link = self::RELATIVE_DOMAIN . sprintf(self::DOWNLOAD_URL, substr($date, 0, 4), substr($date, 4, 4));
             $result = Postcodify_Utility::download($link, $filepath, array(__CLASS__, 'progress'));
             if (!$result || !file_exists($filepath))
             {
