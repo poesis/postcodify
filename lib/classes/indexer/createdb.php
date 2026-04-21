@@ -430,7 +430,7 @@ class Postcodify_Indexer_CreateDB
                 $entry->ilbangu_en,
                 $entry->eupmyeon_ko,
                 $entry->eupmyeon_en,
-                $entry->updated,
+                $entry->updated ?: 0,
             ));
             
             // 카운터를 표시한다.
@@ -542,6 +542,7 @@ class Postcodify_Indexer_CreateDB
                     // 상세건물명과 기타 주소를 정리한다.
                     
                     $building_nums = Postcodify_Utility::consolidate_building_nums($last_nums);
+                    $building_nums = iconv('UTF-8', 'UTF-8//IGNORE', $building_nums);
                     if ($building_nums === '') $building_nums = null;
                     
                     $other_addresses = array();
@@ -557,6 +558,7 @@ class Postcodify_Indexer_CreateDB
                         $other_addresses[] = str_replace(';', ':', $building_name);
                     }
                     $other_addresses = implode('; ', $other_addresses);
+                    $other_addresses = iconv('UTF-8', 'UTF-8//IGNORE', $other_addresses);
                     if ($other_addresses === '') $other_addresses = null;
                     
                     // 공동주택인데 공동주택명이 없는 경우 다른 건물명을 이용한다.
@@ -1088,7 +1090,7 @@ class Postcodify_Indexer_CreateDB
                 'P.O.Box',
                 $entry->range_start_major,
                 $entry->range_start_minor,
-                '',
+                0,
                 $pobox_numbers,
             ));
             
@@ -1330,8 +1332,8 @@ class Postcodify_Indexer_CreateDB
                 $entry->is_mountain,
                 $entry->island_name,
                 $entry->building_name,
-                $entry->building_num_start,
-                $entry->building_num_end,
+                intval($entry->building_num_start),
+                intval($entry->building_num_end),
                 $entry->postcode6,
             ));
             
