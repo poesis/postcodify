@@ -27,7 +27,7 @@ class Postcodify_Parser_Ranges_OldCode extends Postcodify_ZipReader
     {
         // 데이터를 읽는다.
         
-        $line = fgetcsv($this->_fp);
+        $line = fgetcsv($this->_fp, 0, ',', '"', '\\');
         if ($line === false || count($line) < 15) return false;
         if (!ctype_digit($line[0])) return true;
         
