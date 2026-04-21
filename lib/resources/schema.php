@@ -40,7 +40,7 @@ return array(
         'is_mountain' => 'TINYINT(1) DEFAULT 0',
         'building_id' => 'NUMERIC(25)',
         'building_name' => 'VARCHAR(80)',
-        'building_nums' => 'VARCHAR(240)',
+        'building_nums' => 'TEXT',
         'other_addresses' => 'TEXT',
         'updated' => 'NUMERIC(8)',
         'deleted' => 'NUMERIC(8)',
@@ -98,9 +98,9 @@ return array(
     
     'postcodify_english' => array(
         'seq' => 'INT PRIMARY KEY AUTO_INCREMENT',
-        'ko' => 'VARCHAR(40)',
+        'ko' => 'VARCHAR(240)',
         'ko_crc32' => 'INT UNSIGNED',
-        'en' => 'VARCHAR(40)',
+        'en' => 'VARCHAR(240)',
         'en_crc32' => 'INT UNSIGNED',
         '_indexes' => array('ko', 'ko_crc32', 'en', 'en_crc32'),
         '_count' => 130000,
