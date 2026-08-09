@@ -35,22 +35,22 @@ class Postcodify_Indexer_CreateDB
         '경기도',
         '경상북도',
         '경상남도',
-        '전라남도|광주광역시',
-        '전라북도|충청북도',
+        '전남광주통합특별시',
+        '전북특별자치도|충청북도',
         '서울특별시|부산광역시|울산광역시',
         '충청남도|대전광역시|인천광역시',
-        '강원도|대구광역시|세종특별자치시|제주특별자치도',
+        '강원특별자치도|대구광역시|세종특별자치시|제주특별자치도',
     );
     
     // 시도 파일명이 영어로 제공되는 경우를 위한 매핑 목록.
     
     protected $_sido_filenames = array(
         '경기도' => array('gyunggi', 'gyeonggi'),
-        '강원도' => 'gangwon',
+        '강원특별자치도' => 'gangwon',
         '경상북도' => 'gyeongbuk',
         '경상남도' => 'gyeongnam',
-        '전라북도' => 'jeonbuk',
-        '전라남도' => 'jeonnam',
+        '전북특별자치도' => 'jeonbuk',
+        '전남광주통합특별시' => 'jeonnamgwangju',
         '충청북도' => 'chungbuk',
         '충청남도' => 'chungnam',
         '제주특별자치도' => 'jeju',
@@ -59,7 +59,6 @@ class Postcodify_Indexer_CreateDB
         '대구광역시' => 'daegu',
         '대전광역시' => 'daejeon',
         '인천광역시' => 'incheon',
-        '광주광역시' => 'gwangju',
         '울산광역시' => 'ulsan',
         '세종특별자치시' => 'sejong',
     );
@@ -496,6 +495,10 @@ class Postcodify_Indexer_CreateDB
                 $open_status = $zip->open_named_file('build_' . $sido_filename);
                 if ($open_status) break;
             }
+            if (!$open_status)
+            {
+                throw new Exception('Failed to open address file for ' . $sido);
+            }
             
             // 이전 주소를 초기화한다.
             
@@ -794,6 +797,10 @@ class Postcodify_Indexer_CreateDB
             {
                 $open_status = $zip->open_named_file('jibun_' . $sido_filename);
                 if ($open_status) break;
+            }
+            if (!$open_status)
+            {
+                throw new Exception('Failed to open address file for ' . $sido);
             }
             
             // 이전 주소를 초기화한다.
